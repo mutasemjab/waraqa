@@ -12,42 +12,62 @@ use Illuminate\Support\Facades\Validator;
 class UserAuthController extends Controller
 {
 
-    public function showLoginForm()
+    public function showUserLoginForm()
     {
-        return view('auth.login');
+        return view('auth.user.login');
     }
 
-    
-     public function login(Request $request)
+    public function showProviderLoginForm()
+    {
+        return view('auth.provider.login');
+    }
+
+
+     public function loginUser(Request $request)
     {
         $request->validate([
-            'phone' => 'required',
-            'password' => 'required',
-            'user_type' => 'required|in:user,provider'
+            'email' => 'required|email',
+            'password' => 'required'
         ]);
 
         $credentials = [
-            'phone' => $request->phone,
+            'email' => $request->email,
             'password' => $request->password,
             'activate' => 1
         ];
 
-        if ($request->user_type === 'user') {
-            // Use 'web' guard for users (this is the default Laravel guard)
-            if (Auth::guard('web')->attempt($credentials, $request->filled('remember'))) {
-                $request->session()->regenerate();
-                return redirect()->intended(route('user.dashboard'));
-            }
-        } elseif ($request->user_type === 'provider') {
-            // Use 'provider' guard for providers
-            if (Auth::guard('provider')->attempt($credentials, $request->filled('remember'))) {
-                $request->session()->regenerate();
-                return redirect()->intended(route('provider.dashboard'));
-            }
+        // Use 'web' guard for users (this is the default Laravel guard)
+        if (Auth::guard('web')->attempt($credentials, $request->filled('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('user.dashboard'));
         }
 
         return back()->withErrors([
-            'phone' => __('messages.invalid_credentials'),
+            'email' => __('messages.invalid_credentials'),
+        ])->withInput($request->except('password'));
+    }
+
+    public function loginProvider(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        $credentials = [
+            'email' => $request->email,
+            'password' => $request->password,
+            'activate' => 1
+        ];
+
+        // Use 'provider' guard for providers
+        if (Auth::guard('provider')->attempt($credentials, $request->filled('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('provider.dashboard'));
+        }
+
+        return back()->withErrors([
+            'email' => __('messages.invalid_credentials'),
         ])->withInput($request->except('password'));
     }
 
@@ -56,14 +76,18 @@ class UserAuthController extends Controller
         // Check which guard is currently authenticated and logout accordingly
         if (Auth::guard('web')->check()) {
             Auth::guard('web')->logout();
+            $redirectRoute = 'user.login';
         } elseif (Auth::guard('provider')->check()) {
             Auth::guard('provider')->logout();
+            $redirectRoute = 'provider.login';
+        } else {
+            $redirectRoute = 'user.login';
         }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route($redirectRoute);
     }
    
 

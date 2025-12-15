@@ -41,8 +41,18 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
     // Authentication Routes (accessible when not logged in)
     Route::middleware('guest')->group(function () {
-        Route::get('/login', [UserAuthController::class, 'showLoginForm'])->name('login');
-        Route::post('/login', [UserAuthController::class, 'login']);
+        // User Login Routes
+        Route::get('/user/login', [UserAuthController::class, 'showUserLoginForm'])->name('user.login');
+        Route::post('/user/login', [UserAuthController::class, 'loginUser']);
+
+        // Provider Login Routes
+        Route::get('/provider/login', [UserAuthController::class, 'showProviderLoginForm'])->name('provider.login');
+        Route::post('/provider/login', [UserAuthController::class, 'loginProvider']);
+
+        // Redirect old login route to user login
+        Route::get('/login', function () {
+            return redirect()->route('user.login');
+        })->name('login');
     });
 
     // Logout route (accessible when logged in)

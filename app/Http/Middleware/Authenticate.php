@@ -20,11 +20,11 @@ class Authenticate extends Middleware
                 // Admin routes - redirect to admin login
                 return route('admin.showlogin');
             } elseif ($request->is('provider') || $request->is('provider/*')) {
-                // Provider routes - redirect to main login with provider context
-                return route('login') . '?type=provider';
+                // Provider routes - redirect to provider login
+                return route('provider.login');
             } else {
-                // User routes or general routes - redirect to main login
-                return route('login');
+                // User routes or general routes - redirect to user login
+                return route('user.login');
             }
         }
     }
