@@ -4,7 +4,7 @@
     <a href="{{ route('admin.dashboard') }}" class="brand-link">
         <img src="{{ asset('assets/admin/dist/img/AdminLTELogo.png') }}" alt="App Logo"
             class="brand-image img-circle elevation-3" style="opacity: .8">
-        <span class="brand-text font-weight-light">Dar Elnasher</span>
+        <span class="brand-text font-weight-light">Dar Waraqa</span>
     </a>
 
     <!-- Sidebar -->

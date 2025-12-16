@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('name_en');
             $table->string('name_ar');
             $table->double('selling_price');
-            $table->double('tax')->default(16);
+            $table->double('tax')->default(15);
             $table->string('photo')->nullable();
             $table->timestamps();
         });

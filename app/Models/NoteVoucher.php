@@ -40,4 +40,9 @@ class NoteVoucher extends Model
         return $this->hasMany(VoucherProduct::class);
     }
 
+    public function provider()
+    {
+        return $this->belongsTo(Provider::class);
+    }
+
 }

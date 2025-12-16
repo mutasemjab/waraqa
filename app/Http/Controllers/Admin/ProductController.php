@@ -15,13 +15,15 @@ class ProductController extends Controller
     {
         $query = $request->input('term');
         $products = Product::where('name_ar', 'LIKE', "%{$query}%")
+            ->orWhere('name_en', 'LIKE', "%{$query}%")
+            ->limit(10)
             ->get()
             ->map(function ($product) {
                 return [
                     'id' => $product->id,
-                    'name' => $product->name_ar,
+                    'name' => app()->getLocale() === 'ar' ? $product->name_ar : $product->name_en,
                     'tax' => $product->tax,
-                    'selling_price' => $product->selling_price_for_user,
+                    'selling_price' => $product->selling_price,
                 ];
             });
 
@@ -67,7 +69,7 @@ class ProductController extends Controller
             'category_id'   => $request->category_id,
             'provider_id'   => $request->provider_id,
             'selling_price' => $request->selling_price,
-            'tax'           => $request->tax ?? 16,
+            'tax'           => $request->tax ?? 15,
             'photo'         => $photoPath,
             'created_at'    => now(),
             'updated_at'    => now(),
@@ -121,7 +123,7 @@ class ProductController extends Controller
             'category_id'   => $request->category_id,
             'provider_id'   => $request->provider_id,
             'selling_price' => $request->selling_price,
-            'tax'           => $request->tax ?? 16,
+            'tax'           => $request->tax ?? 15,
             'photo'         => $photoPath,
             'updated_at'    => now(),
         ]);

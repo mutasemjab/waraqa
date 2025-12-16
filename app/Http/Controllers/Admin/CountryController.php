@@ -32,8 +32,8 @@ class CountryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name_ar' => 'required|string|max:255|unique:countries,name',
-            'name_en' => 'required|string|max:255|unique:countries,name',
+            'name_ar' => 'required|string|max:255|unique:countries,name_ar',
+            'name_en' => 'required|string|max:255|unique:countries,name_en',
         ]);
 
         DB::beginTransaction();
@@ -67,8 +67,8 @@ class CountryController extends Controller
     public function update(Request $request, Country $country)
     {
         $request->validate([
-            'name_ar' => 'required|string|max:255|unique:countries,name,' . $country->id,
-            'name_en' => 'required|string|max:255|unique:countries,name,' . $country->id,
+            'name_ar' => 'required|string|max:255|unique:countries,name_ar,' . $country->id,
+            'name_en' => 'required|string|max:255|unique:countries,name_en,' . $country->id,
         ]);
 
         DB::beginTransaction();

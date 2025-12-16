@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->unsignedBigInteger('from_warehouse_id')->nullable();
             $table->unsignedBigInteger('to_warehouse_id')->nullable();
+            $table->foreignId('provider_id')->nullable()->constrained('providers')->nullOnDelete();
             $table->unsignedBigInteger('order_id')->nullable();
             $table->unsignedBigInteger('note_voucher_type_id');
             $table->foreign('from_warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');

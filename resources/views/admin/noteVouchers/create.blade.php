@@ -4,7 +4,15 @@
 
 @section('content')
     <div class="container">
-        <h2>   {{ __('messages.New') }}  {{$note_voucher_type->in_out_type ==1 ? 'ادخال': 'اخراج' }}</h2>
+        <h2>
+            @if($note_voucher_type->in_out_type == 1)
+                {{ __('messages.in_out_type_1') }}
+            @elseif($note_voucher_type->in_out_type == 2)
+                {{ __('messages.in_out_type_2') }}
+            @else
+                {{ __('messages.in_out_type_3') }}
+            @endif
+        </h2>
         <form action="{{ route('noteVouchers.store') }}" method="POST">
             @csrf
 
@@ -25,31 +33,55 @@
 
 
 
-            <div class="col-md-6">
-                <div class="form-group mt-3">
-                    <label for="warehouse">{{ __('messages.fromWarehouse') }}</label>
-                    <select name="fromWarehouse" class="form-control" required>
-                        @foreach ($warehouses as $warehouse)
-                            <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
-                        @endforeach
-                    </select>
+            <!-- For Receipt Type (in_out_type = 1): From Provider to Warehouse -->
+            @if ($note_voucher_type->in_out_type == 1)
+                <div class="col-md-6">
+                    <x-search-select
+                        model="App\Models\Provider"
+                        fieldName="provider_id"
+                        label="provider"
+                        placeholder="Search..."
+                        limit="10"
+                        required="true"
+                    />
                 </div>
-            </div>
-           
-            @if ($note_voucher_type->in_out_type ==1 )
-                
-         
-            <div class="col-md-6">
-                <div class="form-group mt-3">
-                    <label for="warehouse">{{ __('messages.providers') }}</label>
-                    <select name="providers" class="form-control" required>
-                        @foreach ($providers as $provider)
-                            <option value="{{ $provider->id }}">{{ $provider->name }}</option>
-                        @endforeach
-                    </select>
+
+                <div class="col-md-6">
+                    <x-search-select
+                        model="App\Models\Warehouse"
+                        fieldName="toWarehouse"
+                        label="toWarehouse"
+                        placeholder="Search..."
+                        limit="10"
+                        required="true"
+                    />
                 </div>
-            </div>
-   @endif
+            @else
+                <!-- For Other Types: From Warehouse to Warehouse -->
+                <div class="col-md-6">
+                    <x-search-select
+                        model="App\Models\Warehouse"
+                        fieldName="fromWarehouse"
+                        label="fromWarehouse"
+                        placeholder="Search..."
+                        limit="10"
+                        required="true"
+                    />
+                </div>
+
+                @if ($note_voucher_type->in_out_type == 3)
+                    <div class="col-md-6">
+                        <x-search-select
+                            model="App\Models\Warehouse"
+                            fieldName="toWarehouse"
+                            label="toWarehouse"
+                            placeholder="Search..."
+                            limit="10"
+                            required="true"
+                        />
+                    </div>
+                @endif
+            @endif
 
 
          
@@ -67,9 +99,10 @@
             <table class="table table-bordered" id="products_table">
                 <thead>
                     <tr>
-                        <th>{{ __('messages.barcode') }}</th>
                         <th>{{ __('messages.product') }}</th>
                         <th>{{ __('messages.quantity') }}</th>
+                        <th>{{ __('messages.unit_price') }}</th>
+                        <th>{{ __('messages.tax') }}</th>
                         @if($note_voucher_type->have_price == 1)
                             <th>{{ __('messages.purchasing_Price') }}</th>
                         @endif
@@ -79,12 +112,15 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td><input type="text" class="form-control barcode-input" name="products[0][barcode]" /></td>
-                        <td><input type="text" class="form-control product-search" name="products[0][name]"/></td>
-                   
-                        <td><input type="number" class="form-control" name="products[0][quantity]" /></td>
+                        <td>
+                            <input type="hidden" class="form-control product-id" name="products[0][product_id]" />
+                            <input type="text" class="form-control product-search" name="products[0][name]" placeholder="{{ __('messages.Search_product') }}"/>
+                        </td>
+                        <td><input type="number" class="form-control product-quantity" name="products[0][quantity]" /></td>
+                        <td><input type="number" class="form-control product-price" name="products[0][price]" step="any" /></td>
+                        <td><input type="number" class="form-control product-tax" name="products[0][tax]" step="any" /></td>
                         @if($note_voucher_type->have_price == 1)
-                            <td><input type="number" class="form-control" name="products[0][purchasing_price]" step="any" /></td>
+                            <td><input type="number" class="form-control product-purchasing-price" name="products[0][purchasing_price]" step="any" /></td>
                         @endif
                         <td><input type="text" class="form-control" name="products[0][note]" /></td>
                         <td><button type="button" class="btn btn-danger remove-row">{{ __('messages.Delete') }}</button></td>
@@ -128,9 +164,9 @@ function setRedirect(value) {
                                 return {
                                     label: item.name,
                                     value: item.name,
-                                    units: item.units,
-                                    unit: item.unit,
-                                    id: item.id
+                                    id: item.id,
+                                    price: item.selling_price,
+                                    tax: item.tax
                                 };
                             }));
                         }
@@ -146,20 +182,11 @@ function setRedirect(value) {
                     event.preventDefault();
                 } else {
                     const selectedRow = $(this).closest('tr');
-                    const unitDropdown = selectedRow.find('.product-unit');
-                    unitDropdown.empty();
 
-                    // Add main unit as the first option
-                    if (ui.item.unit) {
-                        unitDropdown.append(`<option value="${ui.item.unit.id}">${ui.item.unit.name}</option>`);
-                    }
-
-                    // Add other units
-                    if (ui.item.units) {
-                        $.each(ui.item.units, function(index, unit) {
-                            unitDropdown.append(`<option value="${unit.id}">${unit.name}</option>`);
-                        });
-                    }
+                    // Fill product details
+                    selectedRow.find('.product-id').val(ui.item.id);
+                    selectedRow.find('.product-price').val(ui.item.price);
+                    selectedRow.find('.product-tax').val(ui.item.tax);
                 }
             }
         });
@@ -197,12 +224,12 @@ function setRedirect(value) {
 
                             row.find('.barcode-input').val(''); // Clear the barcode input for the next scan
                         } else {
-                            alert('{{ __('messages.Product not found') }}');
+                            alert('{{ __('messages.Product_not_found') }}');
                             row.find('.barcode-input').val(''); // Clear the barcode input for retry
                         }
                     },
                     error: function() {
-                        alert('{{ __('messages.Error fetching product') }}');
+                        alert('{{ __('messages.Error_fetching_product') }}');
                         row.find('.barcode-input').val(''); // Clear the barcode input
                     }
                 });
@@ -213,19 +240,28 @@ function setRedirect(value) {
     }
 
     $('#add_row').on('click', function() {
-        $('#products_table tbody').append(`
+        let newRowHtml = `
             <tr>
-                <td><input type="text" class="form-control barcode-input" name="products[${rowIdx}][barcode]" placeholder="{{ __('messages.Scan Barcode') }}" /></td>
-                <td><input type="text" class="form-control product-search" name="products[${rowIdx}][name]" /></td>
-            
-                <td><input type="number" class="form-control" name="products[${rowIdx}][quantity]" /></td>
-                @if($note_voucher_type->have_price == 1)
-                <td><input type="number" class="form-control" name="products[${rowIdx}][purchasing_price]" step="any" /></td>
-                @endif
+                <td>
+                    <input type="hidden" class="form-control product-id" name="products[${rowIdx}][product_id]" />
+                    <input type="text" class="form-control product-search" name="products[${rowIdx}][name]" placeholder="{{ __('messages.Search_product') }}"/>
+                </td>
+                <td><input type="number" class="form-control product-quantity" name="products[${rowIdx}][quantity]" /></td>
+                <td><input type="number" class="form-control product-price" name="products[${rowIdx}][price]" step="any" /></td>
+                <td><input type="number" class="form-control product-tax" name="products[${rowIdx}][tax]" step="any" /></td>
+        `;
+
+        @if($note_voucher_type->have_price == 1)
+            newRowHtml += `<td><input type="number" class="form-control product-purchasing-price" name="products[${rowIdx}][purchasing_price]" step="any" /></td>`;
+        @endif
+
+        newRowHtml += `
                 <td><input type="text" class="form-control" name="products[${rowIdx}][note]" /></td>
                 <td><button type="button" class="btn btn-danger remove-row">{{ __('messages.Delete') }}</button></td>
             </tr>
-        `);
+        `;
+
+        $('#products_table tbody').append(newRowHtml);
         rowIdx++;
         initializeProductSearch();
     });

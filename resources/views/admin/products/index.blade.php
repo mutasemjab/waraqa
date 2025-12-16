@@ -45,10 +45,18 @@
                                             <strong>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</strong>
                                         </td>
                                         <td>
-                                            <strong>{{ app()->getLocale() == 'ar' ? $product->category->name_ar : $product->category->name_en }}</strong>
+                                            @if($product->category)
+                                                <strong>{{ app()->getLocale() == 'ar' ? $product->category->name_ar : $product->category->name_en }}</strong>
+                                            @else
+                                                <span class="text-muted">{{ __('messages.No_Category') }}</span>
+                                            @endif
                                         </td>
                                         <td>
-                                            <strong>{{$product->provider->name }}</strong>
+                                            @if($product->provider)
+                                                <strong>{{ $product->provider->name }}</strong>
+                                            @else
+                                                <span class="text-muted">{{ __('messages.No_Provider') }}</span>
+                                            @endif
                                         </td>
                                        
                                         <td>{{ number_format($product->selling_price, 2) }} </td>

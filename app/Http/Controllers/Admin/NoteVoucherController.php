@@ -50,20 +50,33 @@ class NoteVoucherController extends Controller
 
 
 
-   public function store(Request $request) 
+   public function store(Request $request)
     {
         $lastNoteVoucher = NoteVoucher::orderBy('id', 'desc')->first();
         $newNumber = $lastNoteVoucher ? $lastNoteVoucher->id + 1 : 1;
 
+        // Get note voucher type to check if it's receipt (in_out_type = 1)
+        $noteVoucherType = NoteVoucherType::findOrFail($request['note_voucher_type_id']);
+
         // Create the note voucher
-        $noteVoucher = NoteVoucher::create([
+        $noteVoucherData = [
             'note_voucher_type_id' => $request['note_voucher_type_id'],
             'date_note_voucher' => $request['date_note_voucher'],
             'number' => $newNumber,
-            'from_warehouse_id' => $request['fromWarehouse'],
-            'to_warehouse_id' => $request['toWarehouse'] ?? null,
             'note' => $request['note'],
-        ]);
+        ];
+
+        // For receipt type (in_out_type = 1), provider is from and warehouse is to
+        if ($noteVoucherType->in_out_type == 1) {
+            $noteVoucherData['provider_id'] = $request['provider_id'];
+            $noteVoucherData['to_warehouse_id'] = $request['toWarehouse'];
+        } else {
+            // For other types, use the warehouse logic
+            $noteVoucherData['from_warehouse_id'] = $request['fromWarehouse'];
+            $noteVoucherData['to_warehouse_id'] = $request['toWarehouse'] ?? null;
+        }
+
+        $noteVoucher = NoteVoucher::create($noteVoucherData);
 
         // Save the products and update quantities
         foreach ($request['products'] as $productData) {

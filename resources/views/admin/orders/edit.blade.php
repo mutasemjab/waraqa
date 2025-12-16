@@ -14,6 +14,23 @@
                         <div class="alert alert-danger">{{ session('error') }}</div>
                     @endif
 
+                    <!-- Store products data for JavaScript -->
+                    @php
+                        $productsArray = $products->map(function($p) {
+                            return [
+                                'id' => $p->id,
+                                'name_en' => $p->name_en,
+                                'name_ar' => $p->name_ar ?? $p->name_en,
+                                'price' => $p->selling_price,
+                                'tax' => $p->tax ?? 15
+                            ];
+                        })->toArray();
+                    @endphp
+                    <script>
+                        const productsData = @json($productsArray);
+                        const currentLocale = '{{ app()->getLocale() }}';
+                    </script>
+
                     <form action="{{ route('orders.update', $order) }}" method="POST" id="orderForm">
                         @csrf
                         @method('PUT')
@@ -54,11 +71,15 @@
                                             <select name="products[{{ $index }}][id]" class="form-control product-select" required>
                                                 <option value="">{{ __('messages.select_product') }}</option>
                                                 @foreach($products as $product)
-                                                    <option value="{{ $product->id }}" 
+                                                    <option value="{{ $product->id }}"
                                                             data-price="{{ $product->selling_price }}"
                                                             data-tax="{{ $product->tax }}"
                                                             {{ $orderProduct->product_id == $product->id ? 'selected' : '' }}>
-                                                        {{ $product->name_en }} - ${{ $product->selling_price }}
+                                                        @if(app()->getLocale() === 'ar')
+                                                            {{ $product->name_ar ?? $product->name_en }} - {{ $product->selling_price }}
+                                                        @else
+                                                            {{ $product->name_en }} - {{ $product->selling_price }}
+                                                        @endif
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -148,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add-product').addEventListener('click', function() {
         const container = document.getElementById('products-container');
         const newRow = container.children[0].cloneNode(true);
-        
+
         // Update indices
         newRow.querySelectorAll('[name]').forEach(input => {
             const currentName = input.name;
@@ -161,13 +182,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-        
-        newRow.querySelector('.line-total').textContent = '$0.00';
+
+        // Regenerate product options with correct language
+        const productSelect = newRow.querySelector('.product-select');
+        productSelect.innerHTML = '<option value="">{{ __('messages.select_product') }}</option>';
+
+        productsData.forEach(product => {
+            const displayName = currentLocale === 'ar' ? product.name_ar : product.name_en;
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.dataset.price = product.price;
+            option.dataset.tax = product.tax;
+            option.textContent = `${displayName} - ${product.price}`;
+            productSelect.appendChild(option);
+        });
+
+        newRow.querySelector('.line-total').textContent = '0.00';
         newRow.querySelector('.remove-product').disabled = false;
-        
+
         container.appendChild(newRow);
         productIndex++;
-        
+
         attachEventListeners(newRow);
     });
     

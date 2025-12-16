@@ -14,17 +14,17 @@
                         @method('PUT')
                         
                         <div class="mb-3">
-                            <label for="name_en" class="form-label">
-                                {{ __('messages.Name_English') }}
+                            <label for="name_ar" class="form-label">
+                                {{ __('messages.Name_Arabic') }}
                             </label>
-                            <input type="text" 
-                                   class="form-control @error('name_en') is-invalid @enderror" 
-                                   id="name_en" 
-                                   name="name_en" 
-                                   value="{{ old('name_en', $category->name_en) }}" 
-                                   placeholder="{{ __('messages.Enter_English_Name') }}"
+                            <input type="text"
+                                   class="form-control @error('name_ar') is-invalid @enderror"
+                                   id="name_ar"
+                                   name="name_ar"
+                                   value="{{ old('name_ar', $category->name_ar) }}"
+                                   placeholder="{{ __('messages.Enter_Arabic_Name') }}"
                                    required>
-                            @error('name_en')
+                            @error('name_ar')
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>
@@ -32,17 +32,17 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="name_ar" class="form-label">
-                                {{ __('messages.Name_Arabic') }}
+                            <label for="name_en" class="form-label">
+                                {{ __('messages.Name_English') }}
                             </label>
-                            <input type="text" 
-                                   class="form-control @error('name_ar') is-invalid @enderror" 
-                                   id="name_ar" 
-                                   name="name_ar" 
-                                   value="{{ old('name_ar', $category->name_ar) }}" 
-                                   placeholder="{{ __('messages.Enter_Arabic_Name') }}"
+                            <input type="text"
+                                   class="form-control @error('name_en') is-invalid @enderror"
+                                   id="name_en"
+                                   name="name_en"
+                                   value="{{ old('name_en', $category->name_en) }}"
+                                   placeholder="{{ __('messages.Enter_English_Name') }}"
                                    required>
-                            @error('name_ar')
+                            @error('name_en')
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>

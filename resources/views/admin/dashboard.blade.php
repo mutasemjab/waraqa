@@ -49,6 +49,12 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+.card-footer .btn {
+    color: white !important;
+}
+.card-footer .btn:hover {
+    color: white !important;
+}
 </style>
 @endsection
 
@@ -82,6 +88,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('users.index') }}" class="btn btn-sm btn-primary text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
+                </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
@@ -99,6 +110,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('providers.index') }}" class="btn btn-sm btn-primary text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
+                </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
@@ -115,6 +131,11 @@
                             <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
                         </div>
                     </div>
+                </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('orders.index') }}" class="btn btn-sm btn-primary text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
                 </div>
             </div>
         </div>
@@ -135,6 +156,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-sm btn-warning text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -154,6 +180,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('orders.index', ['status' => 3]) }}" class="btn btn-sm btn-success text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -172,6 +203,11 @@
                             <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
                         </div>
                     </div>
+                </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('orders.index', ['date' => today()->format('Y-m-d')]) }}" class="btn btn-sm btn-info text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
                 </div>
             </div>
         </div>
@@ -195,6 +231,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('orders.index', ['date' => today()->format('Y-m-d')]) }}" class="btn btn-sm btn-dark text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -214,6 +255,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('orders.index', ['status' => 4]) }}" class="btn btn-sm btn-danger text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -232,6 +278,11 @@
                             <i class="fas fa-chart-line fa-2x text-gray-300"></i>
                         </div>
                     </div>
+                </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('orders.index') }}" class="btn btn-sm btn-secondary text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
                 </div>
             </div>
         </div>
@@ -254,6 +305,11 @@
                             <i class="fas fa-percentage fa-2x text-gray-300"></i>
                         </div>
                     </div>
+                </div>
+                <div class="card-footer bg-light py-2 text-center">
+                    <a href="{{ route('orders.index', ['status' => 3]) }}" class="btn btn-sm btn-success text-white">
+                        <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
+                    </a>
                 </div>
             </div>
         </div>

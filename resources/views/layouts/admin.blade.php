@@ -26,6 +26,7 @@
     @endif
     <link rel="stylesheet" href="{{ asset('assets/admin/css/mycustomstyle.css') }}">
     @yield('css')
+    @stack('styles')
 </head>
 <body class="hold-transition sidebar-mini">
     <?php $user = auth()->user(); ?>
@@ -48,8 +49,8 @@
     <!-- AdminLTE App -->
     <script src="{{ asset('assets/admin/dist/js/adminlte.min.js') }}"></script>
     <script src="{{ asset('assets/admin/js/general.js') }}"></script>
-
     @yield('script')
     @yield('js')
+    @stack('scripts')
 </body>
 </html>

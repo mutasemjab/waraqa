@@ -10,6 +10,23 @@
                     <h4>{{ __('messages.create_new_order') }}</h4>
                 </div>
                 <div class="card-body">
+                    <!-- Store products data for JavaScript -->
+                    @php
+                        $productsArray = $products->map(function($p) {
+                            return [
+                                'id' => $p->id,
+                                'name_en' => $p->name_en,
+                                'name_ar' => $p->name_ar ?? $p->name_en,
+                                'price' => $p->selling_price,
+                                'tax' => $p->tax ?? 15
+                            ];
+                        })->toArray();
+                    @endphp
+                    <script>
+                        const productsData = @json($productsArray);
+                        const currentLocale = '{{ app()->getLocale() }}';
+                    </script>
+
                     <form action="{{ route('orders.store') }}" method="POST" id="orderForm">
                         @csrf
                         
@@ -32,10 +49,14 @@
                                             <select name="products[0][id]" class="form-control product-select" required>
                                                 <option value="">{{ __('messages.select_product') }}</option>
                                                 @foreach($products as $product)
-                                                    <option value="{{ $product->id }}" 
+                                                    <option value="{{ $product->id }}"
                                                             data-price="{{ $product->selling_price }}"
-                                                            data-tax="{{ $product->tax }}">
-                                                        {{ $product->name_en }} - ${{ $product->selling_price }}
+                                                            data-tax="{{ $product->tax ?? 15 }}">
+                                                        @if(app()->getLocale() === 'ar')
+                                                            {{ $product->name_ar ?? $product->name_en }} - {{ $product->selling_price }}
+                                                        @else
+                                                            {{ $product->name_en }} - {{ $product->selling_price }}
+                                                        @endif
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -46,7 +67,7 @@
                                                    placeholder="{{ __('messages.quantity') }}" min="1" required>
                                         </div>
                                         <div class="col-md-2">
-                                            <span class="line-total">$0.00</span>
+                                            <span><x-riyal-icon style="width: 14px; height: 14px;" /> <span class="line-total">0.00</span></span>
                                         </div>
                                         <div class="col-md-1">
                                             <button type="button" class="btn btn-danger remove-product" disabled>×</button>
@@ -70,21 +91,21 @@
                                     <label>{{ __('messages.order_summary') }}</label>
                                     <div class="card">
                                         <div class="card-body">
-                                            <div class="d-flex justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-center">
                                                 <span>{{ __('messages.subtotal') }}:</span>
-                                                <span id="subtotal">$0.00</span>
+                                                <span><x-riyal-icon /> <span id="subtotal">0.00</span></span>
                                             </div>
-                                            <div class="d-flex justify-content-between">
+                                            <div class="d-flex justify-content-between align-items-center">
                                                 <span>{{ __('messages.tax') }}:</span>
-                                                <span id="tax-total">$0.00</span>
+                                                <span><x-riyal-icon /> <span id="tax-total">0.00</span></span>
                                             </div>
-                                            <div class="d-flex justify-content-between font-weight-bold">
+                                            <div class="d-flex justify-content-between font-weight-bold align-items-center">
                                                 <span>{{ __('messages.total') }}:</span>
-                                                <span id="grand-total">$0.00</span>
+                                                <span><x-riyal-icon /> <span id="grand-total">0.00</span></span>
                                             </div>
-                                            <div class="d-flex justify-content-between text-muted">
+                                            <div class="d-flex justify-content-between text-muted align-items-center">
                                                 <span>{{ __('messages.remaining') }}:</span>
-                                                <span id="remaining-amount">$0.00</span>
+                                                <span><x-riyal-icon /> <span id="remaining-amount">0.00</span></span>
                                             </div>
                                         </div>
                                     </div>
@@ -116,19 +137,33 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add-product').addEventListener('click', function() {
         const container = document.getElementById('products-container');
         const newRow = container.children[0].cloneNode(true);
-        
+
         // Update indices
         newRow.querySelectorAll('[name]').forEach(input => {
             input.name = input.name.replace(/\[0\]/, `[${productIndex}]`);
             input.value = '';
         });
-        
-        newRow.querySelector('.line-total').textContent = '$0.00';
+
+        // Regenerate product options with correct language
+        const productSelect = newRow.querySelector('.product-select');
+        productSelect.innerHTML = '<option value="">{{ __('messages.select_product') }}</option>';
+
+        productsData.forEach(product => {
+            const displayName = currentLocale === 'ar' ? product.name_ar : product.name_en;
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.dataset.price = product.price;
+            option.dataset.tax = product.tax;
+            option.textContent = `${displayName} - ${product.price}`;
+            productSelect.appendChild(option);
+        });
+
+        newRow.querySelector('.line-total').textContent = '0.00';
         newRow.querySelector('.remove-product').disabled = false;
-        
+
         container.appendChild(newRow);
         productIndex++;
-        
+
         attachEventListeners(newRow);
     });
     
@@ -165,49 +200,49 @@ document.addEventListener('DOMContentLoaded', function() {
         const productSelect = row.querySelector('.product-select');
         const quantityInput = row.querySelector('.quantity-input');
         const lineTotalSpan = row.querySelector('.line-total');
-        
+
         const selectedOption = productSelect.options[productSelect.selectedIndex];
         const price = parseFloat(selectedOption.dataset.price) || 0;
-        const tax = parseFloat(selectedOption.dataset.tax) || 0;
+        const tax = parseFloat(selectedOption.dataset.tax) || 15;
         const quantity = parseInt(quantityInput.value) || 0;
-        
+
         const subtotal = price * quantity;
         const taxAmount = (subtotal * tax) / 100;
         const total = subtotal + taxAmount;
         
-        lineTotalSpan.textContent = `$${total.toFixed(2)}`;
-        
+        lineTotalSpan.textContent = `${total.toFixed(2)}`;
+
         calculateTotals();
     }
-    
+
     function calculateTotals() {
         let subtotal = 0;
         let totalTax = 0;
-        
+
         document.querySelectorAll('.product-row').forEach(row => {
             const productSelect = row.querySelector('.product-select');
             const quantityInput = row.querySelector('.quantity-input');
-            
+
             const selectedOption = productSelect.options[productSelect.selectedIndex];
             const price = parseFloat(selectedOption.dataset.price) || 0;
-            const tax = parseFloat(selectedOption.dataset.tax) || 0;
+            const tax = parseFloat(selectedOption.dataset.tax) || 15;
             const quantity = parseInt(quantityInput.value) || 0;
-            
+
             const lineSubtotal = price * quantity;
             const lineTax = (lineSubtotal * tax) / 100;
-            
+
             subtotal += lineSubtotal;
             totalTax += lineTax;
         });
-        
+
         const grandTotal = subtotal + totalTax;
         const paidAmount = parseFloat(document.getElementById('paid_amount').value) || 0;
         const remainingAmount = Math.max(0, grandTotal - paidAmount);
-        
-        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('tax-total').textContent = `$${totalTax.toFixed(2)}`;
-        document.getElementById('grand-total').textContent = `$${grandTotal.toFixed(2)}`;
-        document.getElementById('remaining-amount').textContent = `$${remainingAmount.toFixed(2)}`;
+
+        document.getElementById('subtotal').textContent = `${subtotal.toFixed(2)}`;
+        document.getElementById('tax-total').textContent = `${totalTax.toFixed(2)}`;
+        document.getElementById('grand-total').textContent = `${grandTotal.toFixed(2)}`;
+        document.getElementById('remaining-amount').textContent = `${remainingAmount.toFixed(2)}`;
     }
 });
 </script>

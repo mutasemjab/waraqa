@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\ContactUsController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\Provider\ProviderDashboardController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TripTypeController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\UserDashboardController;
@@ -99,24 +100,32 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 Route::middleware(['auth:provider'])->prefix('provider')->name('provider.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [ProviderDashboardController::class, 'index'])->name('dashboard');
-    
+
     // Profile Management
     Route::get('/profile', [ProviderDashboardController::class, 'profile'])->name('profile');
     Route::post('/profile', [ProviderDashboardController::class, 'updateProfile'])->name('profile.update');
-    
+
     // Products Management
     Route::get('/products', [ProviderDashboardController::class, 'products'])->name('products');
+    Route::get('/products/create', [ProviderDashboardController::class, 'createProduct'])->name('products.create');
+    Route::post('/products', [ProviderDashboardController::class, 'storeProduct'])->name('products.store');
     Route::get('/products/{product}/details', [ProviderDashboardController::class, 'productDetails'])->name('products.details');
-    
+    Route::get('/products/{product}/edit', [ProviderDashboardController::class, 'editProduct'])->name('products.edit');
+    Route::put('/products/{product}', [ProviderDashboardController::class, 'updateProduct'])->name('products.update');
+    Route::delete('/products/{product}', [ProviderDashboardController::class, 'deleteProduct'])->name('products.destroy');
+
     // Orders Management
     Route::get('/orders', [ProviderDashboardController::class, 'orders'])->name('orders');
-    
+
     // Users/Customers Management
     Route::get('/users', [ProviderDashboardController::class, 'users'])->name('users');
     Route::get('/users/{user}/details', [ProviderDashboardController::class, 'userDetails'])->name('users.details');
-    
+
     // Analytics & Reports
     Route::get('/analytics', [ProviderDashboardController::class, 'analytics'])->name('analytics');
 });
+
+// Search Items Route (for search-select component)
+Route::get('/search/items', [SearchController::class, 'searchItems'])->name('search.items');
 
 });

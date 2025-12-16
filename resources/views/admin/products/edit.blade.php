@@ -19,17 +19,17 @@
                                 <h5 class="mb-3">{{ __('messages.Basic_Information') }}</h5>
 
                                 <div class="mb-3">
-                                    <label for="name_en" class="form-label">{{ __('messages.Name_English') }}</label>
-                                    <input type="text" class="form-control @error('name_en') is-invalid @enderror"
-                                           id="name_en" name="name_en" value="{{ old('name_en', $product->name_en) }}" required>
-                                    @error('name_en')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-
-                                <div class="mb-3">
                                     <label for="name_ar" class="form-label">{{ __('messages.Name_Arabic') }}</label>
                                     <input type="text" class="form-control @error('name_ar') is-invalid @enderror"
                                            id="name_ar" name="name_ar" value="{{ old('name_ar', $product->name_ar) }}" required>
                                     @error('name_ar')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="name_en" class="form-label">{{ __('messages.Name_English') }}</label>
+                                    <input type="text" class="form-control @error('name_en') is-invalid @enderror"
+                                           id="name_en" name="name_en" value="{{ old('name_en', $product->name_en) }}" required>
+                                    @error('name_en')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
                                 <div class="mb-3">
@@ -61,15 +61,20 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="selling_price" class="form-label">{{ __('messages.Price') }}</label>
+                                    <label for="selling_price" class="form-label">{{ __('messages.Price_with_tax') }} (15%)</label>
                                     <input type="number" class="form-control @error('selling_price') is-invalid @enderror"
                                            id="selling_price" name="selling_price"
                                            value="{{ old('selling_price', $product->selling_price) }}"
-                                           step="0.01" min="0" required>
+                                           step="any" min="0" required>
                                     @error('selling_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
-                              
+                                <div class="mb-3">
+                                    <label for="tax" class="form-label">{{ __('messages.Tax_Value') }}</label>
+                                    <input type="number" class="form-control"
+                                           id="tax" name="tax" value="{{ old('tax', $product->tax ?? 15) }}" step="any" min="0">
+                                </div>
+
                             </div>
                         </div>
 
