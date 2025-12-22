@@ -1264,5 +1264,4 @@ return [
     'Uncheck All' => 'إلغاء تحديد الكل',
     'Enter role name' => 'أدخل اسم الدور',
     'No data found' => 'لم يتم العثور على بيانات',
-
 ];
