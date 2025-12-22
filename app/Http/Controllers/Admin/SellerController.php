@@ -224,4 +224,34 @@ class SellerController extends Controller
             ->route('sellers.index')
             ->with('success', 'Seller deleted successfully');
     }
+
+    /**
+     * Search for sellers (API endpoint)
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function search(Request $request)
+    {
+        $term = $request->get('term', '');
+        $limit = $request->get('limit', 5);
+
+        $sellers = User::role('seller')
+            ->where('activate', 1)
+            ->where(function ($query) use ($term) {
+                $query->where('name', 'like', "%{$term}%")
+                    ->orWhere('phone', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%");
+            })
+            ->limit($limit)
+            ->get()
+            ->map(function ($seller) {
+                return [
+                    'id' => $seller->id,
+                    'text' => $seller->name
+                ];
+            });
+
+        return response()->json($sellers);
+    }
 }

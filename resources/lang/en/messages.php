@@ -1210,4 +1210,10 @@ return [
     'Enter role name' => 'Enter role name',
     'No data found' => 'No data found',
 
+    // Events related
+    'select_event' => 'Select Event',
+    'choose_event' => 'Choose an event',
+    'no_valid_events' => 'No valid events available',
+    'error_loading_events' => 'Error loading events',
+
 ];

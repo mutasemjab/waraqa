@@ -27,7 +27,10 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->double('paid_amount')->default(0);
             $table->double('remaining_amount')->default(0);
-    
+
+            $table->unsignedBigInteger('event_id')->nullable();
+            $table->foreign('event_id')->references('id')->on('events')->onDelete('set null');
+
             $table->timestamps();
         });
     }

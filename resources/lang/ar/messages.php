@@ -1275,4 +1275,11 @@ return [
     'Uncheck All' => 'إلغاء تحديد الكل',
     'Enter role name' => 'أدخل اسم الدور',
     'No data found' => 'لم يتم العثور على بيانات',
+
+    // الفعاليات
+    'select_event' => 'اختر الفعالية',
+    'choose_event' => 'اختر فعالية',
+    'no_valid_events' => 'لا توجد فعاليات صالحة',
+    'error_loading_events' => 'خطأ في تحميل الفعاليات',
+
 ];

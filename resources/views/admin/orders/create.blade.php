@@ -13,14 +13,20 @@
 
                     <form action="{{ route('orders.store') }}" method="POST" id="orderForm">
                         @csrf
-                        
+
                         <div class="form-group mb-3">
                             <label for="user_id">{{ __('messages.select_user') }}</label>
-                            <select name="user_id" id="user_id" class="form-control" required>
-                                <option value="">{{ __('messages.choose_user') }}</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }} - {{ $user->phone }}</option>
-                                @endforeach
+                            <input type="hidden" name="user_id" id="user_id" value="">
+                            <input type="text" id="seller_search" class="form-control"
+                                   placeholder="{{ __('messages.search') }}" autocomplete="off">
+                            <div id="sellers-dropdown" class="border rounded mt-1" style="display:none; position: absolute; width: 100%; max-height: 300px; overflow-y: auto; background: white; z-index: 1000;">
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="event_id">{{ __('messages.select_event') }}</label>
+                            <select name="event_id" id="event_id" class="form-control">
+                                <option value="">{{ __('messages.choose_event') }}</option>
                             </select>
                         </div>
 
@@ -279,6 +285,93 @@ $(document).ready(function() {
 
     // Paid amount change
     $('#paid_amount').on('input', calculateTotals);
+
+    // Seller search functionality
+    let sellerSearchTimer;
+    $('#seller_search').on('input', function() {
+        const term = $(this).val().trim();
+        const dropdown = $('#sellers-dropdown');
+
+        if (term.length < 1) {
+            dropdown.hide();
+            return;
+        }
+
+        clearTimeout(sellerSearchTimer);
+        sellerSearchTimer = setTimeout(() => {
+            $.ajax({
+                url: '{{ route("sellers.search") }}',
+                method: 'GET',
+                data: { term: term, limit: 5 },
+                success: function(data) {
+                    if (data.length > 0) {
+                        let html = '';
+                        data.forEach(function(seller) {
+                            html += `<div class="p-2 border-bottom seller-item" data-id="${seller.id}" data-text="${seller.text}" style="cursor: pointer;">
+                                    ${seller.text}
+                                </div>`;
+                        });
+                        dropdown.html(html).show();
+
+                        // Add click handlers to seller items
+                        $('.seller-item').on('click', function() {
+                            const id = $(this).data('id');
+                            const text = $(this).data('text');
+                            $('#user_id').val(id);
+                            $('#seller_search').val(text);
+                            dropdown.hide();
+                            $('#user_id').trigger('change');
+                        });
+                    } else {
+                        dropdown.html('<div class="p-2">{{ __("messages.no_results") }}</div>').show();
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error searching sellers:', xhr);
+                }
+            });
+        }, 300);
+    });
+
+    // Close dropdown when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#seller_search, #sellers-dropdown').length) {
+            $('#sellers-dropdown').hide();
+        }
+    });
+
+    // Load seller events when user is selected
+    $(document).on('change', '#user_id', function() {
+        const sellerId = $(this).val();
+        const eventSelect = $('#event_id');
+
+        if (!sellerId) {
+            eventSelect.html('<option value="">{{ __("messages.choose_event") }}</option>');
+            return;
+        }
+
+        $.ajax({
+            url: '{{ route("sellers.events", ":sellerId") }}'.replace(':sellerId', sellerId),
+            method: 'GET',
+            success: function(data) {
+                let options = '<option value="">{{ __("messages.choose_event") }}</option>';
+
+                if (data.length > 0) {
+                    data.forEach(function(event) {
+                        options += `<option value="${event.id}">${event.text}</option>`;
+                    });
+                } else {
+                    options = '<option value="">{{ __("messages.no_valid_events") }}</option>';
+                }
+
+                eventSelect.html(options);
+            },
+            error: function(xhr) {
+                console.error('Error fetching events:', xhr);
+                eventSelect.html('<option value="">{{ __("messages.error_loading_events") }}</option>');
+            }
+        });
+    });
 });
 </script>
 @endsection

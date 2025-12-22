@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Driver;
 use App\Models\DriverAssignment;
 use App\Models\DriverSchedule;
+use App\Models\Event;
 use App\Models\NoteVoucher;
 use App\Models\OrderProduct;
 use App\Models\Product;
@@ -55,6 +56,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
+            'event_id' => 'nullable|exists:events,id',
             'products' => 'required|array',
             'products.*.id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|integer|min:1',
@@ -108,7 +110,8 @@ class OrderController extends Controller
                 'order_type' => 1,
                 'date' => now(),
                 'note' => $request->note,
-                'user_id' => $request->user_id
+                'user_id' => $request->user_id,
+                'event_id' => $request->event_id
             ]);
 
             // Create order products
@@ -190,6 +193,7 @@ public function update(Request $request, Order $order)
 {
     $request->validate([
         'user_id' => 'required|exists:users,id',
+        'event_id' => 'nullable|exists:events,id',
         'products' => 'required|array',
         'products.*.id' => 'required|exists:products,id',
         'products.*.quantity' => 'required|integer|min:1',
@@ -257,7 +261,8 @@ public function update(Request $request, Order $order)
             'remaining_amount' => $remainingAmount,
             'payment_status' => $remainingAmount > 0 ? 2 : 1,
             'note' => $request->note,
-            'user_id' => $request->user_id
+            'user_id' => $request->user_id,
+            'event_id' => $request->event_id
         ]);
 
         // Delete existing order products
@@ -340,6 +345,33 @@ public function update(Request $request, Order $order)
         DB::rollback();
         return back()->with('error', __('messages.error_updating_order') . ': ' . $e->getMessage());
     }
+}
+
+/**
+ * Get seller events with valid dates (API endpoint)
+ *
+ * @param int $sellerId
+ * @return \Illuminate\Http\Response
+ */
+public function getSellerEvents($sellerId)
+{
+    $seller = User::findOrFail($sellerId);
+    $now = now();
+
+    $events = Event::where('user_id', $seller->id)
+        ->where(function ($query) use ($now) {
+            $query->where('start_date', '<=', $now)
+                ->where('end_date', '>=', $now);
+        })
+        ->get()
+        ->map(function ($event) {
+            return [
+                'id' => $event->id,
+                'text' => $event->name
+            ];
+        });
+
+    return response()->json($events);
 }
 
 

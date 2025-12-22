@@ -37,6 +37,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         // API Routes (inside localization scope for proper locale detection)
         Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
         Route::get('/products/{productId}/available-quantity', [ProductController::class, 'availableQuantity'])->name('products.available-quantity');
+        Route::get('/sellers/search', [SellerController::class, 'search'])->name('sellers.search');
+        Route::get('/sellers/{sellerId}/events', [OrderController::class, 'getSellerEvents'])->name('sellers.events');
         Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('logout', [LoginController::class, 'logout'])->name('admin.logout');
 
