@@ -21,8 +21,13 @@ use Maatwebsite\Excel\Excel as ExcelWriter;
 
 class NoteVoucherController extends Controller
 {
-
-
+    public function __construct()
+    {
+        $this->middleware('permission:noteVoucher-table')->only(['index']);
+        $this->middleware('permission:noteVoucher-add')->only(['create', 'store']);
+        $this->middleware('permission:noteVoucher-edit')->only(['edit', 'update']);
+        $this->middleware('permission:noteVoucher-delete')->only(['destroy']);
+    }
 
     public function index()
     {

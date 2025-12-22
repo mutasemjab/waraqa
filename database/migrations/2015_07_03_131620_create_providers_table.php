@@ -15,16 +15,11 @@ return new class extends Migration
     {
         Schema::create('providers', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('phone')->unique();
-            $table->string('email')->nullable()->unique();
-            $table->string('password');
-            $table->string('photo')->nullable();
-            $table->text('fcm_token')->nullable();
-            $table->tinyInteger('activate')->default(1); // 1 yes //2 no
-            $table->unsignedBigInteger('country_id')->nullable();
-            $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade');
-            $table->rememberToken();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->text('description')->nullable();
+            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
+            $table->decimal('rating', 3, 2)->default(0);
             $table->timestamps();
         });
     }

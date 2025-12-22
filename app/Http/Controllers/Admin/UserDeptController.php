@@ -12,6 +12,16 @@ use Illuminate\Support\Facades\Validator;
 
 class UserDeptController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:user_dept-table')->only(['index']);
+        $this->middleware('permission:user_dept-add')->only(['create', 'store']);
+        $this->middleware('permission:user_dept-edit')->only(['edit', 'update']);
+        $this->middleware('permission:user_dept-delete')->only(['destroy']);
+        $this->middleware('permission:user_dept-make_payment')->only(['makePayment']);
+        $this->middleware('permission:user_dept-view_summary')->only(['userSummary']);
+    }
+
     /**
      * Display a listing of the resource.
      */

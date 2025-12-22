@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
@@ -29,6 +27,11 @@ class Product extends Model
     public function provider()
     {
         return $this->belongsTo(Provider::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function orderProducts()

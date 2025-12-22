@@ -36,7 +36,7 @@ define('PAGINATION_COUNT',11);
 
 Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath']], function () {
 
- Route::group(['prefix'=>'admin','middleware'=>'auth:admin'],function(){
+ Route::group(['prefix'=>'admin','middleware'=>['auth:web', 'role:admin']],function(){
 
 // API Routes (inside localization scope for proper locale detection)
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
@@ -89,7 +89,7 @@ Route::get('user_summary/{userId}', [UserDeptController::class, 'userSummary'])-
 
 
 
-Route::group(['namespace'=>'Admin','prefix'=>'admin','middleware'=>'guest:admin'],function(){
+Route::group(['namespace'=>'Admin','prefix'=>'admin','middleware'=>'guest'],function(){
     Route::get('login',[LoginController::class,'show_login_view'])->name('admin.showlogin');
     Route::post('login',[LoginController::class,'login'])->name('admin.login');
 

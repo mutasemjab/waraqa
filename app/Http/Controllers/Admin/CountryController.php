@@ -16,6 +16,13 @@ use Illuminate\Support\Facades\DB;
 
 class CountryController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:country-table')->only(['index']);
+        $this->middleware('permission:country-add')->only(['create', 'store']);
+        $this->middleware('permission:country-edit')->only(['edit', 'update']);
+    }
+
     public function index()
     {
         $countries = Country::paginate(10);

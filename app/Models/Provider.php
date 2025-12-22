@@ -3,29 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Passport\HasApiTokens;
+use Illuminate\Database\Eloquent\Model;
 
-
-class Provider extends Authenticatable
+class Provider extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory;
 
     protected $guarded = [];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
 
     // Add all photo URL attributes to the appends array
     protected $appends = [
         'photo_url',
+        'name',
+        'email',
+        'phone',
+        'photo',
+        'fcm_token',
+        'activate',
+        'country_id',
     ];
-    
 
-    
+
+
     /**
      * Helper method to generate image URLs
      *
@@ -38,17 +37,56 @@ class Provider extends Authenticatable
             $baseUrl = rtrim(config('app.url'), '/');
             return $baseUrl . '/assets/admin/uploads/' . $imageName;
         }
-        
+
         return null;
     }
-    
-    // Accessor for photo URL
+
     public function getPhotoUrlAttribute()
     {
-        return $this->getImageUrl($this->photo);
+        return $this->user ? $this->user->photo_url : null;
     }
 
-     public function products()
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->user?->name;
+    }
+
+    public function getEmailAttribute()
+    {
+        return $this->user?->email;
+    }
+
+    public function getPhoneAttribute()
+    {
+        return $this->user?->phone;
+    }
+
+    public function getPhotoAttribute()
+    {
+        return $this->user?->photo;
+    }
+
+    public function getFcmTokenAttribute()
+    {
+        return $this->user?->fcm_token;
+    }
+
+    public function getActivateAttribute()
+    {
+        return $this->user?->activate;
+    }
+
+    public function getCountryIdAttribute()
+    {
+        return $this->user?->country_id;
+    }
+
+    public function products()
     {
         return $this->hasMany(Product::class);
     }
@@ -62,5 +100,4 @@ class Provider extends Authenticatable
     {
         return $this->hasMany(BookRequestResponse::class);
     }
-
 }

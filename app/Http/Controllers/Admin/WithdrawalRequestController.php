@@ -63,7 +63,6 @@ class WithdrawalRequestController  extends Controller
         try {
             // Update request status
             $request->status = 2; // Approved
-            $request->admin_id =auth()->user()->id;
             $request->save();
             
             // Create wallet transaction
@@ -92,8 +91,7 @@ class WithdrawalRequestController  extends Controller
                 
                 $transaction->driver_id = $driver->id;
             }
-            
-            $transaction->admin_id = auth()->user()->id;
+
             $transaction->amount = $request->amount;
             $transaction->type_of_transaction = 2; // withdrawal
             $transaction->note = 'Withdrawal request #' . $request->id . ' approved';
@@ -122,7 +120,6 @@ class WithdrawalRequestController  extends Controller
         
         $withdrawalRequest->status = 3; // Rejected
         $withdrawalRequest->note = $request->note;
-        $withdrawalRequest->admin_id = auth()->user()->id;
         $withdrawalRequest->save();
         
         return back()->with('success', 'Withdrawal request rejected');

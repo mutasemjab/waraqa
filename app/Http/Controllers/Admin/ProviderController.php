@@ -16,6 +16,14 @@ use Illuminate\Support\Str;
 
 class ProviderController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:provider-table')->only(['index']);
+        $this->middleware('permission:provider-add')->only(['create', 'store']);
+        $this->middleware('permission:provider-edit')->only(['edit', 'update']);
+        $this->middleware('permission:provider-delete')->only(['destroy']);
+    }
+
    public function index()
     {
         $providers = Provider::all();

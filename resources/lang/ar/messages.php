@@ -1249,4 +1249,20 @@ return [
     'Delete_Event' => 'حذف الفعالية',
     'Confirm_Delete_Event' => 'هل أنت متأكد من رغبتك في حذف هذه الفعالية؟',
 
+    // Role Management
+    'Roles' => 'الأدوار',
+    'Role' => 'الدور',
+    'Add New Role' => 'إضافة دور جديد',
+    'Role List' => 'قائمة الأدوار',
+    'Role Details' => 'تفاصيل الدور',
+    'Create_Role' => 'إنشاء دور',
+    'Edit Role' => 'تعديل الدور',
+    'View Role' => 'عرض الدور',
+    'Permissions' => 'الصلاحيات',
+    'Guard' => 'الحماية',
+    'Check All' => 'تحديد الكل',
+    'Uncheck All' => 'إلغاء تحديد الكل',
+    'Enter role name' => 'أدخل اسم الدور',
+    'No data found' => 'لم يتم العثور على بيانات',
+
 ];

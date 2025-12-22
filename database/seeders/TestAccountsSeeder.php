@@ -2,13 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Provider;
-use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class TestAccountsSeeder extends Seeder
@@ -20,44 +17,67 @@ class TestAccountsSeeder extends Seeder
      */
     public function run()
     {
-        // Create Admin Account
-        $admin = Admin::firstOrCreate(
-            ['username' => 'admin_test'],
+        // Get roles
+        $roles = Role::all();
+
+        // Filter roles using collection methods
+        $adminRole = $roles->filter(fn($role) => $role->name === 'admin')->first();
+        $providerRole = $roles->filter(fn($role) => $role->name === 'provider')->first();
+        $userRole = $roles->filter(fn($role) => $role->name === 'user')->first();
+
+        // Create Admin User
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
             [
-                'name' => 'Admin Test Account',
-                'email' => 'admin@example.com',
-                'password' => Hash::make('password123'),
-                'is_super' => true,
+                'username' => 'admin',
+                'name' => 'Admin',
+                'phone' => '966501111111',
+                'password' => Hash::make('admin'),
+                'activate' => 1,
             ]
         );
-
-        // Assign all admin permissions to the test admin
-        $permissions = Permission::where('guard_name', 'admin')->get();
-        if ($permissions->count() > 0) {
-            $admin->syncPermissions($permissions);
+        if ($adminRole) {
+            $adminUser->syncRoles($adminRole);
         }
 
-        // Create Provider Account
-        Provider::firstOrCreate(
-            ['phone' => '966501234567'],
+        // Create Provider User with Provider Profile
+        $providerUser = User::firstOrCreate(
+            ['email' => 'provider@example.com'],
             [
+                'username' => 'provider',
                 'name' => 'Provider Test Account',
-                'email' => 'provider@example.com',
-                'password' => Hash::make('password123'),
+                'phone' => '966501234567',
+                'password' => Hash::make('123456'),
                 'activate' => 1,
             ]
         );
+        if ($providerRole) {
+            $providerUser->syncRoles($providerRole);
+        }
 
-        // Create User Account
-        User::firstOrCreate(
-            ['phone' => '966509876543'],
+        // Create Provider profile linked to provider user
+        Provider::firstOrCreate(
+            ['user_id' => $providerUser->id],
             [
-                'name' => 'User Test Account',
-                'email' => 'user@example.com',
-                'password' => Hash::make('password123'),
-                'activate' => 1,
+                'description' => 'Test Provider Account',
+                'status' => 'active',
+                'rating' => 5.0,
             ]
         );
 
+        // Create Regular User
+        $regularUser = User::firstOrCreate(
+            ['email' => 'user@example.com'],
+            [
+                'username' => 'user',
+                'name' => 'User Test Account',
+                'phone' => '966509876543',
+                'password' => Hash::make('123456'),
+                'activate' => 1,
+            ]
+        );
+        if ($userRole) {
+            $regularUser->syncRoles($userRole);
+        }
     }
 }

@@ -7,23 +7,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
-
-
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-   use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
-   protected $guarded = [];
+    protected $guard_name = 'web';
 
-   protected $hidden = [
-      'password',
-      'remember_token',
-   ];
+    protected $guarded = [];
 
-   // Append the photo_url attribute to JSON responses
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    // Append the photo_url attribute to JSON responses
     protected $appends = ['photo_url'];
-    
+
     // Add a custom accessor for the photo URL
     public function getPhotoUrlAttribute()
     {
@@ -32,20 +33,20 @@ class User extends Authenticatable
             $baseUrl = rtrim(config('app.url'), '/');
             return $baseUrl . '/assets/admin/uploads/' . $this->photo;
         }
-        
+
         return null;
     }
 
-      public function orders()
+    public function orders()
     {
         return $this->hasMany(Order::class);
     }
- 
+
     public function userDepts()
     {
         return $this->hasMany(UserDept::class);
     }
-  
+
     public function warehouse()
     {
         return $this->hasOne(Warehouse::class);
@@ -56,4 +57,51 @@ class User extends Authenticatable
         return $this->hasMany(Event::class);
     }
 
+    // Provider profile relationship
+    public function provider()
+    {
+        return $this->hasOne(Provider::class, 'user_id');
+    }
+
+    // Provider-related relationships
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'user_id');
+    }
+
+    public function bookRequests()
+    {
+        return $this->hasMany(BookRequest::class, 'user_id');
+    }
+
+    public function bookRequestResponses()
+    {
+        return $this->hasMany(BookRequestResponse::class, 'user_id');
+    }
+
+    // Helper methods for role checking
+    public function isAdmin()
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isProvider()
+    {
+        return $this->hasRole('provider');
+    }
+
+    // Scopes
+    public function scopeWhereIsAdmin($query)
+    {
+        return $query->whereHas('roles', function ($q) {
+            $q->where('name', 'admin');
+        });
+    }
+
+    public function scopeWhereIsProvider($query)
+    {
+        return $query->whereHas('roles', function ($q) {
+            $q->where('name', 'provider');
+        });
+    }
 }

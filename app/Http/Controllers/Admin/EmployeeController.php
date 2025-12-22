@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,15 +13,24 @@ use Spatie\Permission\Models\Role;
 
 class EmployeeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:employee-table')->only(['index']);
+        $this->middleware('permission:employee-add')->only(['create', 'store']);
+        $this->middleware('permission:employee-edit')->only(['edit', 'update']);
+        $this->middleware('permission:employee-delete')->only(['show', 'destroy']);
+    }
 
     public function index(Request $request)
     {
-        $data = Admin::where('is_super', 0);
-        if ($request->search != '' ||  $request->search) {
+        $data = User::whereIsAdmin()
+            ->where('id', '!=', auth()->user()->id);
+
+        if ($request->search != '' || $request->search) {
             $data->where(function ($query) use ($request) {
-                $query->where('admins.name', 'LIKE', "%$request->search%")
-                    ->orWhere('admins.email',  'LIKE', "%$request->search%")
-                    ->orWhere('admins.mobile',  'LIKE', "%$request->search%");
+                $query->where('users.name', 'LIKE', "%$request->search%")
+                    ->orWhere('users.email', 'LIKE', "%$request->search%")
+                    ->orWhere('users.phone', 'LIKE', "%$request->search%");
             });
         }
         $data = $data->paginate(10);
@@ -36,7 +45,7 @@ class EmployeeController extends Controller
     public function create()
     {
         if (auth()->user()->can('employee-add')) {
-            $roles = Role::get();
+            $roles = Role::where('guard_name', 'web')->get();
             return view('admin.employee.create', compact('roles'));
         } else {
             return redirect()->back()
@@ -55,31 +64,24 @@ class EmployeeController extends Controller
         if (auth()->user()->can('employee-add')) {
             $this->validate($request, [
                 'name' => 'required',
-                'email' => 'required|unique:admins,email',
+                'email' => 'required|unique:users,email',
                 'password' => 'required',
                 'roles' => 'required'
             ]);
 
             DB::beginTransaction();
             try {
-
-
-                $admin = new Admin([
+                $user = new User([
                     'name' => $request->name,
                     'email' => $request->email,
                     'username' => $request->username,
                     'password' => Hash::make($request->password),
-
+                    'activate' => 1,
                 ]);
 
-                $admin->save();
-                foreach ($request->roles as $role) {
-                    DB::table('model_has_roles')->insert([
-                        'role_id' => $role,
-                        'model_type' => 'App\Models\admin',
-                        'model_id' => $admin->id
-                    ]);
-                }
+                $user->save();
+                $user->syncRoles($request->roles);
+
                 DB::commit();
                 return redirect()->route('admin.employee.index')
                     ->with('success', 'Employee created successfully');
@@ -106,8 +108,9 @@ class EmployeeController extends Controller
         if (auth()->user()->can('employee-delete')) {
             DB::beginTransaction();
             try {
-                Admin::find($id)->delete();
-                DB::table('model_has_roles')->where('model_type', 'App\Models\admin')->where('model_id', $id)->delete();
+                $user = User::find($id);
+                $user->syncRoles([]);
+                $user->delete();
                 DB::commit();
                 return redirect()->route('admin.employee.index')
                     ->with('success', 'Admin deleted successfully');
@@ -131,10 +134,10 @@ class EmployeeController extends Controller
     public function edit($id)
     {
         if (auth()->user()->can('employee-edit')) {
-            $admin = Admin::find($id);
-            $roles = Role::all();
-            $adminRole = $admin->roles->pluck('id')->all();
-            return view('admin.employee.edit', compact('admin', 'roles', 'adminRole'));
+            $user = User::find($id);
+            $roles = Role::where('guard_name', 'web')->get();
+            $userRole = $user->roles->pluck('id')->all();
+            return view('admin.employee.edit', compact('user', 'roles', 'userRole'));
         } else {
             return redirect()->back()
                 ->with('error', "Access Denied");
@@ -153,30 +156,23 @@ class EmployeeController extends Controller
         if (auth()->user()->can('employee-edit')) {
             $this->validate($request, [
                 'name' => 'required',
-                'email' => 'required|unique:admins,email,' . $id,
+                'email' => 'required|unique:users,email,' . $id,
                 'roles' => 'required'
             ]);
 
             DB::beginTransaction();
             try {
-                $admin = Admin::find($id);
+                $user = User::find($id);
 
-                $admin->name = $request->name;
-                $admin->email = $request->email;
-                $admin->username = $request->username;
+                $user->name = $request->name;
+                $user->email = $request->email;
+                $user->username = $request->username;
                 if ($request->password) {
-                    $admin->password = Hash::make($request->password);
+                    $user->password = Hash::make($request->password);
                 }
-                $admin->save();
-                DB::table('model_has_roles')->where('model_type', 'App\Models\admin')
-                    ->where('model_id', $id)->delete();
-                foreach ($request->roles as $role) {
-                    DB::table('model_has_roles')->insert([
-                        'role_id' => $role,
-                        'model_type' => 'App\Models\admin',
-                        'model_id' => $admin->id
-                    ]);
-                }
+                $user->save();
+                $user->syncRoles($request->roles);
+
                 DB::commit();
                 return redirect()->route('admin.employee.index')
                     ->with('success', 'Employee updated successfully');
@@ -202,14 +198,15 @@ class EmployeeController extends Controller
     {
         DB::beginTransaction();
         try {
-            Admin::find($id)->delete();
-            DB::table('model_has_roles')->where('model_type', 'App\Models\admin')->where('model_id', $id)->delete();
+            $user = User::find($id);
+            $user->syncRoles([]);
+            $user->delete();
             DB::commit();
-            return redirect()->route('admins.index')
-                ->with('success', 'Admin deleted successfully');
+            return redirect()->route('admin.employee.index')
+                ->with('success', 'Employee deleted successfully');
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->route('admins.index')
+            return redirect()->route('admin.employee.index')
                 ->with('error', 'Something Error');
         }
     }

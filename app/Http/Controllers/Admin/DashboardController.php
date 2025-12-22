@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:dashboard-view')->only(['index']);
+    }
+
     public function index()
     {
         $stats = [

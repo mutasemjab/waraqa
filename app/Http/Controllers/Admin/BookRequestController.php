@@ -11,6 +11,14 @@ use Illuminate\Http\Request;
 
 class BookRequestController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:bookRequest-table')->only(['index']);
+        $this->middleware('permission:bookRequest-add')->only(['create', 'store']);
+        $this->middleware('permission:bookRequest-edit')->only(['edit', 'update']);
+        $this->middleware('permission:bookRequest-delete')->only(['destroy']);
+    }
+
     // عرض قائمة الطلبات
     public function index()
     {

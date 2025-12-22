@@ -12,6 +12,28 @@ use Spatie\Permission\Models\Permission;
 use Gate;
 class RoleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:role-table')->only(['index']);
+        $this->middleware('permission:role-add')->only(['create', 'store']);
+        $this->middleware('permission:role-edit')->only(['edit', 'update']);
+        $this->middleware('permission:role-delete')->only(['delete']);
+    }
+
+    private function groupPermissionsByResource($permissions)
+    {
+        $grouped = [];
+        foreach ($permissions as $permission) {
+            // Extract resource name from permission name (e.g., "role-table" -> "role")
+            $resource = explode('-', $permission->name)[0];
+            if (!isset($grouped[$resource])) {
+                $grouped[$resource] = [];
+            }
+            $grouped[$resource][] = $permission;
+        }
+        return $grouped;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -43,9 +65,9 @@ class RoleController extends Controller
      */
     public function create()
     {
-
-        $data = Permission::where('guard_name','admin')->get();
-        return view('admin.roles.create', compact('data'));
+        $permissions = Permission::where('guard_name','web')->get();
+        $groupedPermissions = $this->groupPermissionsByResource($permissions);
+        return view('admin.roles.create', compact('groupedPermissions'));
     }
 
     /**
@@ -68,7 +90,7 @@ class RoleController extends Controller
 
             $role = new Role([
                 "name" => $request->name,
-                "guard_name" => 'admin',
+                "guard_name" => 'web',
 
             ]);
             $role->save();
@@ -110,11 +132,11 @@ class RoleController extends Controller
      */
     public function edit($id)
     {
-
-        $permissions = Permission::where('guard_name','admin')->get();
+        $permissions = Permission::where('guard_name','web')->get();
+        $groupedPermissions = $this->groupPermissionsByResource($permissions);
         $role_permissions = DB::table('role_has_permissions')->where('role_id',$id)->pluck('permission_id')->toArray();
         $data = Role::find($id);
-         return view('admin.roles.edit', compact('permissions','role_permissions','data'));
+        return view('admin.roles.edit', compact('groupedPermissions','role_permissions','data'));
     }
 
     /**
@@ -132,7 +154,7 @@ class RoleController extends Controller
         try {
             $role = Role::find($id);
             $role->name = $request->name;
-            $role->guard_name = 'admin';
+            $role->guard_name = 'web';
 
 
             $role->save();

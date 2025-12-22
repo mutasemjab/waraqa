@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('book_request_id')->constrained('book_requests')->onDelete('cascade');
             $table->foreignId('provider_id')->constrained('providers')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->integer('available_quantity');
             $table->string('status')->default('pending'); // pending, approved, rejected
             $table->text('note')->nullable();

@@ -97,8 +97,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
  
     });
 
-    // Provider Dashboard Routes (using 'provider' guard)
-Route::middleware(['auth:provider'])->prefix('provider')->name('provider.')->group(function () {
+    // Provider Dashboard Routes (using 'web' guard with 'provider' role)
+    Route::middleware(['auth:web', 'role:provider'])->prefix('provider')->name('provider.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [ProviderDashboardController::class, 'index'])->name('dashboard');
 

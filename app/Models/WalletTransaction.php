@@ -24,13 +24,6 @@ class WalletTransaction extends Model
         return $this->belongsTo(Driver::class);
     }
 
-    /**
-     * Get the admin who created the transaction.
-     */
-    public function admin()
-    {
-        return $this->belongsTo(Admin::class);
-    }
 
     /**
      * Get the transaction type text.

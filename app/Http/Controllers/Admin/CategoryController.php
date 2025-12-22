@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:category-table')->only(['index']);
+        $this->middleware('permission:category-add')->only(['create', 'store']);
+        $this->middleware('permission:category-edit')->only(['edit', 'update']);
+    }
+
     public function index()
     {
         $categories =Category::get();

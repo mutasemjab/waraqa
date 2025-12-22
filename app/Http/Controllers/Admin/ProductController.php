@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:product-table')->only(['index']);
+        $this->middleware('permission:product-add')->only(['create', 'store']);
+        $this->middleware('permission:product-edit')->only(['edit', 'update']);
+        $this->middleware('permission:product-search')->only(['search']);
+        $this->middleware('permission:product-available-quantity')->only(['availableQuantity']);
+    }
 
     public function search(Request $request)
     {

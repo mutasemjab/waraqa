@@ -22,6 +22,12 @@ use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:order-table')->only(['index']);
+        $this->middleware('permission:order-add')->only(['create', 'store']);
+        $this->middleware('permission:order-edit')->only(['edit', 'update']);
+    }
 
         // Admin: List all orders
     public function index()
@@ -120,7 +126,7 @@ class OrderController extends Controller
             }
 
             // Handle warehouse transfers
-            $mainWarehouse = Warehouse::where('admin_id', 1)->first(); // Main warehouse
+            $mainWarehouse = Warehouse::first(); // Get first available warehouse
             $userWarehouse = Warehouse::where('user_id', $request->user_id)->first();
 
          
@@ -230,7 +236,7 @@ public function update(Request $request, Order $order)
         $existingOrderProducts = OrderProduct::where('order_id', $order->id)->get();
         
         // Handle warehouse transfers - First reverse the old transfer
-        $mainWarehouse = Warehouse::where('admin_id', 1)->first();
+        $mainWarehouse = Warehouse::first(); // Get first available warehouse
         $newUserWarehouse = Warehouse::where('user_id', $request->user_id)->first();
 
    

@@ -1,13 +1,10 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
 class UserAuthController extends Controller
 {
@@ -23,7 +20,7 @@ class UserAuthController extends Controller
     }
 
 
-     public function loginUser(Request $request)
+    public function loginUser(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
@@ -36,8 +33,10 @@ class UserAuthController extends Controller
             'activate' => 1
         ];
 
-        // Use 'web' guard for users (this is the default Laravel guard)
+        // Use 'web' guard for users
         if (Auth::guard('web')->attempt($credentials, $request->filled('remember'))) {
+
+            // Users don't need specific role, proceed to dashboard
             $request->session()->regenerate();
             return redirect()->intended(route('user.dashboard'));
         }
@@ -60,8 +59,18 @@ class UserAuthController extends Controller
             'activate' => 1
         ];
 
-        // Use 'provider' guard for providers
-        if (Auth::guard('provider')->attempt($credentials, $request->filled('remember'))) {
+        // Use 'web' guard for providers
+        if (Auth::guard('web')->attempt($credentials, $request->filled('remember'))) {
+            $user = Auth::user();
+
+            // Check if user has provider role
+            if (!$user->hasRole('provider')) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => __('messages.invalid_credentials'),
+                ])->withInput($request->except('password'));
+            }
+
             $request->session()->regenerate();
             return redirect()->intended(route('provider.dashboard'));
         }
@@ -73,23 +82,21 @@ class UserAuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Check which guard is currently authenticated and logout accordingly
-        if (Auth::guard('web')->check()) {
-            Auth::guard('web')->logout();
-            $redirectRoute = 'user.login';
-        } elseif (Auth::guard('provider')->check()) {
-            Auth::guard('provider')->logout();
+        $user = Auth::user();
+
+        // Determine redirect based on user role
+        if ($user && $user->hasRole('admin')) {
+            $redirectRoute = 'admin.showlogin';
+        } elseif ($user && $user->hasRole('provider')) {
             $redirectRoute = 'provider.login';
         } else {
             $redirectRoute = 'user.login';
         }
 
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect()->route($redirectRoute);
     }
-   
-
- 
 }

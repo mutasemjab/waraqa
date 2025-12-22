@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:setting-table')->only(['index']);
+        $this->middleware('permission:setting-edit')->only(['edit', 'update']);
+    }
 
   public function index()
   {

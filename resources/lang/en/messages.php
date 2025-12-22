@@ -1184,4 +1184,20 @@ return [
     'Delete_Event' => 'Delete Event',
     'Confirm_Delete_Event' => 'Are you sure you want to delete this event?',
 
+    // Role Management
+    'Roles' => 'Roles',
+    'Role' => 'Role',
+    'Add New Role' => 'Add New Role',
+    'Role List' => 'Role List',
+    'Role Details' => 'Role Details',
+    'Create_Role' => 'Create Role',
+    'Edit Role' => 'Edit Role',
+    'View Role' => 'View Role',
+    'Permissions' => 'Permissions',
+    'Guard' => 'Guard',
+    'Check All' => 'Check All',
+    'Uncheck All' => 'Uncheck All',
+    'Enter role name' => 'Enter role name',
+    'No data found' => 'No data found',
+
 ];

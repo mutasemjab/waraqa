@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 
 class NoteVoucherTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:noteVoucherType-table')->only(['index']);
+        $this->middleware('permission:noteVoucherType-add')->only(['create', 'store']);
+        $this->middleware('permission:noteVoucherType-edit')->only(['edit', 'update']);
+        $this->middleware('permission:noteVoucherType-delete')->only(['destroy']);
+    }
+
     public function index()
     {
 

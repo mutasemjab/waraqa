@@ -22,9 +22,4 @@ class WithdrawalRequest extends Model
     {
         return $this->belongsTo(Driver::class);
     }
-    
-    public function admin()
-    {
-        return $this->belongsTo(Admin::class);
-    }
 }

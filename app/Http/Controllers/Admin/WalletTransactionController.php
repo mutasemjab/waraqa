@@ -20,7 +20,7 @@ class WalletTransactionController extends Controller
      */
     public function index()
     {
-        $transactions = WalletTransaction::with(['user', 'driver', 'admin'])->orderBy('created_at', 'desc')->get();
+        $transactions = WalletTransaction::with(['user', 'driver'])->orderBy('created_at', 'desc')->get();
         return view('admin.wallet_transactions.index', compact('transactions'));
     }
 
@@ -64,7 +64,6 @@ class WalletTransactionController extends Controller
             'amount' => $request->amount,
             'type_of_transaction' => $request->type_of_transaction,
             'note' => $request->note,
-            'admin_id' => Auth::id(), // Current logged in admin
         ];
 
         // Set the appropriate entity (user or driver)
@@ -126,7 +125,7 @@ class WalletTransactionController extends Controller
      */
     public function show($id)
     {
-        $transaction = WalletTransaction::with(['user', 'driver', 'admin'])->findOrFail($id);
+        $transaction = WalletTransaction::with(['user', 'driver'])->findOrFail($id);
         return view('admin.wallet_transactions.show', compact('transaction'));
     }
 
@@ -152,7 +151,7 @@ class WalletTransactionController extends Controller
                 ->withErrors($validator);
         }
 
-        $query = WalletTransaction::with(['user', 'driver', 'admin']);
+        $query = WalletTransaction::with(['user', 'driver']);
 
         // Filter by entity type and ID
         if ($request->entity_type == 'user' && $request->entity_id) {
@@ -197,11 +196,10 @@ class WalletTransactionController extends Controller
     public function userTransactions($id)
     {
         $user = User::findOrFail($id);
-        $transactions = WalletTransaction::with(['admin'])
-            ->where('user_id', $id)
+        $transactions = WalletTransaction::where('user_id', $id)
             ->orderBy('created_at', 'desc')
             ->get();
-        
+
         return view('admin.wallet_transactions.user_transactions', compact('transactions', 'user'));
     }
 
@@ -214,11 +212,10 @@ class WalletTransactionController extends Controller
     public function driverTransactions($id)
     {
         $driver = Driver::findOrFail($id);
-        $transactions = WalletTransaction::with(['admin'])
-            ->where('driver_id', $id)
+        $transactions = WalletTransaction::where('driver_id', $id)
             ->orderBy('created_at', 'desc')
             ->get();
-        
+
         return view('admin.wallet_transactions.driver_transactions', compact('transactions', 'driver'));
     }
 }

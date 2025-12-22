@@ -19,12 +19,13 @@ class ProviderDashboardController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:provider');
+        $this->middleware(['auth:web', 'role:provider']);
     }
 
     public function index()
     {
-        $provider = Auth::guard('provider')->user();
+        $user = Auth::user();
+        $provider = $user->provider;
         
         // Get provider statistics
         $stats = [
@@ -50,7 +51,8 @@ class ProviderDashboardController extends Controller
 
     public function products(Request $request)
     {
-        $provider = Auth::guard('provider')->user();
+        $user = Auth::user();
+        $provider = $user->provider;
         
         $query = $provider->products()->with(['category']);
 
