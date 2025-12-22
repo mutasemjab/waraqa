@@ -1,14 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', __('messages.Users'))
+@section('title', __('messages.Sellers'))
 
 @section('content')
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ __('messages.Users') }}</h1>
-        <a href="{{ route('users.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> {{ __('messages.Add_New_User') }}
+        <h1 class="h3 mb-0 text-gray-800">{{ __('messages.Sellers') ?? 'البائعون' }}</h1>
+        <a href="{{ route('sellers.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> {{ __('messages.Add_New_Seller') ?? 'إضافة بائع جديد' }}
         </a>
     </div>
 
@@ -16,7 +16,7 @@
     <!-- DataTales Example -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">{{ __('messages.User_List') }}</h6>
+            <h6 class="m-0 font-weight-bold text-primary">{{ __('messages.Sellers_List') ?? 'قائمة البائعين' }}</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -33,21 +33,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($users as $user)
+                        @foreach($sellers as $seller)
                         <tr>
-                            <td>{{ $user->id }}</td>
+                            <td>{{ $seller->id }}</td>
                             <td>
-                                @if($user->photo)
-                                <img src="{{ asset('assets/admin/uploads/' . $user->photo) }}" alt="{{ $user->name }}" width="50">
+                                @if($seller->photo)
+                                <img src="{{ asset('assets/admin/uploads/' . $seller->photo) }}" alt="{{ $seller->name }}" width="50">
                                 @else
                                 <img src="{{ asset('assets/admin/img/no-image.png') }}" alt="No Image" width="50">
                                 @endif
                             </td>
-                            <td>{{ $user->name }}</td>
-                            <td> {{ $user->phone }}</td>
-                            <td>{{ $user->email }}</td>
+                            <td>{{ $seller->name }}</td>
+                            <td> {{ $seller->phone }}</td>
+                            <td>{{ $seller->email }}</td>
                             <td>
-                                @if($user->activate == 1)
+                                @if($seller->activate == 1)
                                 <span class="badge badge-success">{{ __('messages.Active') }}</span>
                                 @else
                                 <span class="badge badge-danger">{{ __('messages.Inactive') }}</span>
@@ -55,14 +55,19 @@
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{{ route('users.show', $user->id) }}" class="btn btn-info btn-sm">
+                                    <a href="{{ route('sellers.show', $seller->id) }}" class="btn btn-info btn-sm">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-primary btn-sm">
+                                    <a href="{{ route('sellers.edit', $seller->id) }}" class="btn btn-primary btn-sm">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                 
-                                   
+                                    <form action="{{ route('sellers.destroy', $seller->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{ __('messages.Are_you_sure') ?? 'هل أنت متأكد؟' }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

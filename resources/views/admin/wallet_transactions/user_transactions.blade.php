@@ -11,7 +11,7 @@
             <a href="{{ route('wallet_transactions.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> {{ __('messages.Add_New_Transaction') }}
             </a>
-            <a href="{{ route('users.show', $user->id) }}" class="btn btn-info">
+            <a href="{{ route('sellers.show', $user->id) }}" class="btn btn-info">
                 <i class="fas fa-user"></i> {{ __('messages.View_User_Profile') }}
             </a>
             <a href="{{ route('wallet_transactions.index') }}" class="btn btn-secondary">

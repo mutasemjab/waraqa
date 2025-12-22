@@ -39,7 +39,7 @@
                             <div class="d-flex align-items-center">
                                 <span class="badge badge-info mr-2">{{ __('messages.User') }}</span>
                                 <span>
-                                    <a href="{{ route('users.show', $transaction->user_id) }}">
+                                    <a href="{{ route('sellers.show', $transaction->user_id) }}">
                                         {{ $transaction->user->name ?? 'N/A' }}
                                     </a>
                                     @if($transaction->user && $transaction->user->phone)

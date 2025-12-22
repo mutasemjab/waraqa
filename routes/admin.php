@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\ProviderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SellerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\NoteVoucherController;
 use App\Http\Controllers\Admin\NoteVoucherTypeController;
@@ -65,7 +65,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::resource('categories', CategoryController::class);
         Route::resource('products', ProductController::class);
         Route::resource('settings', SettingController::class);
-        Route::resource('users', UserController::class);
+        Route::resource('sellers', SellerController::class);
         Route::resource('countries', CountryController::class);
         Route::resource('orders', OrderController::class);
         Route::resource('providers', ProviderController::class);

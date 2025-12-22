@@ -31,14 +31,14 @@ return [
     'View_Full_Size' => 'عرض بالحجم الكامل',
 
     // User specific
-    'Users' => 'البائعين',
-    'User' => 'البائع',
+    'Users' => 'المستخدمون',
+    'User' => 'المستخدم',
     'User_List' => 'قائمة المستخدمين',
     'User_Details' => 'تفاصيل المستخدم',
-    'Add_New_User' => 'إضافة بائع جديد',
-    'Create_User' => 'منفذ بيع',
-    'Edit_User' => 'تعديل البائع',
-    'View_User' => 'عرض البائع',
+    'Add_New_User' => 'إضافة مستخدم جديد',
+    'Create_User' => 'إنشاء مستخدم',
+    'Edit_User' => 'تعديل المستخدم',
+    'View_User' => 'عرض المستخدم',
     'Referral_Code' => 'رمز الإحالة',
     'Referral_Code_Info' => 'اتركه فارغاً للإنشاء التلقائي',
     'Leave_blank_to_keep_current_password' => 'اتركه فارغاً للاحتفاظ بكلمة المرور الحالية',
@@ -313,9 +313,9 @@ return [
     'Date_Range_Error' => 'تاريخ الانتهاء لا يمكن أن يكون قبل تاريخ البداية',
     
     // إدارة المستخدمين
-    'Create_User' => 'منفذ بيع',
+    'Create_User' => 'إنشاء مستخدم',
     'Back_to_List' => 'العودة للقائمة',
-    'User_Details' => 'تفاصيل البائع',
+    'User_Details' => 'تفاصيل المستخدم',
     'Name' => 'الاسم',
     'Phone' => 'الهاتف',
     'Email' => 'البريد الإلكتروني',
@@ -1236,6 +1236,17 @@ return [
     'Select_Product' => 'اختر منتج',
     'Select_Provider' => 'اختر مورد',
     'Edit_Book_Request' => 'تعديل طلب الكتاب',
+
+    // Sellers
+    'Sellers' => 'البائعون',
+    'sellers' => 'البائعون',
+    'Seller' => 'البائع',
+    'Sellers_List' => 'قائمة البائعين',
+    'Seller_Details' => 'تفاصيل البائع',
+    'Add_New_Seller' => 'إضافة بائع جديد',
+    'Create_Seller' => 'إنشاء منفذ بيع',
+    'Edit_Seller' => 'تعديل البائع',
+    'View_Seller' => 'عرض البائع',
 
     // Events
     'Events' => 'الفعاليات',

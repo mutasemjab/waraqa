@@ -1,24 +1,33 @@
 @extends('layouts.admin')
 
-@section('title', __('messages.Create_User'))
+@section('title', __('messages.Create_Seller'))
 
 @section('content')
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ __('messages.Create_User') }}</h1>
-        <a href="{{ route('users.index') }}" class="btn btn-secondary">
+        <h1 class="h3 mb-0 text-gray-800">{{ __('messages.Create_Seller') }}</h1>
+        <a href="{{ route('sellers.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> {{ __('messages.Back_to_List') }}
         </a>
     </div>
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">{{ __('messages.User_Details') }}</h6>
+            <h6 class="m-0 font-weight-bold text-primary">{{ __('messages.Seller_Details') }}</h6>
         </div>
         <div class="card-body">
+            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
 
-            <form action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data" id="user-form">
+            <form action="{{ route('sellers.store') }}" method="POST" enctype="multipart/form-data" id="seller-form">
                 @csrf
                 <div class="row">
                     <div class="col-md-6">
@@ -78,13 +87,13 @@
                 </div>
 
                 <div class="form-group text-center mt-4">
-                    <button type="submit" class="btn btn-primary" id="user-submit-btn">
+                    <button type="submit" class="btn btn-primary" id="seller-submit-btn">
                         <i class="fas fa-save"></i> {{ __('messages.Save') }}
                     </button>
                     <button type="button" class="btn btn-info" id="add-event-btn">
-                        <i class="fas fa-calendar-alt"></i> {{ __('messages.Add_Event') ?? 'إضافة فعالية' }}
+                        <i class="fas fa-calendar-alt"></i> {{ __('messages.Add_Event') }}
                     </button>
-                    <a href="{{ route('users.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('sellers.index') }}" class="btn btn-secondary">
                         <i class="fas fa-times"></i> {{ __('messages.Cancel') }}
                     </a>
                 </div>
@@ -95,43 +104,43 @@
     <!-- Events Section -->
     <div class="card shadow mb-4" id="events-section" style="display: none;">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">{{ __('messages.Events') ?? 'الفعاليات' }}</h6>
+            <h6 class="m-0 font-weight-bold text-primary">{{ __('messages.Events') }}</h6>
         </div>
         <div class="card-body">
             <div id="events-list" class="mb-4"></div>
 
             <form id="event-form">
                 <div class="form-group">
-                    <label for="event_name">{{ __('messages.Event_Name') ?? 'اسم الفعالية' }} <span class="text-danger">*</span></label>
+                    <label for="event_name">{{ __('messages.Event_Name') }} <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="event_name" name="event_name" required>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="start_date">{{ __('messages.Start_Date') ?? 'تاريخ البدء' }} <span class="text-danger">*</span></label>
+                            <label for="start_date">{{ __('messages.Start_Date') }} <span class="text-danger">*</span></label>
                             <input type="datetime-local" class="form-control" id="start_date" name="start_date" required>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="end_date">{{ __('messages.End_Date') ?? 'تاريخ الانتهاء' }} <span class="text-danger">*</span></label>
+                            <label for="end_date">{{ __('messages.End_Date') }} <span class="text-danger">*</span></label>
                             <input type="datetime-local" class="form-control" id="end_date" name="end_date" required>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="commission_percentage">{{ __('messages.Commission_Percentage') ?? 'نسبة العمولة (%)' }} <span class="text-danger">*</span></label>
+                    <label for="commission_percentage">{{ __('messages.Commission_Percentage') }} <span class="text-danger">*</span></label>
                     <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" min="0" max="100" step="0.01" required>
                 </div>
 
                 <div class="form-group text-center mt-4">
                     <button type="button" class="btn btn-success" id="save-event-btn">
-                        <i class="fas fa-plus"></i> {{ __('messages.Add_Event') ?? 'إضافة الفعالية' }}
+                        <i class="fas fa-plus"></i> {{ __('messages.Add_Event') }}
                     </button>
                     <button type="button" class="btn btn-secondary" id="close-events">
-                        <i class="fas fa-times"></i> {{ __('messages.Cancel') ?? 'إلغاء' }}
+                        <i class="fas fa-times"></i> {{ __('messages.Cancel') }}
                     </button>
                 </div>
             </form>
@@ -177,7 +186,7 @@
         // Save event
         $('#save-event-btn').on('click', function() {
             if ($('#event-form')[0].checkValidity() === false) {
-                alert('{{ __('messages.Please_fill_all_required_fields') ?? 'يرجى ملء جميع الحقول المطلوبة' }}');
+                alert('{{ __('messages.Please_fill_all_required_fields') }}');
                 return;
             }
 
@@ -211,13 +220,13 @@
                             </div>
                             <div class="row mt-2">
                                 <div class="col-md-4">
-                                    <small>{{ __('messages.Start_Date') ?? 'تاريخ البدء' }}: ${event.start_date}</small>
+                                    <small>{{ __('messages.Start_Date') }}: ${event.start_date}</small>
                                 </div>
                                 <div class="col-md-4">
-                                    <small>{{ __('messages.End_Date') ?? 'تاريخ الانتهاء' }}: ${event.end_date}</small>
+                                    <small>{{ __('messages.End_Date') }}: ${event.end_date}</small>
                                 </div>
                                 <div class="col-md-4">
-                                    <small>{{ __('messages.Commission_Percentage') ?? 'نسبة العمولة' }}: ${event.commission_percentage}%</small>
+                                    <small>{{ __('messages.Commission_Percentage') }}: ${event.commission_percentage}%</small>
                                 </div>
                             </div>
                         </div>
@@ -233,7 +242,7 @@
         };
 
         // Add events data to form submission
-        $('#user-form').on('submit', function(e) {
+        $('#seller-form').on('submit', function(e) {
             if (eventsData.length > 0) {
                 eventsData.forEach((event, index) => {
                     $(this).append(`

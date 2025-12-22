@@ -1184,6 +1184,16 @@ return [
     'Delete_Event' => 'Delete Event',
     'Confirm_Delete_Event' => 'Are you sure you want to delete this event?',
 
+    // Sellers
+    'Sellers' => 'Sellers',
+    'Seller' => 'Seller',
+    'Sellers_List' => 'Sellers List',
+    'Seller_Details' => 'Seller Details',
+    'Add_New_Seller' => 'Add New Seller',
+    'Create_Seller' => 'Create Seller',
+    'Edit_Seller' => 'Edit Seller',
+    'View_Seller' => 'View Seller',
+
     // Role Management
     'Roles' => 'Roles',
     'Role' => 'Role',

@@ -37,6 +37,12 @@ class PermissionSeeder extends Seeder
             'user-edit',
             'user-delete',
 
+            // Seller Management
+            'seller-table',
+            'seller-add',
+            'seller-edit',
+            'seller-delete',
+
             // Order Management
             'order-table',
             'order-add',

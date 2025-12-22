@@ -36,8 +36,8 @@
                         </li>
                  @endcanany
                 <!-- User Management Section -->
-                @canany(['user-table', 'user-add', 'user-edit', 'user-delete', 'driver-table', 'driver-add', 'driver-edit', 'driver-delete'])
-                <li class="nav-item {{ request()->is('admin/users*') || request()->is('admin/drivers*') ? 'menu-open' : '' }}">
+                @canany(['seller-table', 'seller-add', 'seller-edit', 'seller-delete', 'provider-table', 'provider-add', 'provider-edit', 'provider-delete'])
+                <li class="nav-item {{ request()->is('admin/sellers*') || request()->is('admin/providers*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-users"></i>
                         <p>
@@ -46,18 +46,18 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
-                        @canany(['user-table', 'user-add', 'user-edit', 'user-delete'])
+                        @canany(['seller-table', 'seller-add', 'seller-edit', 'seller-delete'])
                         <li class="nav-item">
-                            <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}">
-                                <i class="far fa-user nav-icon"></i>
-                                <p>{{ __('messages.users') }}</p>
+                            <a href="{{ route('sellers.index') }}" class="nav-link {{ request()->routeIs('sellers.index', 'sellers.*') ? 'active' : '' }}">
+                                <i class="fas fa-store nav-icon"></i>
+                                <p>{{ __('messages.sellers') }}</p>
                             </a>
                         </li>
                         @endcanany
-                        
+
                         @canany(['provider-table', 'provider-add', 'provider-edit', 'provider-delete'])
                         <li class="nav-item">
-                            <a href="{{ route('providers.index') }}" class="nav-link {{ request()->routeIs('providers.index') ? 'active' : '' }}">
+                            <a href="{{ route('providers.index') }}" class="nav-link {{ request()->routeIs('providers.index', 'providers.*') ? 'active' : '' }}">
                                 <i class="fas fa-car nav-icon"></i>
                                 <p>{{ __('messages.providers') }}</p>
                             </a>

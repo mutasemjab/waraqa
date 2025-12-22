@@ -24,6 +24,7 @@ class TestAccountsSeeder extends Seeder
         $adminRole = $roles->filter(fn($role) => $role->name === 'admin')->first();
         $providerRole = $roles->filter(fn($role) => $role->name === 'provider')->first();
         $userRole = $roles->filter(fn($role) => $role->name === 'user')->first();
+        $sellerRole = $roles->filter(fn($role) => $role->name === 'seller')->first();
 
         // Create Admin User
         $adminUser = User::firstOrCreate(
@@ -78,6 +79,21 @@ class TestAccountsSeeder extends Seeder
         );
         if ($userRole) {
             $regularUser->syncRoles($userRole);
+        }
+
+        // Create Seller User
+        $sellerUser = User::firstOrCreate(
+            ['email' => 'seller@example.com'],
+            [
+                'username' => 'seller',
+                'name' => 'Seller Test Account',
+                'phone' => '966505555555',
+                'password' => Hash::make('123456'),
+                'activate' => 1,
+            ]
+        );
+        if ($sellerRole) {
+            $sellerUser->syncRoles($sellerRole);
         }
     }
 }

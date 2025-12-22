@@ -18,6 +18,7 @@ class RoleSeeder extends Seeder
             ['name' => 'admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'provider', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'user', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'seller', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
         ];
 
         Role::insertOrIgnore($roles);

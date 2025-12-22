@@ -89,7 +89,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('users.index') }}" class="btn btn-sm btn-primary text-white">
+                    <a href="{{ route('sellers.index') }}" class="btn btn-sm btn-primary text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>

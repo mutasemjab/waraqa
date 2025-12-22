@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\Event;
-use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,14 +13,14 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
 
-class UserController extends Controller
+class SellerController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:user-table')->only(['index']);
-        $this->middleware('permission:user-add')->only(['create', 'store']);
-        $this->middleware('permission:user-edit')->only(['edit', 'update']);
-        $this->middleware('permission:user-delete')->only(['destroy']);
+        $this->middleware('permission:seller-table')->only(['index']);
+        $this->middleware('permission:seller-add')->only(['create', 'store']);
+        $this->middleware('permission:seller-edit')->only(['edit', 'update']);
+        $this->middleware('permission:seller-delete')->only(['destroy']);
     }
 
     /**
@@ -31,8 +30,8 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
-        return view('admin.users.index', compact('users'));
+        $sellers = User::role('seller')->get();
+        return view('admin.sellers.index', compact('sellers'));
     }
 
     /**
@@ -43,7 +42,7 @@ class UserController extends Controller
     public function create()
     {
         $countries = Country::get();
-        return view('admin.users.create', compact('countries'));
+        return view('admin.sellers.create', compact('countries'));
     }
 
     /**
@@ -72,7 +71,7 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             return redirect()
-                ->route('users.create')
+                ->route('sellers.create')
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -86,13 +85,16 @@ class UserController extends Controller
         }
         $userData['password'] = bcrypt($userData['password']);
 
-        $user = User::create($userData);
+        $seller = User::create($userData);
+
+        // Assign seller role
+        $seller->assignRole('seller');
 
         // Create events if provided
         if ($request->has('events') && is_array($request->events)) {
             foreach ($request->events as $eventData) {
                 Event::create([
-                    'user_id' => $user->id,
+                    'user_id' => $seller->id,
                     'name' => $eventData['name'],
                     'start_date' => $eventData['start_date'],
                     'end_date' => $eventData['end_date'],
@@ -101,14 +103,9 @@ class UserController extends Controller
             }
         }
 
-        DB::table('warehouses')->insert([
-            'name' => 'مستودع ' . $request->name,
-            'user_id' => $user->id,
-        ]);
-
         return redirect()
-            ->route('users.index')
-            ->with('success', 'User created successfully');
+            ->route('sellers.index')
+            ->with('success', 'Seller created successfully');
     }
 
     /**
@@ -119,9 +116,9 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $seller = User::role('seller')->findOrFail($id);
 
-        return view('admin.users.show', compact('user'));
+        return view('admin.sellers.show', compact('seller'));
     }
 
     /**
@@ -132,9 +129,9 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        $user = User::with('events')->findOrFail($id);
+        $seller = User::with('events')->role('seller')->findOrFail($id);
         $countries = Country::get();
-        return view('admin.users.edit', compact('user', 'countries'));
+        return view('admin.sellers.edit', compact('seller', 'countries'));
     }
 
     /**
@@ -146,7 +143,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $seller = User::role('seller')->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
@@ -166,7 +163,7 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             return redirect()
-                ->route('users.edit', $id)
+                ->route('sellers.edit', $id)
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -183,13 +180,13 @@ class UserController extends Controller
             $userData['password'] = Hash::make($request->password);
         }
 
-        $user->update($userData);
+        $seller->update($userData);
 
         // Handle new events
         if ($request->has('events') && is_array($request->events)) {
             foreach ($request->events as $eventData) {
                 Event::create([
-                    'user_id' => $user->id,
+                    'user_id' => $seller->id,
                     'name' => $eventData['name'],
                     'start_date' => $eventData['start_date'],
                     'end_date' => $eventData['end_date'],
@@ -207,8 +204,8 @@ class UserController extends Controller
         }
 
         return redirect()
-            ->route('users.index')
-            ->with('success', 'User updated successfully');
+            ->route('sellers.index')
+            ->with('success', 'Seller updated successfully');
     }
 
     /**
@@ -219,13 +216,12 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
+        $seller = User::role('seller')->findOrFail($id);
 
-
-        $user->delete();
+        $seller->delete();
 
         return redirect()
-            ->route('users.index')
-            ->with('success', 'User deleted successfully');
+            ->route('sellers.index')
+            ->with('success', 'Seller deleted successfully');
     }
 }
