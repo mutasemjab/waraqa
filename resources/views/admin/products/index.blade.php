@@ -19,6 +19,7 @@
                                 <tr>
                                     <th>{{ __('messages.Image') }}</th>
                                     <th>{{ __('messages.Name') }}</th>
+                                    <th>{{ __('messages.SKU') }}</th>
                                     <th>{{ __('messages.Category') }}</th>
                                     <th>{{ __('messages.provider') }}</th>
                                     <th>{{ __('messages.Price') }}</th>
@@ -43,6 +44,9 @@
                                         </td>
                                         <td>
                                             <strong>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</strong>
+                                        </td>
+                                        <td>
+                                            {{ $product->sku ?? '-' }}
                                         </td>
                                         <td>
                                             @if($product->category)

@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\UserDeptController;
 use App\Http\Controllers\Admin\WalletTransactionController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\Admin\WithdrawalRequestController;
+use App\Http\Controllers\Admin\BookRequestController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Spatie\Permission\Models\Permission;
 /*
@@ -32,12 +33,14 @@ use Spatie\Permission\Models\Permission;
 */
 
 define('PAGINATION_COUNT',11);
+
 Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath']], function () {
 
-
-
-
  Route::group(['prefix'=>'admin','middleware'=>'auth:admin'],function(){
+
+// API Routes (inside localization scope for proper locale detection)
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+Route::get('/products/{productId}/available-quantity', [ProductController::class, 'availableQuantity'])->name('products.available-quantity');
  Route::get('/',[DashboardController::class,'index'])->name('admin.dashboard');
  Route::get('logout',[LoginController::class,'logout'])->name('admin.logout');
 
@@ -62,11 +65,6 @@ Route::get('/permissions/{guard_name}', function($guard_name){
 
 
 
-// other routes
-Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
-
-
-
 // Resource Route
 Route::resource('categories', CategoryController::class);
 Route::resource('products', ProductController::class);
@@ -79,6 +77,7 @@ Route::resource('warehouses', WarehouseController::class);
 Route::resource('noteVoucherTypes', NoteVoucherTypeController::class);
 Route::resource('noteVouchers', NoteVoucherController::class);
 Route::resource('user_depts', UserDeptController::class);
+Route::resource('bookRequests', BookRequestController::class);
 
 // Additional routes for user debts
 Route::post('user_depts/{userDept}/make_payment', [UserDeptController::class, 'makePayment'])->name('user_depts.make_payment');

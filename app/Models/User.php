@@ -50,5 +50,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Warehouse::class);
     }
-    
+
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+
 }

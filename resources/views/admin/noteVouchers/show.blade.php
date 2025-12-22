@@ -22,15 +22,33 @@
         <div class="col-md-6">
             <strong>{{ __('messages.number') }}:</strong> {{ $noteVoucher->number }}
         </div>
-        <div class="col-md-6">
-            <strong>{{ __('messages.fromWarehouse') }}:</strong> {{ $noteVoucher->fromWarehouse->name }}
-        </div>
-        @if ($noteVoucher->note_voucher_type_id == 3)
+
+        @if ($noteVoucher->noteVoucherType->in_out_type == 1)
+            <!-- For Receipt Type (in_out_type = 1): From Provider to Warehouse -->
+            <div class="col-md-6">
+                <strong>{{ __('messages.provider') }}:</strong> {{ $noteVoucher->provider->name }}
+            </div>
+            <div class="col-md-6">
+                <strong>{{ __('messages.toWarehouse') }}:</strong> {{ $noteVoucher->toWarehouse->name }}
+            </div>
+        @elseif ($noteVoucher->noteVoucherType->in_out_type == 2)
+            <!-- For Outgoing Type (in_out_type = 2): From Warehouse to Provider -->
+            <div class="col-md-6">
+                <strong>{{ __('messages.fromWarehouse') }}:</strong> {{ $noteVoucher->fromWarehouse->name }}
+            </div>
+            <div class="col-md-6">
+                <strong>{{ __('messages.provider') }}:</strong> {{ $noteVoucher->provider->name }}
+            </div>
+        @else
+            <!-- For Transfer Type (in_out_type = 3): From Warehouse to Warehouse -->
+            <div class="col-md-6">
+                <strong>{{ __('messages.fromWarehouse') }}:</strong> {{ $noteVoucher->fromWarehouse->name }}
+            </div>
             <div class="col-md-6">
                 <strong>{{ __('messages.toWarehouse') }}:</strong> {{ $noteVoucher->toWarehouse->name }}
             </div>
         @endif
-        
+
         <div class="col-md-12">
             <strong>{{ __('messages.Note') }}:</strong> {{ $noteVoucher->note }}
         </div>

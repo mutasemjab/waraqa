@@ -52,7 +52,15 @@ class Provider extends Authenticatable
     {
         return $this->hasMany(Product::class);
     }
-    
 
+    public function bookRequests()
+    {
+        return $this->hasMany(BookRequest::class);
+    }
+
+    public function bookRequestResponses()
+    {
+        return $this->hasMany(BookRequestResponse::class);
+    }
 
 }

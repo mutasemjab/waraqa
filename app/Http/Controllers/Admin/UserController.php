@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
+use App\Models\Event;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -54,6 +55,11 @@ class UserController extends Controller
             'fcm_token' => 'nullable|string',
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
+            'events' => 'nullable|array',
+            'events.*.name' => 'required_with:events|string|max:255',
+            'events.*.start_date' => 'required_with:events|date_format:Y-m-d\TH:i',
+            'events.*.end_date' => 'required_with:events|date_format:Y-m-d\TH:i|after:events.*.start_date',
+            'events.*.commission_percentage' => 'required_with:events|numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -63,9 +69,7 @@ class UserController extends Controller
                 ->withInput();
         }
 
-        $userData = $request->except('photo');
-
-
+        $userData = $request->except('photo', 'events');
 
         // Handle photo upload
         if ($request->has('photo')) {
@@ -74,7 +78,20 @@ class UserController extends Controller
         }
         $userData['password'] = bcrypt($userData['password']);
 
-        $user =  User::create($userData);
+        $user = User::create($userData);
+
+        // Create events if provided
+        if ($request->has('events') && is_array($request->events)) {
+            foreach ($request->events as $eventData) {
+                Event::create([
+                    'user_id' => $user->id,
+                    'name' => $eventData['name'],
+                    'start_date' => $eventData['start_date'],
+                    'end_date' => $eventData['end_date'],
+                    'commission_percentage' => $eventData['commission_percentage'],
+                ]);
+            }
+        }
 
         DB::table('warehouses')->insert([
             'name' => 'مستودع ' . $request->name,
@@ -107,7 +124,7 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('events')->findOrFail($id);
         $countries = Country::get();
         return view('admin.users.edit', compact('user', 'countries'));
     }
@@ -132,6 +149,11 @@ class UserController extends Controller
             'fcm_token' => 'nullable|string',
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
+            'events' => 'nullable|array',
+            'events.*.name' => 'required_with:events|string|max:255',
+            'events.*.start_date' => 'required_with:events|date_format:Y-m-d\TH:i',
+            'events.*.end_date' => 'required_with:events|date_format:Y-m-d\TH:i|after:events.*.start_date',
+            'events.*.commission_percentage' => 'required_with:events|numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -141,7 +163,7 @@ class UserController extends Controller
                 ->withInput();
         }
 
-        $userData = $request->except('photo', 'password');
+        $userData = $request->except('photo', 'password', 'events', 'deleted_events');
 
         // Handle photo upload
         if ($request->has('photo')) {
@@ -154,6 +176,27 @@ class UserController extends Controller
         }
 
         $user->update($userData);
+
+        // Handle new events
+        if ($request->has('events') && is_array($request->events)) {
+            foreach ($request->events as $eventData) {
+                Event::create([
+                    'user_id' => $user->id,
+                    'name' => $eventData['name'],
+                    'start_date' => $eventData['start_date'],
+                    'end_date' => $eventData['end_date'],
+                    'commission_percentage' => $eventData['commission_percentage'],
+                ]);
+            }
+        }
+
+        // Handle deleted events
+        if ($request->has('deleted_events')) {
+            $deletedIds = array_filter(explode(',', $request->deleted_events));
+            if (!empty($deletedIds)) {
+                Event::whereIn('id', $deletedIds)->delete();
+            }
+        }
 
         return redirect()
             ->route('users.index')

@@ -57,7 +57,7 @@
                     />
                 </div>
             @else
-                <!-- For Other Types: From Warehouse to Warehouse -->
+                <!-- For Other Types: From Warehouse -->
                 <div class="col-md-6">
                     <x-search-select
                         model="App\Models\Warehouse"
@@ -69,7 +69,20 @@
                     />
                 </div>
 
-                @if ($note_voucher_type->in_out_type == 3)
+                @if ($note_voucher_type->in_out_type == 2)
+                    <!-- For Outgoing Type (in_out_type = 2): From Warehouse to Provider -->
+                    <div class="col-md-6">
+                        <x-search-select
+                            model="App\Models\Provider"
+                            fieldName="provider_id"
+                            label="provider"
+                            placeholder="Search..."
+                            limit="10"
+                            required="true"
+                        />
+                    </div>
+                @elseif ($note_voucher_type->in_out_type == 3)
+                    <!-- For Transfer Type (in_out_type = 3): From Warehouse to Warehouse -->
                     <div class="col-md-6">
                         <x-search-select
                             model="App\Models\Warehouse"
@@ -117,8 +130,8 @@
                             <input type="text" class="form-control product-search" name="products[0][name]" placeholder="{{ __('messages.Search_product') }}"/>
                         </td>
                         <td><input type="number" class="form-control product-quantity" name="products[0][quantity]" /></td>
-                        <td><input type="number" class="form-control product-price" name="products[0][price]" step="any" /></td>
-                        <td><input type="number" class="form-control product-tax" name="products[0][tax]" step="any" /></td>
+                        <td><input type="number" class="form-control product-price" name="products[0][price]" step="any" disabled /></td>
+                        <td><input type="number" class="form-control product-tax" name="products[0][tax]" step="any" disabled /></td>
                         @if($note_voucher_type->have_price == 1)
                             <td><input type="number" class="form-control product-purchasing-price" name="products[0][purchasing_price]" step="any" /></td>
                         @endif
@@ -150,6 +163,24 @@ function setRedirect(value) {
     function initializeProductSearch() {
         $('.product-search').autocomplete({
             source: function(request, response) {
+                // Validation: Check if warehouse is selected for outgoing and transfer vouchers
+                const noteVoucherTypeId = {{ $note_voucher_type->in_out_type }};
+                if ((noteVoucherTypeId === 2 || noteVoucherTypeId === 3)) {
+                    const warehouseInput = $('input[name="fromWarehouse"]').closest('.col-md-6').find('input[type="hidden"]');
+                    const warehouseId = warehouseInput.val() || warehouseInput.data('value');
+
+                    if (!warehouseId) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '{{ __("messages.warning") }}',
+                            text: '{{ __("messages.select_warehouse_first") }}',
+                            confirmButtonText: '{{ __("messages.confirm") }}'
+                        });
+                        response([]);
+                        return;
+                    }
+                }
+
                 $.ajax({
                     url: '{{ route("products.search") }}',
                     dataType: 'json',
@@ -185,9 +216,83 @@ function setRedirect(value) {
 
                     // Fill product details
                     selectedRow.find('.product-id').val(ui.item.id);
+                    selectedRow.find('.product-search').val(ui.item.label); // Fill product name
                     selectedRow.find('.product-price').val(ui.item.price);
                     selectedRow.find('.product-tax').val(ui.item.tax);
+
+                    // Fetch available quantity
+                    let url = '{{ route("products.available-quantity", ":productId") }}'.replace(':productId', ui.item.id);
+
+                    // If this is an outgoing or transfer voucher, add warehouse_id filter
+                    const noteVoucherTypeId = {{ $note_voucher_type->in_out_type }};
+                    if ((noteVoucherTypeId === 2 || noteVoucherTypeId === 3)) {
+                        const warehouseInput = $('input[name="fromWarehouse"]').closest('.col-md-6').find('input[type="hidden"]');
+                        const warehouseId = warehouseInput.val() || warehouseInput.data('value');
+                        if (warehouseId) {
+                            url += '?warehouse_id=' + warehouseId;
+                        }
+                    }
+
+                    $.ajax({
+                        url: url,
+                        method: 'GET',
+                        success: function(data) {
+                            console.log('Available quantity fetched:', data.available_quantity);
+                            selectedRow.data('available-quantity', data.available_quantity);
+                            attachQuantityListener(selectedRow);
+                        },
+                        error: function(xhr) {
+                            console.error('Error fetching available quantity:', xhr);
+                        }
+                    });
+
+                    return false; // Prevent default behavior
                 }
+            }
+        });
+    }
+
+    function attachQuantityListener(row) {
+        // Only validate quantity for outgoing (type 2) and transfer (type 3) vouchers
+        const noteVoucherTypeId = {{ $note_voucher_type->in_out_type }};
+
+        if (noteVoucherTypeId !== 2 && noteVoucherTypeId !== 3) {
+            return; // Don't validate for receipt type (type 1)
+        }
+
+        const quantityInput = row.find('.product-quantity');
+
+        // Remove existing listener using namespace
+        quantityInput.off('input.quantity-validation');
+
+        // Attach new listener with namespace
+        quantityInput.on('input.quantity-validation', function() {
+            const enteredQuantity = parseInt($(this).val()) || 0;
+            const availableQuantity = row.data('available-quantity');
+
+            if (availableQuantity === undefined) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '{{ __("messages.warning") }}',
+                    text: '{{ __("messages.select_warehouse_first") }}',
+                    confirmButtonText: '{{ __("messages.confirm") }}'
+                });
+                $(this).val('');
+                return;
+            }
+
+            if (enteredQuantity > availableQuantity) {
+                const message = '{{ __("messages.quantity_exceeds_available") }}'
+                    .replace(':entered', enteredQuantity)
+                    .replace(':available', availableQuantity);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: '{{ __("messages.error") }}',
+                    text: message,
+                    confirmButtonText: '{{ __("messages.confirm") }}'
+                });
+                $(this).val(availableQuantity);
             }
         });
     }
@@ -247,8 +352,8 @@ function setRedirect(value) {
                     <input type="text" class="form-control product-search" name="products[${rowIdx}][name]" placeholder="{{ __('messages.Search_product') }}"/>
                 </td>
                 <td><input type="number" class="form-control product-quantity" name="products[${rowIdx}][quantity]" /></td>
-                <td><input type="number" class="form-control product-price" name="products[${rowIdx}][price]" step="any" /></td>
-                <td><input type="number" class="form-control product-tax" name="products[${rowIdx}][tax]" step="any" /></td>
+                <td><input type="number" class="form-control product-price" name="products[${rowIdx}][price]" step="any" disabled /></td>
+                <td><input type="number" class="form-control product-tax" name="products[${rowIdx}][tax]" step="any" disabled /></td>
         `;
 
         @if($note_voucher_type->have_price == 1)
@@ -261,16 +366,20 @@ function setRedirect(value) {
             </tr>
         `;
 
-        $('#products_table tbody').append(newRowHtml);
+        const newRow = $(newRowHtml);
+        $('#products_table tbody').append(newRow);
         rowIdx++;
         initializeProductSearch();
+        attachQuantityListener(newRow);
     });
 
     $(document).on('click', '.remove-row', function() {
         $(this).closest('tr').remove();
     });
 
+    // Initialize first row
     initializeProductSearch();
+    attachQuantityListener($('tr').first());
     handleBarcodeInput();
 });
 

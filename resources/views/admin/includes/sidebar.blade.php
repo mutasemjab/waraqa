@@ -149,6 +149,14 @@
                     </a>
                 </li>
                 @endcanany
+
+                <!-- Book Requests -->
+                <li class="nav-item">
+                    <a href="{{ route('bookRequests.index') }}" class="nav-link {{ request()->routeIs('bookRequests.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-book"></i>
+                        <p>{{ __('messages.book_requests') }}</p>
+                    </a>
+                </li>
             
          
 

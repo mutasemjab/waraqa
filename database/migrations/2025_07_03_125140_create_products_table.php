@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->string('name_en');
             $table->string('name_ar');
+            $table->string('sku')->nullable();
             $table->double('selling_price');
             $table->double('tax')->default(15);
             $table->string('photo')->nullable();

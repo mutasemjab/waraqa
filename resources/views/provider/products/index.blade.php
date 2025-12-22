@@ -91,7 +91,15 @@
                             
                             <div class="card-body d-flex flex-column">
                                 <h6 class="card-title">{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
-                                
+
+                                @if($product->sku)
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-barcode me-1"></i>SKU: {{ $product->sku }}
+                                        </small>
+                                    </div>
+                                @endif
+
                                 <div class="mb-2">
                                     <small class="text-muted">
                                         <i class="fas fa-folder me-1"></i>

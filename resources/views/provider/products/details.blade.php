@@ -26,7 +26,11 @@
                 @if($product->name_en)
                     <p class="text-muted">{{ $product->name_en }}</p>
                 @endif
-                
+
+                @if($product->sku)
+                    <p class="text-muted mb-3"><strong>SKU:</strong> {{ $product->sku }}</p>
+                @endif
+
                 <div class="row text-center">
                     <div class="col-6">
                         <h4 class="text-success">${{ number_format($product->selling_price, 2) }}</h4>

@@ -10,22 +10,6 @@
                     <h4>{{ __('messages.create_new_order') }}</h4>
                 </div>
                 <div class="card-body">
-                    <!-- Store products data for JavaScript -->
-                    @php
-                        $productsArray = $products->map(function($p) {
-                            return [
-                                'id' => $p->id,
-                                'name_en' => $p->name_en,
-                                'name_ar' => $p->name_ar ?? $p->name_en,
-                                'price' => $p->selling_price,
-                                'tax' => $p->tax ?? 15
-                            ];
-                        })->toArray();
-                    @endphp
-                    <script>
-                        const productsData = @json($productsArray);
-                        const currentLocale = '{{ app()->getLocale() }}';
-                    </script>
 
                     <form action="{{ route('orders.store') }}" method="POST" id="orderForm">
                         @csrf
@@ -45,32 +29,22 @@
                             <div id="products-container">
                                 <div class="product-row mb-3 p-3 border rounded">
                                     <div class="row">
-                                        <div class="col-md-6">
-                                            <select name="products[0][id]" class="form-control product-select" required>
-                                                <option value="">{{ __('messages.select_product') }}</option>
-                                                @foreach($products as $product)
-                                                    <option value="{{ $product->id }}"
-                                                            data-price="{{ $product->selling_price }}"
-                                                            data-tax="{{ $product->tax ?? 15 }}">
-                                                        @if(app()->getLocale() === 'ar')
-                                                            {{ $product->name_ar ?? $product->name_en }} - {{ $product->selling_price }}
-                                                        @else
-                                                            {{ $product->name_en }} - {{ $product->selling_price }}
-                                                        @endif
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                        <div class="col-md-4">
+                                            <input type="hidden" class="form-control product-id" name="products[0][id]" required />
+                                            <input type="hidden" class="form-control product-price" name="products[0][price]" />
+                                            <input type="hidden" class="form-control product-tax" name="products[0][tax]" />
+                                            <input type="text" class="form-control product-search" name="products[0][name]" placeholder="{{ __('messages.search_product') }}" />
                                         </div>
                                         <div class="col-md-3">
-                                            <input type="number" name="products[0][quantity]" 
-                                                   class="form-control quantity-input" 
+                                            <input type="number" name="products[0][quantity]"
+                                                   class="form-control quantity-input"
                                                    placeholder="{{ __('messages.quantity') }}" min="1" required>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-3">
                                             <span><x-riyal-icon style="width: 14px; height: 14px;" /> <span class="line-total">0.00</span></span>
                                         </div>
-                                        <div class="col-md-1">
-                                            <button type="button" class="btn btn-danger remove-product" disabled>×</button>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-danger remove-product btn-sm" disabled>×</button>
                                         </div>
                                     </div>
                                 </div>
@@ -119,7 +93,7 @@
                         </div>
 
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary">{{ __('messages.create_order') }}</button>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">{{ __('messages.create_order') }}</button>
                             <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.cancel') }}</a>
                         </div>
                     </form>
@@ -130,88 +104,142 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let productIndex = 1;
-    
+$(document).ready(function() {
+    let rowIdx = 1;
+
+    function initializeProductSearch() {
+        $('.product-search').autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: '{{ route("products.search") }}',
+                    dataType: 'json',
+                    data: {
+                        term: request.term
+                    },
+                    success: function(data) {
+                        if (data.length === 0) {
+                            response([{ label: 'Not Found', value: '' }]);
+                        } else {
+                            response($.map(data, function(item) {
+                                return {
+                                    label: item.name,
+                                    value: item.name,
+                                    id: item.id,
+                                    selling_price: item.selling_price,
+                                    tax: item.tax,
+                                    price_without_tax: item.price_without_tax
+                                };
+                            }));
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', status, error);
+                    }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                if (ui.item.value === '') {
+                    event.preventDefault();
+                } else {
+                    const selectedRow = $(this).closest('.product-row');
+                    const productId = ui.item.id;
+
+                    // Fill product details
+                    const sellingPrice = parseFloat(ui.item.selling_price);
+                    const taxRate = parseFloat(ui.item.tax);
+
+                    selectedRow.find('.product-id').val(productId);
+                    selectedRow.find('.product-search').val(ui.item.label);
+                    selectedRow.find('.product-price').val(sellingPrice.toFixed(2));
+                    selectedRow.find('.product-tax').val(taxRate);
+
+                    // Calculate price without tax from selling price: priceWithoutTax = sellingPrice / (1 + tax/100)
+                    const priceWithoutTax = sellingPrice / (1 + (taxRate / 100));
+                    selectedRow.data('price-without-tax', priceWithoutTax);
+
+                    // Fetch available quantity
+                    $.ajax({
+                        url: '{{ route("products.available-quantity", ":productId") }}'.replace(':productId', productId),
+                        method: 'GET',
+                        success: function(data) {
+                            selectedRow.data('available-quantity', data.available_quantity);
+                        },
+                        error: function(xhr) {
+                            console.error('Error fetching available quantity:', xhr);
+                        }
+                    });
+
+                    calculateLineTotal(selectedRow);
+
+                    // Close autocomplete
+                    $(this).autocomplete('close');
+                    return false;
+                }
+            }
+        });
+    }
+
     // Add product row
-    document.getElementById('add-product').addEventListener('click', function() {
-        const container = document.getElementById('products-container');
-        const newRow = container.children[0].cloneNode(true);
+    $('#add-product').on('click', function() {
+        const container = $('#products-container');
+        const newRow = container.find('.product-row').first().clone();
 
         // Update indices
-        newRow.querySelectorAll('[name]').forEach(input => {
-            input.name = input.name.replace(/\[0\]/, `[${productIndex}]`);
-            input.value = '';
+        newRow.find('[name]').each(function() {
+            const name = $(this).attr('name');
+            if (name) {
+                $(this).attr('name', name.replace(/\[0\]/, `[${rowIdx}]`));
+            }
+            $(this).val('');
         });
 
-        // Regenerate product options with correct language
-        const productSelect = newRow.querySelector('.product-select');
-        productSelect.innerHTML = '<option value="">{{ __('messages.select_product') }}</option>';
+        newRow.find('.line-total').text('0.00');
+        newRow.find('.remove-product').prop('disabled', false);
 
-        productsData.forEach(product => {
-            const displayName = currentLocale === 'ar' ? product.name_ar : product.name_en;
-            const option = document.createElement('option');
-            option.value = product.id;
-            option.dataset.price = product.price;
-            option.dataset.tax = product.tax;
-            option.textContent = `${displayName} - ${product.price}`;
-            productSelect.appendChild(option);
-        });
+        container.append(newRow);
+        rowIdx++;
 
-        newRow.querySelector('.line-total').textContent = '0.00';
-        newRow.querySelector('.remove-product').disabled = false;
-
-        container.appendChild(newRow);
-        productIndex++;
-
-        attachEventListeners(newRow);
+        initializeProductSearch();
+        attachQuantityListener(newRow);
     });
-    
+
     // Remove product row
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-product') && !e.target.disabled) {
-            e.target.closest('.product-row').remove();
-            calculateTotals();
-        }
+    $(document).on('click', '.remove-product:not(:disabled)', function() {
+        $(this).closest('.product-row').remove();
+        calculateTotals();
     });
-    
-    // Attach event listeners to existing rows
-    document.querySelectorAll('.product-row').forEach(row => {
-        attachEventListeners(row);
-    });
-    
-    // Paid amount change
-    document.getElementById('paid_amount').addEventListener('input', calculateTotals);
-    
-    function attachEventListeners(row) {
-        const productSelect = row.querySelector('.product-select');
-        const quantityInput = row.querySelector('.quantity-input');
-        
-        productSelect.addEventListener('change', function() {
-            calculateLineTotal(row);
-        });
-        
-        quantityInput.addEventListener('input', function() {
+
+    function attachQuantityListener(row) {
+        row.find('.quantity-input').off('input').on('input', function() {
+            const enteredQuantity = parseInt($(this).val()) || 0;
+            const availableQuantity = row.data('available-quantity') || 0;
+
+            if (enteredQuantity > availableQuantity) {
+                const message = '{{ __("messages.quantity_exceeds_available") }}'
+                    .replace(':entered', enteredQuantity)
+                    .replace(':available', availableQuantity);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: '{{ __("messages.error") }}',
+                    text: message,
+                    confirmButtonText: '{{ __("messages.confirm") }}'
+                });
+                $(this).val(availableQuantity);
+            }
+
             calculateLineTotal(row);
         });
     }
-    
-    function calculateLineTotal(row) {
-        const productSelect = row.querySelector('.product-select');
-        const quantityInput = row.querySelector('.quantity-input');
-        const lineTotalSpan = row.querySelector('.line-total');
 
-        const selectedOption = productSelect.options[productSelect.selectedIndex];
-        const price = parseFloat(selectedOption.dataset.price) || 0;
-        const tax = parseFloat(selectedOption.dataset.tax) || 15;
-        const quantity = parseInt(quantityInput.value) || 0;
+    function calculateLineTotal(row) {
+        const price = parseFloat(row.find('.product-price').val()) || 0;
+        const quantity = parseInt(row.find('.quantity-input').val()) || 0;
 
         const subtotal = price * quantity;
-        const taxAmount = (subtotal * tax) / 100;
-        const total = subtotal + taxAmount;
-        
-        lineTotalSpan.textContent = `${total.toFixed(2)}`;
 
+        row.find('.line-total').text(subtotal.toFixed(2));
         calculateTotals();
     }
 
@@ -219,16 +247,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let subtotal = 0;
         let totalTax = 0;
 
-        document.querySelectorAll('.product-row').forEach(row => {
-            const productSelect = row.querySelector('.product-select');
-            const quantityInput = row.querySelector('.quantity-input');
+        $('.product-row').each(function() {
+            const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 15;
+            const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
 
-            const selectedOption = productSelect.options[productSelect.selectedIndex];
-            const price = parseFloat(selectedOption.dataset.price) || 0;
-            const tax = parseFloat(selectedOption.dataset.tax) || 15;
-            const quantity = parseInt(quantityInput.value) || 0;
-
-            const lineSubtotal = price * quantity;
+            // Subtotal is the price without tax × quantity
+            const lineSubtotal = priceWithoutTax * quantity;
+            // Tax is calculated from price without tax
             const lineTax = (lineSubtotal * tax) / 100;
 
             subtotal += lineSubtotal;
@@ -236,14 +262,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         const grandTotal = subtotal + totalTax;
-        const paidAmount = parseFloat(document.getElementById('paid_amount').value) || 0;
+        const paidAmount = parseFloat($('#paid_amount').val()) || 0;
         const remainingAmount = Math.max(0, grandTotal - paidAmount);
 
-        document.getElementById('subtotal').textContent = `${subtotal.toFixed(2)}`;
-        document.getElementById('tax-total').textContent = `${totalTax.toFixed(2)}`;
-        document.getElementById('grand-total').textContent = `${grandTotal.toFixed(2)}`;
-        document.getElementById('remaining-amount').textContent = `${remainingAmount.toFixed(2)}`;
+        $('#subtotal').text(subtotal.toFixed(2));
+        $('#tax-total').text(totalTax.toFixed(2));
+        $('#grand-total').text(grandTotal.toFixed(2));
+        $('#remaining-amount').text(remainingAmount.toFixed(2));
     }
+
+    // Initialize first row search and quantity listener
+    initializeProductSearch();
+    $('.product-row').each(function() {
+        attachQuantityListener($(this));
+    });
+
+    // Paid amount change
+    $('#paid_amount').on('input', calculateTotals);
 });
 </script>
 @endsection

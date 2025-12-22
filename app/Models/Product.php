@@ -10,8 +10,16 @@ use Illuminate\Support\Facades\DB;
 class Product extends Model
 {
     use HasFactory;
-      
+
     protected $guarded = [];
+
+    protected $appends = ['price_without_tax'];
+
+    public function getPriceWithoutTaxAttribute()
+    {
+        $tax = $this->tax ?? 15;
+        return $this->selling_price / (1 + ($tax / 100));
+    }
 
      public function category()
     {
@@ -31,6 +39,11 @@ class Product extends Model
    public function voucherProducts()
     {
         return $this->hasMany(VoucherProduct::class);
+    }
+
+    public function bookRequests()
+    {
+        return $this->hasMany(BookRequest::class);
     }
 
 }

@@ -507,7 +507,14 @@
                     <span class="notification-badge">5</span>
                 </a>
             </div>
-            
+
+            <div class="nav-item">
+                <a href="{{ route('provider.bookRequests.index') }}" class="nav-link {{ request()->routeIs('provider.bookRequests*') ? 'active' : '' }}">
+                    <i class="fas fa-book"></i>
+                    <span>{{ __('messages.book_requests') }}</span>
+                </a>
+            </div>
+
             <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-chart-line"></i>

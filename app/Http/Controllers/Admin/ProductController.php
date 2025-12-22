@@ -19,11 +19,15 @@ class ProductController extends Controller
             ->limit(10)
             ->get()
             ->map(function ($product) {
+                $tax = $product->tax ?? 15;
+                $priceWithoutTax = $product->selling_price / (1 + ($tax / 100));
+
                 return [
                     'id' => $product->id,
                     'name' => app()->getLocale() === 'ar' ? $product->name_ar : $product->name_en,
-                    'tax' => $product->tax,
+                    'tax' => $tax,
                     'selling_price' => $product->selling_price,
+                    'price_without_tax' => $priceWithoutTax,
                 ];
             });
 
@@ -51,6 +55,7 @@ class ProductController extends Controller
         $request->validate([
             'name_en'       => 'required|string|max:255',
             'name_ar'       => 'required|string|max:255',
+            'sku'           => 'nullable|string|max:255',
             'category_id'   => 'nullable|exists:categories,id',
             'provider_id'   => 'nullable|exists:providers,id',
             'selling_price' => 'required|numeric|min:0',
@@ -66,6 +71,7 @@ class ProductController extends Controller
         DB::table('products')->insert([
             'name_en'       => $request->name_en,
             'name_ar'       => $request->name_ar,
+            'sku'           => $request->sku,
             'category_id'   => $request->category_id,
             'provider_id'   => $request->provider_id,
             'selling_price' => $request->selling_price,
@@ -104,6 +110,7 @@ class ProductController extends Controller
         $request->validate([
             'name_en'       => 'required|string|max:255',
             'name_ar'       => 'required|string|max:255',
+            'sku'           => 'nullable|string|max:255',
             'category_id'   => 'nullable|exists:categories,id',
             'provider_id'   => 'nullable|exists:providers,id',
             'selling_price' => 'required|numeric|min:0',
@@ -120,6 +127,7 @@ class ProductController extends Controller
         DB::table('products')->where('id', $id)->update([
             'name_en'       => $request->name_en,
             'name_ar'       => $request->name_ar,
+            'sku'           => $request->sku,
             'category_id'   => $request->category_id,
             'provider_id'   => $request->provider_id,
             'selling_price' => $request->selling_price,
@@ -131,6 +139,50 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', __('messages.Product_Updated'));
     }
 
-   
+    public function availableQuantity($productId)
+    {
+        $warehouseId = request()->query('warehouse_id');
+        $excludeVoucherId = request()->query('exclude_voucher_id');
+
+        // Build base query for getting input (receipt) quantities
+        $inputQuery = DB::table('voucher_products')
+            ->join('note_vouchers', 'voucher_products.note_voucher_id', '=', 'note_vouchers.id')
+            ->join('note_voucher_types', 'note_vouchers.note_voucher_type_id', '=', 'note_voucher_types.id')
+            ->where('voucher_products.product_id', $productId)
+            ->where('note_voucher_types.in_out_type', 1); // Input/Receipt vouchers
+
+        // If warehouse_id is provided, filter by warehouse
+        if ($warehouseId) {
+            $inputQuery->where('note_vouchers.to_warehouse_id', $warehouseId);
+        }
+
+        $totalInput = $inputQuery->sum('voucher_products.quantity');
+
+        // Build base query for getting output quantities
+        $outputQuery = DB::table('voucher_products')
+            ->join('note_vouchers', 'voucher_products.note_voucher_id', '=', 'note_vouchers.id')
+            ->join('note_voucher_types', 'note_vouchers.note_voucher_type_id', '=', 'note_voucher_types.id')
+            ->where('voucher_products.product_id', $productId)
+            ->whereIn('note_voucher_types.in_out_type', [2, 3]); // Output and Transfer vouchers
+
+        // If warehouse_id is provided, filter by source warehouse
+        if ($warehouseId) {
+            $outputQuery->where('note_vouchers.from_warehouse_id', $warehouseId);
+        }
+
+        // Exclude the current voucher if provided (useful when editing)
+        if ($excludeVoucherId) {
+            $outputQuery->where('note_vouchers.id', '!=', $excludeVoucherId);
+        }
+
+        $totalOutput = $outputQuery->sum('voucher_products.quantity');
+
+        // Available quantity = Input - Output
+        $availableQuantity = ($totalInput ?? 0) - ($totalOutput ?? 0);
+
+        return response()->json([
+            'available_quantity' => max(0, $availableQuantity) // Ensure non-negative
+        ]);
+    }
 
 }

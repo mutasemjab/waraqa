@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\ContactUsController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\Provider\ProviderDashboardController;
+use App\Http\Controllers\Provider\BookRequestController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TripTypeController;
 use App\Http\Controllers\User\HomeController;
@@ -120,6 +121,12 @@ Route::middleware(['auth:provider'])->prefix('provider')->name('provider.')->gro
     // Users/Customers Management
     Route::get('/users', [ProviderDashboardController::class, 'users'])->name('users');
     Route::get('/users/{user}/details', [ProviderDashboardController::class, 'userDetails'])->name('users.details');
+
+    // Book Requests Management
+    Route::get('/bookRequests', [BookRequestController::class, 'index'])->name('bookRequests.index');
+    Route::get('/bookRequests/{bookRequest}', [BookRequestController::class, 'show'])->name('bookRequests.show');
+    Route::get('/bookRequests/{bookRequest}/respond', [BookRequestController::class, 'createResponse'])->name('bookRequests.respond');
+    Route::post('/bookRequests/{bookRequest}/respond', [BookRequestController::class, 'storeResponse'])->name('bookRequests.storeResponse');
 
     // Analytics & Reports
     Route::get('/analytics', [ProviderDashboardController::class, 'analytics'])->name('analytics');

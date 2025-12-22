@@ -33,6 +33,13 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label for="sku" class="form-label">{{ __('messages.SKU') }}</label>
+                                    <input type="text" class="form-control @error('sku') is-invalid @enderror"
+                                           id="sku" name="sku" value="{{ old('sku', $product->sku) }}">
+                                    @error('sku')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div class="mb-3">
                                     <label for="category_id" class="form-label">{{ __('messages.Category') }}</label>
                                     <select class="form-control @error('category_id') is-invalid @enderror"
                                             id="category_id" name="category_id">
