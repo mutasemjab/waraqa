@@ -100,11 +100,11 @@
                                 <td>
                                     <span class="badge bg-info">{{ $order->orderProducts->count() }} {{ __('messages.items') }}</span>
                                 </td>
-                                <td class="fw-bold">${{ number_format($order->total_prices, 2) }}</td>
-                                <td class="text-success">${{ number_format($order->paid_amount, 2) }}</td>
+                                <td class="fw-bold"><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</td>
+                                <td class="text-success"><x-riyal-icon /> {{ number_format($order->paid_amount, 2) }}</td>
                                 <td>
                                     @if($order->remaining_amount > 0)
-                                        <span class="text-danger fw-bold">${{ number_format($order->remaining_amount, 2) }}</span>
+                                        <span class="text-danger fw-bold"><x-riyal-icon /> {{ number_format($order->remaining_amount, 2) }}</span>
                                     @else
                                         <span class="text-success">{{ __('messages.fully_paid') }}</span>
                                     @endif
@@ -166,7 +166,7 @@
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body text-center">
-                    <h3>${{ number_format($orders->sum('total_prices'), 2) }}</h3>
+                    <h3><x-riyal-icon /> {{ number_format($orders->sum('total_prices'), 2) }}</h3>
                     <p class="mb-0">{{ __('messages.total_value') }}</p>
                 </div>
             </div>
@@ -174,7 +174,7 @@
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body text-center">
-                    <h3>${{ number_format($orders->sum('paid_amount'), 2) }}</h3>
+                    <h3><x-riyal-icon /> {{ number_format($orders->sum('paid_amount'), 2) }}</h3>
                     <p class="mb-0">{{ __('messages.total_paid') }}</p>
                 </div>
             </div>
@@ -182,7 +182,7 @@
         <div class="col-md-3">
             <div class="card bg-warning text-white">
                 <div class="card-body text-center">
-                    <h3>${{ number_format($orders->sum('remaining_amount'), 2) }}</h3>
+                    <h3><x-riyal-icon /> {{ number_format($orders->sum('remaining_amount'), 2) }}</h3>
                     <p class="mb-0">{{ __('messages.total_remaining') }}</p>
                 </div>
             </div>
@@ -252,8 +252,8 @@
 function showPaymentModal(orderId, orderNumber, remainingAmount) {
     document.getElementById('order_id').value = orderId;
     document.getElementById('order_number').value = orderNumber;
-    document.getElementById('remaining_amount').value = '$' + remainingAmount.toFixed(2);
-    
+    document.getElementById('remaining_amount').value = remainingAmount.toFixed(2);
+
     const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
     modal.show();
 }

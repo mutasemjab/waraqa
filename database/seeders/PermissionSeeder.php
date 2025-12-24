@@ -112,6 +112,8 @@ class PermissionSeeder extends Seeder
             'bookRequest-add',
             'bookRequest-edit',
             'bookRequest-delete',
+            'bookRequest-approve',
+            'bookRequest-reject',
         ];
 
         $data = array_map(function ($permission) {

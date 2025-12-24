@@ -188,7 +188,8 @@
         showLoading();
         openDropdown();
 
-        const url = `${apiUrl}?model=${encodeURIComponent(model)}&limit=${limit}&term=${encodeURIComponent(term)}`;
+        const displayColumn = '{{ $displayColumn ?? 'name' }}';
+        const url = `${apiUrl}?model=${encodeURIComponent(model)}&limit=${limit}&term=${encodeURIComponent(term)}&displayColumn=${encodeURIComponent(displayColumn)}`;
 
         fetch(url)
             .then(response => response.json())

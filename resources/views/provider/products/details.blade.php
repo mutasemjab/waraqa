@@ -33,7 +33,7 @@
 
                 <div class="row text-center">
                     <div class="col-6">
-                        <h4 class="text-success">${{ number_format($product->selling_price, 2) }}</h4>
+                        <h4 class="text-success"><x-riyal-icon /> {{ number_format($product->selling_price, 2) }}</h4>
                         <small class="text-muted">{{ __('messages.selling_price') }}</small>
                     </div>
                     <div class="col-6">
@@ -109,13 +109,13 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="text-center">
-                            <h4 class="text-success">${{ number_format($analytics['total_revenue'], 2) }}</h4>
+                            <h4 class="text-success"><x-riyal-icon /> {{ number_format($analytics['total_revenue'], 2) }}</h4>
                             <p class="text-muted">{{ __('messages.total_revenue_from_product') }}</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-center">
-                            <h4 class="text-info">${{ number_format($analytics['average_selling_price'] ?? 0, 2) }}</h4>
+                            <h4 class="text-info"><x-riyal-icon /> {{ number_format($analytics['average_selling_price'] ?? 0, 2) }}</h4>
                             <p class="text-muted">{{ __('messages.average_user_selling_price') }}</p>
                         </div>
                     </div>
@@ -219,7 +219,7 @@
                                             <p class="text-muted mb-1">
                                                 {{ __('messages.sold') }} {{ $sale->quantity }} {{ __('messages.items') }}
                                                 @if($sale->purchasing_price)
-                                                    {{ __('messages.at') }} ${{ number_format($sale->purchasing_price, 2) }}
+                                                    {{ __('messages.at') }} <x-riyal-icon /> {{ number_format($sale->purchasing_price, 2) }}
                                                 @endif
                                             </p>
                                             <small class="text-muted">{{ $sale->noteVoucher->date_note_voucher }}</small>
@@ -227,7 +227,7 @@
                                         <div class="text-end">
                                             @if($sale->purchasing_price)
                                                 <div class="fw-bold text-success">
-                                                    ${{ number_format($sale->quantity * $sale->purchasing_price, 2) }}
+                                                    <x-riyal-icon /> {{ number_format($sale->quantity * $sale->purchasing_price, 2) }}
                                                 </div>
                                             @endif
                                         </div>
@@ -284,8 +284,8 @@
                                 <td>
                                     <span class="badge bg-info">{{ $orderProduct->quantity }}</span>
                                 </td>
-                                <td>${{ number_format($orderProduct->unit_price, 2) }}</td>
-                                <td class="fw-bold text-success">${{ number_format($orderProduct->total_price_after_tax, 2) }}</td>
+                                <td><x-riyal-icon /> {{ number_format($orderProduct->unit_price, 2) }}</td>
+                                <td class="fw-bold text-success"><x-riyal-icon /> {{ number_format($orderProduct->total_price_after_tax, 2) }}</td>
                                 <td>
                                     @if($orderProduct->order->status == 1)
                                         <span class="badge bg-success">{{ __('messages.completed') }}</span>

@@ -124,7 +124,7 @@
                                         @endif
                                         <div class="mt-1">
                                             <span class="badge bg-info">{{ $product->available_quantity }} {{ __('messages.available') }}</span>
-                                            <span class="badge bg-success">${{ number_format($product->selling_price, 2) }}</span>
+                                            <span class="badge bg-success"><x-riyal-icon style="width: 12px; height: 12px;" /> {{ number_format($product->selling_price, 2) }}</span>
                                         </div>
                                         @if($product->category)
                                             <small class="text-muted">{{ $product->category->name_ar }}</small>
@@ -164,7 +164,7 @@
                 </div>
                 <div class="summary-item d-flex justify-content-between mb-2">
                     <span>{{ __('messages.total_value') }}:</span>
-                    <span id="totalValue">$0.00</span>
+                    <span><x-riyal-icon /> <span id="totalValue">0.00</span></span>
                 </div>
                 <hr>
                 <div class="summary-item d-flex justify-content-between">
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         document.getElementById('totalItems').textContent = totalItems;
-        document.getElementById('totalValue').textContent = '$' + totalValue.toFixed(2);
+        document.getElementById('totalValue').textContent = totalValue.toFixed(2);
         document.getElementById('productsCount').textContent = productsCount;
     }
 

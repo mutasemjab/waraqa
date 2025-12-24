@@ -26,7 +26,7 @@
             <i class="fas fa-dollar-sign"></i>
         </div>
         <div class="stat-content">
-            <h3>${{ number_format($topProducts->sum('total_spent'), 2) }}</h3>
+            <h3><x-riyal-icon /> {{ number_format($topProducts->sum('total_spent'), 2) }}</h3>
             <p>{{ __('messages.total_amount_spent') }}</p>
         </div>
     </div>
@@ -36,7 +36,7 @@
             <i class="fas fa-chart-line"></i>
         </div>
         <div class="stat-content">
-            <h3>${{ number_format($topProducts->avg('total_spent'), 2) }}</h3>
+            <h3><x-riyal-icon /> {{ number_format($topProducts->avg('total_spent'), 2) }}</h3>
             <p>{{ __('messages.average_order_value') }}</p>
         </div>
     </div>
@@ -135,7 +135,7 @@
                                 <h6 class="mb-1">{{ $product->name_ar }}</h6>
                                 <small class="text-muted">
                                     {{ $product->total_quantity }} {{ __('messages.items') }} • 
-                                    ${{ number_format($product->total_spent, 2) }}
+                                    <x-riyal-icon /> {{ number_format($product->total_spent, 2) }}
                                 </small>
                             </div>
                         </div>
@@ -207,7 +207,7 @@
                                     $savings = $avgSpending > $lastMonthSpending ? $avgSpending - $lastMonthSpending : 0;
                                 @endphp
                                 @if($savings > 0)
-                                    ${{ number_format($savings, 2) }} {{ __('messages.saved_last_month') }}
+                                    <x-riyal-icon /> {{ number_format($savings, 2) }} {{ __('messages.saved_last_month') }}
                                 @else
                                     {{ __('messages.maintain_budget') }}
                                 @endif

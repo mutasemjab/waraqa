@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserDeptController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\Admin\BookRequestController;
+use App\Http\Controllers\Admin\ReportController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Spatie\Permission\Models\Permission;
 /*
@@ -77,9 +78,16 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::resource('user_depts', UserDeptController::class);
         Route::resource('bookRequests', BookRequestController::class);
 
+        // Book Request Responses
+        Route::post('bookRequests/responses/{response}/approve', [BookRequestController::class, 'approve'])->name('bookRequests.responses.approve');
+        Route::post('bookRequests/responses/{response}/reject', [BookRequestController::class, 'reject'])->name('bookRequests.responses.reject');
+
         // Additional routes for user debts
         Route::post('user_depts/{userDept}/make_payment', [UserDeptController::class, 'makePayment'])->name('user_depts.make_payment');
         Route::get('user_summary/{userId}', [UserDeptController::class, 'userSummary'])->name('user_depts.user_summary');
+
+        // Reports
+        Route::get('reports/note-vouchers', [ReportController::class, 'noteVouchersReport'])->name('admin.reports.noteVouchers');
     });
 });
 

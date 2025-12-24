@@ -12,9 +12,15 @@
 <div class="card">
     <div class="card-header">
         <h3 class="card-title card_title_center"> {{ __('messages.noteVouchers') }} </h3>
-     
+
         {{-- <a href="{{ route('noteVouchers.create') }}" class="btn btn-sm btn-success"> {{ __('messages.New') }} {{
             __('messages.noteVouchers') }}</a> --}}
+
+        @can('noteVoucher-table')
+        <a href="{{ route('admin.reports.noteVouchers') }}" class="btn btn-sm btn-info" style="float: right;">
+            <i class="fas fa-chart-bar"></i> {{ __('messages.Report') }}
+        </a>
+        @endcan
 
     </div>
     <!-- /.card-header -->

@@ -36,11 +36,11 @@
                                     <td>{{ $order->number }}</td>
                                     <td>{{ $order->user->name ?? 'N/A' }}</td>
                                     <td>{{ $order->date->format('M d, Y') }}</td>
-                                    <td>${{ number_format($order->total_prices, 2) }}</td>
-                                    <td>${{ number_format($order->paid_amount, 2) }}</td>
+                                    <td><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</td>
+                                    <td><x-riyal-icon /> {{ number_format($order->paid_amount, 2) }}</td>
                                     <td>
                                         <span class="badge {{ $order->remaining_amount > 0 ? 'bg-warning' : 'bg-success' }}">
-                                            ${{ number_format($order->remaining_amount, 2) }}
+                                            <x-riyal-icon /> {{ number_format($order->remaining_amount, 2) }}
                                         </span>
                                     </td>
                                     <td>

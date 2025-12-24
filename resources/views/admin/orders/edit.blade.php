@@ -93,7 +93,7 @@
                                                    required>
                                         </div>
                                         <div class="col-md-2">
-                                            <span class="line-total">${{ number_format($orderProduct->total_price_after_tax, 2) }}</span>
+                                            <span class="line-total"><x-riyal-icon style="width: 12px; height: 12px;" /> {{ number_format($orderProduct->total_price_after_tax, 2) }}</span>
                                         </div>
                                         <div class="col-md-1">
                                             <button type="button" class="btn btn-danger remove-product" 
@@ -123,19 +123,19 @@
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between">
                                                 <span>{{ __('messages.subtotal') }}:</span>
-                                                <span id="subtotal">${{ number_format($order->total_prices - $order->total_taxes, 2) }}</span>
+                                                <span id="subtotal"><x-riyal-icon style="width: 14px; height: 14px;" /> {{ number_format($order->total_prices - $order->total_taxes, 2) }}</span>
                                             </div>
                                             <div class="d-flex justify-content-between">
                                                 <span>{{ __('messages.tax') }}:</span>
-                                                <span id="tax-total">${{ number_format($order->total_taxes, 2) }}</span>
+                                                <span id="tax-total"><x-riyal-icon style="width: 14px; height: 14px;" /> {{ number_format($order->total_taxes, 2) }}</span>
                                             </div>
                                             <div class="d-flex justify-content-between font-weight-bold">
                                                 <span>{{ __('messages.total') }}:</span>
-                                                <span id="grand-total">${{ number_format($order->total_prices, 2) }}</span>
+                                                <span id="grand-total"><x-riyal-icon style="width: 14px; height: 14px;" /> {{ number_format($order->total_prices, 2) }}</span>
                                             </div>
                                             <div class="d-flex justify-content-between text-muted">
                                                 <span>{{ __('messages.remaining') }}:</span>
-                                                <span id="remaining-amount">${{ number_format($order->remaining_amount, 2) }}</span>
+                                                <span id="remaining-amount"><x-riyal-icon style="width: 14px; height: 14px;" /> {{ number_format($order->remaining_amount, 2) }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -244,17 +244,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const productSelect = row.querySelector('.product-select');
         const quantityInput = row.querySelector('.quantity-input');
         const lineTotalSpan = row.querySelector('.line-total');
-        
+
         const selectedOption = productSelect.options[productSelect.selectedIndex];
-        const price = parseFloat(selectedOption.dataset.price) || 0;
+        const sellingPrice = parseFloat(selectedOption.dataset.price) || 0; // السعر مع الضريبة
         const tax = parseFloat(selectedOption.dataset.tax) || 0;
         const quantity = parseInt(quantityInput.value) || 0;
-        
-        const subtotal = price * quantity;
+
+        // حساب السعر بدون ضريبة من السعر مع الضريبة
+        const priceBeforeTax = sellingPrice / (1 + (tax / 100));
+        const subtotal = priceBeforeTax * quantity;
         const taxAmount = (subtotal * tax) / 100;
         const total = subtotal + taxAmount;
-        
-        lineTotalSpan.textContent = `$${total.toFixed(2)}`;
+
+        lineTotalSpan.innerHTML = '<x-riyal-icon style="width: 12px; height: 12px;" /> ' + total.toFixed(2);
         
         calculateTotals();
     }
@@ -262,19 +264,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function calculateTotals() {
         let subtotal = 0;
         let totalTax = 0;
-        
+
         document.querySelectorAll('.product-row').forEach(row => {
             const productSelect = row.querySelector('.product-select');
             const quantityInput = row.querySelector('.quantity-input');
-            
+
             const selectedOption = productSelect.options[productSelect.selectedIndex];
-            const price = parseFloat(selectedOption.dataset.price) || 0;
+            const sellingPrice = parseFloat(selectedOption.dataset.price) || 0; // السعر مع الضريبة
             const tax = parseFloat(selectedOption.dataset.tax) || 0;
             const quantity = parseInt(quantityInput.value) || 0;
-            
-            const lineSubtotal = price * quantity;
+
+            // حساب السعر بدون ضريبة من السعر مع الضريبة
+            const priceBeforeTax = sellingPrice / (1 + (tax / 100));
+            const lineSubtotal = priceBeforeTax * quantity;
             const lineTax = (lineSubtotal * tax) / 100;
-            
+
             subtotal += lineSubtotal;
             totalTax += lineTax;
         });
@@ -282,11 +286,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const grandTotal = subtotal + totalTax;
         const paidAmount = parseFloat(document.getElementById('paid_amount').value) || 0;
         const remainingAmount = Math.max(0, grandTotal - paidAmount);
-        
-        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('tax-total').textContent = `$${totalTax.toFixed(2)}`;
-        document.getElementById('grand-total').textContent = `$${grandTotal.toFixed(2)}`;
-        document.getElementById('remaining-amount').textContent = `$${remainingAmount.toFixed(2)}`;
+
+        const riyalIcon = '<svg viewBox="0 0 1124.14 1256.39" xmlns="http://www.w3.org/2000/svg" style="width: 14px; height: 14px; display: inline; margin-right: 4px; vertical-align: middle;"><path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></svg>';
+
+        document.getElementById('subtotal').innerHTML = riyalIcon + subtotal.toFixed(2);
+        document.getElementById('tax-total').innerHTML = riyalIcon + totalTax.toFixed(2);
+        document.getElementById('grand-total').innerHTML = riyalIcon + grandTotal.toFixed(2);
+        document.getElementById('remaining-amount').innerHTML = riyalIcon + remainingAmount.toFixed(2);
     }
     
     // Initial calculation

@@ -76,7 +76,7 @@
                 </div>
                 <div class="card-body">
                     @php
-                        $myResponse = $bookRequest->responses->where('provider_id', auth('provider')->id())->first();
+                        $myResponse = $bookRequest->responses->where('provider_id', $provider->id)->first();
                     @endphp
                     <div class="row">
                         <div class="col-md-6">
@@ -129,7 +129,11 @@
                     <small class="text-muted">{{ __('messages.Category') }}</small>
                     <p>
                         <strong>
-                            {{ app()->getLocale() == 'ar' ? $bookRequest->product->category->name_ar : $bookRequest->product->category->name_en }}
+                            @if($bookRequest->product->category)
+                                {{ app()->getLocale() == 'ar' ? $bookRequest->product->category->name_ar : $bookRequest->product->category->name_en }}
+                            @else
+                                {{ __('messages.uncategorized') }}
+                            @endif
                         </strong>
                     </p>
                 </div>
@@ -157,7 +161,7 @@
                     <h6 class="mb-0">{{ __('messages.Other_Responses') }}</h6>
                 </div>
                 <div class="card-body">
-                    @foreach($bookRequest->responses->where('provider_id', '!=', auth('provider')->id()) as $response)
+                    @foreach($bookRequest->responses->where('provider_id', '!=', $provider->id) as $response)
                         <div class="mb-3 pb-3 border-bottom">
                             <h6 class="mb-1">{{ $response->provider->name }}</h6>
                             <small class="text-muted">

@@ -26,7 +26,7 @@
             <i class="fas fa-check-circle"></i>
         </div>
         <div class="stat-content">
-            <h3>{{ $bookRequests->filter(fn($r) => $r->responses->where('provider_id', auth('provider')->id())->count() > 0)->count() }}</h3>
+            <h3>{{ $bookRequests->filter(fn($r) => $r->responses->where('provider_id', $provider->id)->count() > 0)->count() }}</h3>
             <p>{{ __('messages.requests_responded') }}</p>
         </div>
     </div>
@@ -36,7 +36,7 @@
             <i class="fas fa-clock"></i>
         </div>
         <div class="stat-content">
-            <h3>{{ $bookRequests->filter(fn($r) => $r->responses->where('provider_id', auth('provider')->id())->count() == 0)->count() }}</h3>
+            <h3>{{ $bookRequests->filter(fn($r) => $r->responses->where('provider_id', $provider->id)->count() == 0)->count() }}</h3>
             <p>{{ __('messages.pending_response') }}</p>
         </div>
     </div>
@@ -66,7 +66,7 @@
                     <tbody>
                         @foreach($bookRequests as $request)
                             @php
-                                $hasResponse = $request->responses->where('provider_id', auth('provider')->id())->count() > 0;
+                                $hasResponse = $request->responses->where('provider_id', $provider->id)->count() > 0;
                             @endphp
                             <tr>
                                 <td>

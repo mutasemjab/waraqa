@@ -22,35 +22,27 @@
                     <form action="{{ route('bookRequests.store') }}" method="POST">
                         @csrf
 
-                        <div class="mb-3">
-                            <label for="product_id" class="form-label">{{ __('messages.Product') }} <span class="text-danger">*</span></label>
-                            <select name="product_id" id="product_id" class="form-select @error('product_id') is-invalid @enderror" required>
-                                <option value="">-- {{ __('messages.Select_Product') }} --</option>
-                                @foreach($products as $product)
-                                    <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
-                                        {{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('product_id')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
+                        <x-search-select
+                            :model="'App\Models\Product'"
+                            fieldName="product_id"
+                            label="Product"
+                            placeholder="Search for product..."
+                            :limit="10"
+                            :required="true"
+                            :value="old('product_id')"
+                            displayColumn="name_ar"
+                        />
 
-                        <div class="mb-3">
-                            <label for="provider_id" class="form-label">{{ __('messages.provider') }} <span class="text-danger">*</span></label>
-                            <select name="provider_id" id="provider_id" class="form-select @error('provider_id') is-invalid @enderror" required>
-                                <option value="">-- {{ __('messages.Select_Provider') }} --</option>
-                                @foreach($providers as $provider)
-                                    <option value="{{ $provider->id }}" {{ old('provider_id') == $provider->id ? 'selected' : '' }}>
-                                        {{ $provider->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('provider_id')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
+                        <x-search-select
+                            :model="'App\Models\Provider'"
+                            fieldName="provider_id"
+                            label="provider"
+                            placeholder="Search for provider..."
+                            :limit="10"
+                            :required="true"
+                            :value="old('provider_id')"
+                            displayColumn="name"
+                        />
 
                         <div class="mb-3">
                             <label for="requested_quantity" class="form-label">{{ __('messages.Requested_Quantity') }} <span class="text-danger">*</span></label>

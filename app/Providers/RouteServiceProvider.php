@@ -28,6 +28,9 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
 
+        // Route Model Bindings
+        Route::model('response', \App\Models\BookRequestResponse::class);
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

@@ -197,10 +197,7 @@
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                 {{ __('messages.today_revenue') }}
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ number_format($stats['revenue_today'], 2) }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><x-riyal-icon /> {{ number_format($stats['revenue_today'], 2) }}</div>
                         </div>
                     </div>
                 </div>
@@ -272,7 +269,7 @@
                             <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
                                 {{ __('messages.monthly_revenue') }}
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ number_format($stats['revenue_month'], 2) }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><x-riyal-icon /> {{ number_format($stats['revenue_month'], 2) }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-chart-line fa-2x text-gray-300"></i>

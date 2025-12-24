@@ -71,13 +71,13 @@
             </div>
             <div class="col-md-3">
                 <div class="text-center">
-                    <h3 class="text-success">${{ number_format($report['order_summary']['total_spent'], 2) }}</h3>
+                    <h3 class="text-success"><x-riyal-icon /> {{ number_format($report['order_summary']['total_spent'], 2) }}</h3>
                     <p class="text-muted">{{ __('messages.total_spent') }}</p>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="text-center">
-                    <h3 class="text-info">${{ number_format($report['order_summary']['average_order_value'], 2) }}</h3>
+                    <h3 class="text-info"><x-riyal-icon /> {{ number_format($report['order_summary']['average_order_value'], 2) }}</h3>
                     <p class="text-muted">{{ __('messages.average_order_value') }}</p>
                 </div>
             </div>
@@ -127,13 +127,13 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="text-center">
-                    <h4 class="text-danger">${{ number_format($report['payment_summary']['total_debt'], 2) }}</h4>
+                    <h4 class="text-danger"><x-riyal-icon /> {{ number_format($report['payment_summary']['total_debt'], 2) }}</h4>
                     <p class="text-muted">{{ __('messages.outstanding_debt') }}</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="text-center">
-                    <h4 class="text-success">${{ number_format($report['payment_summary']['total_paid'], 2) }}</h4>
+                    <h4 class="text-success"><x-riyal-icon /> {{ number_format($report['payment_summary']['total_paid'], 2) }}</h4>
                     <p class="text-muted">{{ __('messages.total_paid') }}</p>
                 </div>
             </div>
@@ -183,7 +183,7 @@
                                     <span class="badge bg-info">{{ $product->total_quantity }}</span>
                                 </td>
                                 <td>
-                                    <strong>${{ number_format($product->total_spent, 2) }}</strong>
+                                    <strong><x-riyal-icon /> {{ number_format($product->total_spent, 2) }}</strong>
                                 </td>
                                 <td>
                                     @php
@@ -226,7 +226,7 @@
                         <div class="timeline-marker bg-primary"></div>
                         <div class="timeline-content">
                             <h6 class="mb-1">{{ __('messages.order') }} {{ $order->number }}</h6>
-                            <p class="text-muted mb-1">${{ number_format($order->total_prices, 2) }} • {{ $order->orderProducts->count() }} {{ __('messages.items') }}</p>
+                            <p class="text-muted mb-1"><x-riyal-icon /> {{ number_format($order->total_prices, 2) }} • {{ $order->orderProducts->count() }} {{ __('messages.items') }}</p>
                             <small class="text-muted">{{ Carbon\Carbon::parse($order->date)->format('M d, Y H:i') }}</small>
                             
                             @if($order->orderProducts->count() > 0)

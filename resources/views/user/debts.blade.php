@@ -14,7 +14,7 @@
     <div class="col-md-4">
         <div class="card bg-danger text-white">
             <div class="card-body text-center">
-                <h3>${{ number_format($totalDebt, 2) }}</h3>
+                <h3><x-riyal-icon /> {{ number_format($totalDebt, 2) }}</h3>
                 <p class="mb-0">{{ __('messages.total_outstanding_debt') }}</p>
             </div>
         </div>
@@ -109,11 +109,11 @@
                                         {{ Carbon\Carbon::parse($debt->order->date)->format('M d, Y') }}
                                     </small>
                                 </td>
-                                <td class="fw-bold">${{ number_format($debt->total_amount, 2) }}</td>
-                                <td class="text-success">${{ number_format($debt->paid_amount, 2) }}</td>
+                                <td class="fw-bold"><x-riyal-icon /> {{ number_format($debt->total_amount, 2) }}</td>
+                                <td class="text-success"><x-riyal-icon /> {{ number_format($debt->paid_amount, 2) }}</td>
                                 <td>
                                     @if($debt->remaining_amount > 0)
-                                        <span class="text-danger fw-bold">${{ number_format($debt->remaining_amount, 2) }}</span>
+                                        <span class="text-danger fw-bold"><x-riyal-icon /> {{ number_format($debt->remaining_amount, 2) }}</span>
                                     @else
                                         <span class="text-success fw-bold">{{ __('messages.fully_paid') }}</span>
                                     @endif
@@ -194,13 +194,13 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mt-2">
-                        <small class="text-muted">{{ __('messages.paid') }}: ${{ number_format($totalPaidAmount, 2) }}</small>
-                        <small class="text-muted">{{ __('messages.total') }}: ${{ number_format($totalDebtAmount, 2) }}</small>
+                        <small class="text-muted">{{ __('messages.paid') }}: <x-riyal-icon /> {{ number_format($totalPaidAmount, 2) }}</small>
+                        <small class="text-muted">{{ __('messages.total') }}: <x-riyal-icon /> {{ number_format($totalDebtAmount, 2) }}</small>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="text-center">
-                        <h4 class="text-danger">${{ number_format($totalDebt, 2) }}</h4>
+                        <h4 class="text-danger"><x-riyal-icon /> {{ number_format($totalDebt, 2) }}</h4>
                         <p class="text-muted">{{ __('messages.remaining_to_pay') }}</p>
                     </div>
                 </div>
@@ -330,7 +330,7 @@
                 </div>
                 
                 <div class="text-center">
-                    <h3 class="text-danger">${{ number_format($totalDebt, 2) }}</h3>
+                    <h3 class="text-danger"><x-riyal-icon /> {{ number_format($totalDebt, 2) }}</h3>
                     <p class="text-muted">{{ __('messages.total_amount_to_pay') }}</p>
                 </div>
                 

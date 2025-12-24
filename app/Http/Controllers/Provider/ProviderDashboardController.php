@@ -79,8 +79,9 @@ class ProviderDashboardController extends Controller
 
     public function productDetails($productId)
     {
-        $provider = Auth::guard('provider')->user();
-        
+        $user = Auth::user();
+        $provider = $user->provider;
+
         // Get product with validation that it belongs to provider
         $product = $provider->products()->with('category')->findOrFail($productId);
         
@@ -107,8 +108,9 @@ class ProviderDashboardController extends Controller
 
     public function analytics()
     {
-        $provider = Auth::guard('provider')->user();
-        
+        $user = Auth::user();
+        $provider = $user->provider;
+
         // Monthly sales data for charts
         $monthlySales = $this->getMonthlySalesData($provider->id);
         
@@ -131,8 +133,9 @@ class ProviderDashboardController extends Controller
 
     public function users()
     {
-        $provider = Auth::guard('provider')->user();
-        
+        $user = Auth::user();
+        $provider = $user->provider;
+
         // Get users who have purchased provider's products
         $users = $this->getProviderCustomers($provider->id);
 
@@ -141,7 +144,8 @@ class ProviderDashboardController extends Controller
 
     public function userDetails($userId)
     {
-        $provider = Auth::guard('provider')->user();
+        $authUser = Auth::user();
+        $provider = $authUser->provider;
         $user = User::findOrFail($userId);
         
         // Get user's activity with provider's products

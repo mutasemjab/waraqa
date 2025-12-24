@@ -31,6 +31,17 @@
                         </div>
 
                         <div class="form-group mb-3">
+                            <x-search-select
+                                model="App\Models\Warehouse"
+                                fieldName="from_warehouse_id"
+                                label="fromWarehouse"
+                                placeholder="Search..."
+                                limit="10"
+                                required="true"
+                            />
+                        </div>
+
+                        <div class="form-group mb-3">
                             <label>{{ __('messages.products') }}</label>
                             <div id="products-container">
                                 <div class="product-row mb-3 p-3 border rounded">
@@ -116,15 +127,31 @@ $(document).ready(function() {
     function initializeProductSearch() {
         $('.product-search').autocomplete({
             source: function(request, response) {
+                // Get the selected warehouse
+                const warehouseInput = $('input[name="from_warehouse_id"]').closest('.form-group').find('input[type="hidden"]');
+                const warehouseId = warehouseInput.val() || warehouseInput.data('value');
+
+                if (!warehouseId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '{{ __("messages.warning") }}',
+                        text: '{{ __("messages.select_warehouse_first") }}',
+                        confirmButtonText: '{{ __("messages.confirm") }}'
+                    });
+                    response([]);
+                    return;
+                }
+
                 $.ajax({
                     url: '{{ route("products.search") }}',
                     dataType: 'json',
                     data: {
-                        term: request.term
+                        term: request.term,
+                        warehouse_id: warehouseId
                     },
                     success: function(data) {
                         if (data.length === 0) {
-                            response([{ label: 'Not Found', value: '' }]);
+                            response([{ label: '{{ __("messages.not_found") }}', value: '' }]);
                         } else {
                             response($.map(data, function(item) {
                                 return {
@@ -164,9 +191,17 @@ $(document).ready(function() {
                     const priceWithoutTax = sellingPrice / (1 + (taxRate / 100));
                     selectedRow.data('price-without-tax', priceWithoutTax);
 
-                    // Fetch available quantity
+                    // Fetch available quantity with warehouse_id
+                    const warehouseInput = $('input[name="from_warehouse_id"]').closest('.form-group').find('input[type="hidden"]');
+                    const warehouseId = warehouseInput.val() || warehouseInput.data('value');
+
+                    let quantityUrl = '{{ route("products.available-quantity", ":productId") }}'.replace(':productId', productId);
+                    if (warehouseId) {
+                        quantityUrl += '?warehouse_id=' + warehouseId;
+                    }
+
                     $.ajax({
-                        url: '{{ route("products.available-quantity", ":productId") }}'.replace(':productId', productId),
+                        url: quantityUrl,
                         method: 'GET',
                         success: function(data) {
                             selectedRow.data('available-quantity', data.available_quantity);
@@ -240,12 +275,15 @@ $(document).ready(function() {
     }
 
     function calculateLineTotal(row) {
-        const price = parseFloat(row.find('.product-price').val()) || 0;
+        const priceWithoutTax = parseFloat(row.data('price-without-tax')) || 0;
         const quantity = parseInt(row.find('.quantity-input').val()) || 0;
+        const tax = parseFloat(row.find('.product-tax').val()) || 15;
 
-        const subtotal = price * quantity;
+        const subtotal = priceWithoutTax * quantity;
+        const taxAmount = (subtotal * tax) / 100;
+        const total = subtotal + taxAmount;
 
-        row.find('.line-total').text(subtotal.toFixed(2));
+        row.find('.line-total').text(total.toFixed(2));
         calculateTotals();
     }
 

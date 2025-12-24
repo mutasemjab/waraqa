@@ -200,7 +200,7 @@
                         <small class="text-muted">{{ __('messages.total_orders') }}</small>
                     </div>
                     <div class="col-6">
-                        <h6 class="text-success">${{ number_format($user->orders()->sum('total_prices') ?? 0, 2) }}</h6>
+                        <h6 class="text-success"><x-riyal-icon /> {{ number_format($user->orders()->sum('total_prices') ?? 0, 2) }}</h6>
                         <small class="text-muted">{{ __('messages.total_spent') }}</small>
                     </div>
                 </div>

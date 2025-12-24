@@ -46,7 +46,7 @@
             <i class="fas fa-credit-card"></i>
         </div>
         <div class="stat-content">
-            <h3>${{ number_format($stats['total_debt'], 2) }}</h3>
+            <h3><x-riyal-icon /> {{ number_format($stats['total_debt'], 2) }}</h3>
             <p>{{ __('messages.total_debt') }}</p>
         </div>
     </div>
@@ -113,7 +113,7 @@
                                     <tr>
                                         <td>{{ $order->number }}</td>
                                         <td>{{ $order->date }}</td>
-                                        <td>${{ number_format($order->total_prices, 2) }}</td>
+                                        <td><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</td>
                                         <td>
                                             <span class="badge bg-{{ $order->status == 1 ? 'success' : 'warning' }}">
                                                 {{ $order->status == 1 ? __('messages.completed') : __('messages.pending') }}
@@ -177,7 +177,7 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                     <span>{{ __('messages.total_spent') }}</span>
-                    <span class="fw-bold">${{ number_format(auth()->user()->orders()->sum('total_prices') ?? 0, 2) }}</span>
+                    <span class="fw-bold"><x-riyal-icon /> {{ number_format(auth()->user()->orders()->sum('total_prices') ?? 0, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -222,7 +222,7 @@
                     <div class="col-md-4 mb-2">
                         <div class="bg-light p-3 rounded">
                             <strong>{{ __('messages.order') }} #{{ $debt->order->number }}</strong><br>
-                            <span class="text-danger">${{ number_format($debt->remaining_amount, 2) }}</span>
+                            <span class="text-danger"><x-riyal-icon /> {{ number_format($debt->remaining_amount, 2) }}</span>
                         </div>
                     </div>
                 @endforeach

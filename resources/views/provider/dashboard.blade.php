@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">{{ __('messages.welcome_back') }}, {{ auth('provider')->user()->name }}!</h1>
+    <h1 class="page-title">{{ __('messages.welcome_back') }}, {{ auth()->user()->name }}!</h1>
     <p class="page-subtitle">{{ __('messages.provider_dashboard_subtitle') }}</p>
 </div>
 
@@ -46,7 +46,7 @@
             <i class="fas fa-dollar-sign"></i>
         </div>
         <div class="stat-content">
-            <h3>${{ number_format($stats['total_revenue'], 2) }}</h3>
+            <h3><x-riyal-icon /> {{ number_format($stats['total_revenue'], 2) }}</h3>
             <p>{{ __('messages.total_revenue') }}</p>
         </div>
     </div>
@@ -155,7 +155,7 @@
                                             </small>
                                         </td>
                                         <td class="fw-bold text-success">
-                                            ${{ number_format($order->orderProducts->sum('total_price_after_tax'), 2) }}
+                                            <x-riyal-icon /> {{ number_format($order->orderProducts->sum('total_price_after_tax'), 2) }}
                                         </td>
                                         <td>
                                             @if($order->status == 1)
@@ -233,7 +233,7 @@
                                             </span>
                                         </td>
                                         <td class="fw-bold text-success">
-                                            ${{ number_format($sale->voucherProducts->sum(function($vp) { return $vp->quantity * $vp->purchasing_price; }), 2) }}
+                                            <x-riyal-icon /> {{ number_format($sale->voucherProducts->sum(function($vp) { return $vp->quantity * $vp->purchasing_price; }), 2) }}
                                         </td>
                                         <td>
                                             <a href="#" class="btn btn-sm btn-outline-success" onclick="showSaleDetails({{ $sale->id }})">
@@ -285,7 +285,7 @@
                                     <span class="badge bg-primary">{{ $product->order_products_sum_quantity ?? 0 }} {{ __('messages.ordered') }}</span>
                                     <span class="badge bg-success">{{ $product->voucher_products_sum_quantity ?? 0 }} {{ __('messages.sold') }}</span>
                                 </div>
-                                <div class="text-success fw-bold">${{ number_format($product->selling_price, 2) }}</div>
+                                <div class="text-success fw-bold"><x-riyal-icon /> {{ number_format($product->selling_price, 2) }}</div>
                             </div>
                             <div>
                                 <a href="{{ route('provider.products.details', $product->id) }}" class="btn btn-sm btn-outline-primary">
@@ -320,10 +320,10 @@
                 </h5>
             </div>
             <div class="card-body text-center">
-                <img src="{{ auth('provider')->user()->photo_url }}" alt="Provider" class="rounded-circle mb-3" width="80" height="80">
-                <h6>{{ auth('provider')->user()->name }}</h6>
-                <p class="text-muted small">{{ auth('provider')->user()->email }}</p>
-                <p class="text-muted small">{{ auth('provider')->user()->phone }}</p>
+                <img src="{{ auth()->user()->photo_url }}" alt="Provider" class="rounded-circle mb-3" width="80" height="80">
+                <h6>{{ auth()->user()->name }}</h6>
+                <p class="text-muted small">{{ auth()->user()->email }}</p>
+                <p class="text-muted small">{{ auth()->user()->phone }}</p>
                 
                 <div class="row text-center mt-3">
                     <div class="col-4">
@@ -393,7 +393,7 @@
                         <span>{{ __('messages.account_status') }}</span>
                         <span class="badge bg-success">{{ __('messages.active') }}</span>
                     </div>
-                    <small class="text-muted">{{ __('messages.member_since') }}: {{ auth('provider')->user()->created_at->format('M Y') }}</small>
+                    <small class="text-muted">{{ __('messages.member_since') }}: {{ auth()->user()->created_at->format('M Y') }}</small>
                 </div>
             </div>
         </div>

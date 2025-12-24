@@ -56,6 +56,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
+            'from_warehouse_id' => 'required|exists:warehouses,id',
             'event_id' => 'nullable|exists:events,id',
             'products' => 'required|array',
             'products.*.id' => 'required|exists:products,id',
@@ -74,10 +75,12 @@ class OrderController extends Controller
             foreach ($request->products as $productData) {
                 $product = Product::find($productData['id']);
                 $quantity = $productData['quantity'];
-                $unitPrice = $product->selling_price;
+                $sellingPrice = $product->selling_price; // السعر مع الضريبة
                 $taxPercentage = $product->tax;
-                
-                $totalPriceBeforeTax = $unitPrice * $quantity;
+
+                // حساب السعر بدون ضريبة من السعر مع الضريبة
+                $unitPriceBeforeTax = $sellingPrice / (1 + ($taxPercentage / 100));
+                $totalPriceBeforeTax = $unitPriceBeforeTax * $quantity;
                 $taxValue = ($totalPriceBeforeTax * $taxPercentage) / 100;
                 $totalPriceAfterTax = $totalPriceBeforeTax + $taxValue;
                 
@@ -87,7 +90,7 @@ class OrderController extends Controller
                 $orderProducts[] = [
                     'product_id' => $product->id,
                     'quantity' => $quantity,
-                    'unit_price' => $unitPrice,
+                    'unit_price' => $unitPriceBeforeTax,
                     'total_price_after_tax' => $totalPriceAfterTax,
                     'tax_percentage' => $taxPercentage,
                     'tax_value' => $taxValue,
@@ -128,22 +131,15 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Handle warehouse transfers
-            $mainWarehouse = Warehouse::first(); // Get first available warehouse
-            $userWarehouse = Warehouse::where('user_id', $request->user_id)->first();
+            // Create note voucher for outgoing transfer from selected warehouse
+            $nextNoteVoucherNumber = (DB::table('note_vouchers')->max('number') ?? 0) + 1;
 
-         
-
-            // Get the next note voucher number
-            $nextNoteVoucherNumber = DB::table('note_vouchers')->max('number') + 1;
-
-            // Create note voucher for transfer (out from main warehouse, in to user warehouse)
+            // Create note voucher for outgoing (out from selected warehouse)
             $noteVoucher = NoteVoucher::create([
                 'number' => $nextNoteVoucherNumber,
                 'date_note_voucher' => now()->toDateString(),
-                'note' => 'تحويل بضاعة للطلب رقم: ' . $order->number,
-                'from_warehouse_id' => $mainWarehouse->id,
-                'to_warehouse_id' => $userWarehouse->id,
+                'note' => __('messages.order_number') . ': ' . $order->number,
+                'from_warehouse_id' => $request->from_warehouse_id,
                 'order_id' => $order->id,
                 'note_voucher_type_id' => 2 // Out Note Voucher type
             ]);
@@ -152,8 +148,8 @@ class OrderController extends Controller
             foreach ($orderProducts as $orderProduct) {
                 VoucherProduct::create([
                     'quantity' => $orderProduct['quantity'],
-                    'purchasing_price' => null, // No price for transfer
-                    'note' => 'نقل من المستودع الرئيسي إلى مستودع المستخدم',
+                    'purchasing_price' => null,
+                    'note' => __('messages.product_outgoing_for_order'),
                     'product_id' => $orderProduct['product_id'],
                     'note_voucher_id' => $noteVoucher->id
                 ]);
@@ -172,10 +168,10 @@ class OrderController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('orders.index')->with('success', 'Order created successfully with warehouse transfer!');
+            return redirect()->route('orders.index')->with('success', __('messages.order_created_successfully'));
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->with('error', 'Error creating order: ' . $e->getMessage());
+            return back()->with('error', __('messages.error_creating_order') . ': ' . $e->getMessage());
         }
     }
 
@@ -212,10 +208,12 @@ public function update(Request $request, Order $order)
         foreach ($request->products as $productData) {
             $product = Product::find($productData['id']);
             $quantity = $productData['quantity'];
-            $unitPrice = $product->selling_price;
+            $sellingPrice = $product->selling_price; // السعر مع الضريبة
             $taxPercentage = $product->tax;
-            
-            $totalPriceBeforeTax = $unitPrice * $quantity;
+
+            // حساب السعر بدون ضريبة من السعر مع الضريبة
+            $unitPriceBeforeTax = $sellingPrice / (1 + ($taxPercentage / 100));
+            $totalPriceBeforeTax = $unitPriceBeforeTax * $quantity;
             $taxValue = ($totalPriceBeforeTax * $taxPercentage) / 100;
             $totalPriceAfterTax = $totalPriceBeforeTax + $taxValue;
             
@@ -225,7 +223,7 @@ public function update(Request $request, Order $order)
             $orderProducts[] = [
                 'product_id' => $product->id,
                 'quantity' => $quantity,
-                'unit_price' => $unitPrice,
+                'unit_price' => $unitPriceBeforeTax,
                 'total_price_after_tax' => $totalPriceAfterTax,
                 'tax_percentage' => $taxPercentage,
                 'tax_value' => $taxValue,

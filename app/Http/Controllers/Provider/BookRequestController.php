@@ -11,41 +11,44 @@ class BookRequestController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:provider');
+        $this->middleware(['auth:web', 'role:provider']);
     }
 
     // عرض قائمة الطلبات الموجهة لهذا المورد
     public function index()
     {
-        $provider = auth('provider')->user();
+        $user = auth()->user();
+        $provider = $user->provider;
         $bookRequests = BookRequest::where('provider_id', $provider->id)
-            ->with(['product', 'responses'])
+            ->with(['product.category', 'responses.provider'])
             ->get();
-        return view('provider.bookRequests.index', compact('bookRequests'));
+        return view('provider.bookRequests.index', compact('bookRequests', 'provider'));
     }
 
     // عرض تفاصيل الطلب
     public function show(BookRequest $bookRequest)
     {
-        $provider = auth('provider')->user();
+        $user = auth()->user();
+        $provider = $user->provider;
 
         // التحقق من أن الطلب موجه لهذا المورد
         if ($bookRequest->provider_id !== $provider->id) {
             abort(403);
         }
 
-        $bookRequest->load(['product', 'responses']);
+        $bookRequest->load(['product.category', 'responses.provider']);
         $hasResponse = $bookRequest->responses()
             ->where('provider_id', $provider->id)
             ->exists();
 
-        return view('provider.bookRequests.show', compact('bookRequest', 'hasResponse'));
+        return view('provider.bookRequests.show', compact('bookRequest', 'hasResponse', 'provider'));
     }
 
     // صفحة إنشاء الرد
     public function createResponse(BookRequest $bookRequest)
     {
-        $provider = auth('provider')->user();
+        $user = auth()->user();
+        $provider = $user->provider;
 
         if ($bookRequest->provider_id !== $provider->id) {
             abort(403);
@@ -58,7 +61,8 @@ class BookRequestController extends Controller
     // حفظ الرد
     public function storeResponse(Request $request, BookRequest $bookRequest)
     {
-        $provider = auth('provider')->user();
+        $user = auth()->user();
+        $provider = $user->provider;
 
         if ($bookRequest->provider_id !== $provider->id) {
             abort(403);

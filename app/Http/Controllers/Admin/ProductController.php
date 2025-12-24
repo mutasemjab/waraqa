@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -53,7 +54,7 @@ class ProductController extends Controller
    public function create()
     {
         $categories = DB::table('categories')->get();
-        $providers = DB::table('providers')->get(); 
+        $providers = Provider::with('user')->get();
         return view('admin.products.create', compact('categories', 'providers'));
     }
 
@@ -101,7 +102,7 @@ class ProductController extends Controller
         }
 
         $categories = DB::table('categories')->get();
-        $providers = DB::table('providers')->get();
+        $providers = Provider::with('user')->get();
 
         return view('admin.products.edit', compact('product', 'categories', 'providers'));
     }
@@ -152,17 +153,21 @@ class ProductController extends Controller
         $warehouseId = request()->query('warehouse_id');
         $excludeVoucherId = request()->query('exclude_voucher_id');
 
+        // warehouse_id is required for filtering
+        if (!$warehouseId) {
+            return response()->json([
+                'available_quantity' => 0,
+                'message' => __('messages.warehouse_required')
+            ], 400);
+        }
+
         // Build base query for getting input (receipt) quantities
         $inputQuery = DB::table('voucher_products')
             ->join('note_vouchers', 'voucher_products.note_voucher_id', '=', 'note_vouchers.id')
             ->join('note_voucher_types', 'note_vouchers.note_voucher_type_id', '=', 'note_voucher_types.id')
             ->where('voucher_products.product_id', $productId)
-            ->where('note_voucher_types.in_out_type', 1); // Input/Receipt vouchers
-
-        // If warehouse_id is provided, filter by warehouse
-        if ($warehouseId) {
-            $inputQuery->where('note_vouchers.to_warehouse_id', $warehouseId);
-        }
+            ->where('note_voucher_types.in_out_type', 1) // Input/Receipt vouchers
+            ->where('note_vouchers.to_warehouse_id', $warehouseId);
 
         $totalInput = $inputQuery->sum('voucher_products.quantity');
 
@@ -171,12 +176,8 @@ class ProductController extends Controller
             ->join('note_vouchers', 'voucher_products.note_voucher_id', '=', 'note_vouchers.id')
             ->join('note_voucher_types', 'note_vouchers.note_voucher_type_id', '=', 'note_voucher_types.id')
             ->where('voucher_products.product_id', $productId)
-            ->whereIn('note_voucher_types.in_out_type', [2, 3]); // Output and Transfer vouchers
-
-        // If warehouse_id is provided, filter by source warehouse
-        if ($warehouseId) {
-            $outputQuery->where('note_vouchers.from_warehouse_id', $warehouseId);
-        }
+            ->whereIn('note_voucher_types.in_out_type', [2, 3]) // Output and Transfer vouchers
+            ->where('note_vouchers.from_warehouse_id', $warehouseId);
 
         // Exclude the current voucher if provided (useful when editing)
         if ($excludeVoucherId) {

@@ -574,9 +574,9 @@
             <div class="navbar-right">
                 <div class="user-dropdown">
                     <div class="user-info" data-bs-toggle="dropdown">
-                        <img src="{{ auth('provider')->user()->photo_url }}" alt="Provider" class="user-avatar">
+                        <img src="{{ auth()->user()->photo_url }}" alt="Provider" class="user-avatar">
                         <div class="user-details">
-                            <h6>{{ auth('provider')->user()->name }}</h6>
+                            <h6>{{ auth()->user()->name }}</h6>
                             <span>{{ __('messages.provider') }}</span>
                         </div>
                         <i class="fas fa-chevron-down ms-2"></i>

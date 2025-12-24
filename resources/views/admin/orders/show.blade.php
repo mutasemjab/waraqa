@@ -127,21 +127,21 @@
                                                 <strong>{{ $orderProduct->product->name_en }}</strong><br>
                                                 <small class="text-muted">{{ $orderProduct->product->name_ar }}</small>
                                             </td>
-                                            <td>${{ number_format($orderProduct->unit_price, 2) }}</td>
+                                            <td><x-riyal-icon /> {{ number_format($orderProduct->unit_price, 2) }}</td>
                                             <td>{{ $orderProduct->quantity }}</td>
                                             <td>{{ $orderProduct->tax_percentage }}%</td>
-                                            <td>${{ number_format($orderProduct->tax_value, 2) }}</td>
-                                            <td>${{ number_format($orderProduct->total_price_before_tax, 2) }}</td>
-                                            <td><strong>${{ number_format($orderProduct->total_price_after_tax, 2) }}</strong></td>
+                                            <td><x-riyal-icon /> {{ number_format($orderProduct->tax_value, 2) }}</td>
+                                            <td><x-riyal-icon /> {{ number_format($orderProduct->total_price_before_tax, 2) }}</td>
+                                            <td><strong><x-riyal-icon /> {{ number_format($orderProduct->total_price_after_tax, 2) }}</strong></td>
                                         </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot>
                                         <tr class="table-active">
                                             <th colspan="4">{{ __('messages.totals') }}</th>
-                                            <th>${{ number_format($order->total_taxes, 2) }}</th>
-                                            <th>${{ number_format($order->total_prices - $order->total_taxes, 2) }}</th>
-                                            <th><strong>${{ number_format($order->total_prices, 2) }}</strong></th>
+                                            <th><x-riyal-icon /> {{ number_format($order->total_taxes, 2) }}</th>
+                                            <th><x-riyal-icon /> {{ number_format($order->total_prices - $order->total_taxes, 2) }}</th>
+                                            <th><strong><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</strong></th>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -160,16 +160,16 @@
                                     <table class="table table-borderless">
                                         <tr>
                                             <td><strong>{{ __('messages.total_amount') }}:</strong></td>
-                                            <td>${{ number_format($order->total_prices, 2) }}</td>
+                                            <td><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>{{ __('messages.paid_amount') }}:</strong></td>
-                                            <td class="text-success">${{ number_format($order->paid_amount, 2) }}</td>
+                                            <td class="text-success"><x-riyal-icon /> {{ number_format($order->paid_amount, 2) }}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>{{ __('messages.remaining_amount') }}:</strong></td>
                                             <td class="{{ $order->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">
-                                                ${{ number_format($order->remaining_amount, 2) }}
+                                                <x-riyal-icon /> {{ number_format($order->remaining_amount, 2) }}
                                             </td>
                                         </tr>
                                     </table>
@@ -260,7 +260,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <strong>{{ __('messages.current_debt') }}:</strong><br>
-                            ${{ number_format($order->remaining_amount, 2) }}
+                            <x-riyal-icon /> {{ number_format($order->remaining_amount, 2) }}
                         </div>
                         <div class="col-md-6">
                             <strong>{{ __('messages.order_number') }}:</strong><br>
@@ -271,7 +271,7 @@
                     <div class="form-group">
                         <label for="payment_amount">{{ __('messages.payment_amount') }}</label>
                         <div class="input-group">
-                            <span class="input-group-text">$</span>
+                            <span class="input-group-text"><x-riyal-icon style="width: 16px; height: 16px;" /></span>
                             <input type="number" 
                                    name="payment_amount" 
                                    id="payment_amount"

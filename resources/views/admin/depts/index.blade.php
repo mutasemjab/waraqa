@@ -30,7 +30,7 @@
                             <div class="card text-center">
                                 <div class="card-body">
                                     <h5 class="card-title">{{ __('messages.total_debt_amount') }}</h5>
-                                    <h3 class="text-danger">${{ number_format($debts->sum('remaining_amount'), 2) }}</h3>
+                                    <h3 class="text-danger"><x-riyal-icon /> {{ number_format($debts->sum('remaining_amount'), 2) }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -38,7 +38,7 @@
                             <div class="card text-center">
                                 <div class="card-body">
                                     <h5 class="card-title">{{ __('messages.total_paid_amount') }}</h5>
-                                    <h3 class="text-success">${{ number_format($debts->sum('paid_amount'), 2) }}</h3>
+                                    <h3 class="text-success"><x-riyal-icon /> {{ number_format($debts->sum('paid_amount'), 2) }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -66,10 +66,10 @@
                                     </td>
                                     <td>{{ $debt->order->number }}</td>
                                     <td>{{ $debt->order->date->format('M d, Y') }}</td>
-                                    <td>${{ number_format($debt->total_amount, 2) }}</td>
-                                    <td>${{ number_format($debt->paid_amount, 2) }}</td>
+                                    <td><x-riyal-icon /> {{ number_format($debt->total_amount, 2) }}</td>
+                                    <td><x-riyal-icon /> {{ number_format($debt->paid_amount, 2) }}</td>
                                     <td>
-                                        <span class="badge bg-warning">${{ number_format($debt->remaining_amount, 2) }}</span>
+                                        <span class="badge bg-warning"><x-riyal-icon /> {{ number_format($debt->remaining_amount, 2) }}</span>
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-success" 
@@ -94,7 +94,7 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <strong>{{ __('messages.current_debt') }}:</strong><br>
-                                                            ${{ number_format($debt->remaining_amount, 2) }}
+                                                            <x-riyal-icon /> {{ number_format($debt->remaining_amount, 2) }}
                                                         </div>
                                                         <div class="col-md-6">
                                                             <strong>{{ __('messages.order_number') }}:</strong><br>
@@ -105,7 +105,7 @@
                                                     <div class="form-group">
                                                         <label for="payment_amount{{ $debt->id }}">{{ __('messages.payment_amount') }}</label>
                                                         <div class="input-group">
-                                                            <span class="input-group-text">$</span>
+                                                            <span class="input-group-text"><x-riyal-icon style="width: 16px; height: 16px;" /></span>
                                                             <input type="number" 
                                                                    name="payment_amount" 
                                                                    id="payment_amount{{ $debt->id }}"

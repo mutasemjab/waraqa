@@ -72,26 +72,26 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
                     <span>{{ __('messages.subtotal') }}:</span>
-                    <span>${{ number_format($order->orderProducts->sum('total_price_after_tax'), 2) }}</span>
+                    <span><x-riyal-icon /> {{ number_format($order->orderProducts->sum('total_price_after_tax'), 2) }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>{{ __('messages.tax') }}:</span>
-                    <span>${{ number_format($order->orderProducts->sum(function($item) { return $item->total_price_after_tax - $item->total_price; }), 2) }}</span>
+                    <span><x-riyal-icon /> {{ number_format($order->orderProducts->sum(function($item) { return $item->total_price_after_tax - $item->total_price; }), 2) }}</span>
                 </div>
                 <hr>
                 <div class="d-flex justify-content-between mb-3">
                     <strong>{{ __('messages.total_amount') }}:</strong>
-                    <strong class="text-primary">${{ number_format($order->total_prices, 2) }}</strong>
+                    <strong class="text-primary"><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-success">{{ __('messages.paid_amount') }}:</span>
-                    <span class="text-success">${{ number_format($order->paid_amount, 2) }}</span>
+                    <span class="text-success"><x-riyal-icon /> {{ number_format($order->paid_amount, 2) }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-3">
                     <span class="{{ $order->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">{{ __('messages.remaining_amount') }}:</span>
                     <span class="{{ $order->remaining_amount > 0 ? 'text-danger' : 'text-success' }}">
                         @if($order->remaining_amount > 0)
-                            ${{ number_format($order->remaining_amount, 2) }}
+                            <x-riyal-icon /> {{ number_format($order->remaining_amount, 2) }}
                         @else
                             {{ __('messages.fully_paid') }}
                         @endif
@@ -152,22 +152,22 @@
                                     </div>
                                 </div>
                             </td>
-                            <td>${{ number_format($orderProduct->unit_price, 2) }}</td>
+                            <td><x-riyal-icon /> {{ number_format($orderProduct->unit_price, 2) }}</td>
                             <td>
                                 <span class="badge bg-info">{{ $orderProduct->quantity }}</span>
                             </td>
-                            <td>${{ number_format($orderProduct->total_price_before_tax, 2) }}</td>
-                            <td>${{ number_format($orderProduct->tax_percentage, 2) }}</td>
-                            <td class="fw-bold">${{ number_format($orderProduct->total_price_after_tax, 2) }}</td>
+                            <td><x-riyal-icon /> {{ number_format($orderProduct->total_price_before_tax, 2) }}</td>
+                            <td><x-riyal-icon /> {{ number_format($orderProduct->tax_percentage, 2) }}</td>
+                            <td class="fw-bold"><x-riyal-icon /> {{ number_format($orderProduct->total_price_after_tax, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr class="table-active">
                         <th colspan="3">{{ __('messages.total') }}</th>
-                        <th>${{ number_format($order->orderProducts->sum('total_price'), 2) }}</th>
-                        <th>${{ number_format($order->orderProducts->sum(function($item) { return $item->total_price_after_tax - $item->total_price; }), 2) }}</th>
-                        <th class="text-primary">${{ number_format($order->orderProducts->sum('total_price_after_tax'), 2) }}</th>
+                        <th><x-riyal-icon /> {{ number_format($order->orderProducts->sum('total_price'), 2) }}</th>
+                        <th><x-riyal-icon /> {{ number_format($order->orderProducts->sum(function($item) { return $item->total_price_after_tax - $item->total_price; }), 2) }}</th>
+                        <th class="text-primary"><x-riyal-icon /> {{ number_format($order->orderProducts->sum('total_price_after_tax'), 2) }}</th>
                     </tr>
                 </tfoot>
             </table>
@@ -197,8 +197,8 @@
                     <tbody>
                         @foreach($order->userDepts as $debt)
                             <tr>
-                                <td>${{ number_format($debt->debt_amount, 2) }}</td>
-                                <td class="text-danger">${{ number_format($debt->remaining_amount, 2) }}</td>
+                                <td><x-riyal-icon /> {{ number_format($debt->debt_amount, 2) }}</td>
+                                <td class="text-danger"><x-riyal-icon /> {{ number_format($debt->remaining_amount, 2) }}</td>
                                 <td>
                                     @if($debt->status == 1)
                                         <span class="badge bg-warning">{{ __('messages.active') }}</span>

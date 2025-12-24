@@ -13,11 +13,13 @@ class SearchController extends Controller
             $term = $request->get('term', '');
             $model = $request->get('model');
             $limit = (int)$request->get('limit', 5);
+            $displayColumn = $request->get('displayColumn', 'name');
 
             Log::info('SearchController - Input:', [
                 'term' => $term,
                 'model' => $model,
-                'limit' => $limit
+                'limit' => $limit,
+                'displayColumn' => $displayColumn
             ]);
 
             if (!$model || !class_exists($model)) {
@@ -45,10 +47,11 @@ class SearchController extends Controller
             Log::info('SearchController - Results count: ' . $results->count());
 
             // Format results
-            $formatted = $results->map(function ($item) {
+            $formatted = $results->map(function ($item) use ($displayColumn) {
+                $text = $item->{$displayColumn} ?? $item->name ?? (string)$item;
                 return [
                     'id' => $item->id,
-                    'text' => $item->name ?? (string)$item
+                    'text' => $text
                 ];
             })->toArray();
 
