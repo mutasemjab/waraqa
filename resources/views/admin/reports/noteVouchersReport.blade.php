@@ -4,6 +4,88 @@
 @endsection
 
 @section('content')
+<style>
+    @media print {
+        /* Hide everything except printable content */
+        body * {
+            visibility: hidden;
+        }
+
+        /* Show only the printable section */
+        .printable-section,
+        .printable-section * {
+            visibility: visible;
+        }
+
+        /* Position printable section at top of page */
+        .printable-section {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        /* Hide buttons, filters, and navigation */
+        .no-print,
+        .btn,
+        .card-header .card-title,
+        nav,
+        .main-sidebar,
+        .main-header,
+        footer,
+        .content-header,
+        .breadcrumb {
+            display: none !important;
+        }
+
+        /* Clean table styling for print */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #000;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        /* Make sure table header is visible */
+        thead,
+        thead *,
+        tbody,
+        tbody * {
+            visibility: visible !important;
+        }
+
+        /* Style table header for print */
+        .custom_thead,
+        .custom_thead th {
+            background-color: #007bff !important;
+            color: white !important;
+            font-weight: bold !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .card {
+            border: none;
+            box-shadow: none;
+        }
+
+        /* Page breaks */
+        .page-break {
+            page-break-after: always;
+        }
+
+        /* Hide card headers in print */
+        .card-header {
+            display: none !important;
+        }
+    }
+</style>
+
 <div class="card">
     <div class="card-header">
         <h3 class="card-title card_title_center">{{ __('messages.noteVouchers') }} {{ __('messages.Report') }}</h3>
@@ -11,7 +93,7 @@
 
     <div class="card-body">
         <!-- Filters Section -->
-        <div class="row mb-4">
+        <div class="row mb-4 no-print">
             <div class="col-md-12">
                 <div class="card card-default">
                     <div class="card-header">
@@ -107,6 +189,14 @@
                                         </button>
                                     </div>
                                 </div>
+
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <div class="form-group" style="width: 100%;">
+                                        <button type="button" class="btn btn-info btn-block" onclick="window.print()">
+                                            <i class="fas fa-print"></i> {{ __('messages.print') }}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -115,7 +205,7 @@
         </div>
 
         <!-- Statistics Section -->
-        <div class="row mb-4">
+        <div class="row mb-4 no-print">
             <div class="col-md-3">
                 <div class="info-box">
                     <span class="info-box-icon bg-info"><i class="fas fa-file-invoice"></i></span>
@@ -148,10 +238,10 @@
         </div>
 
         <!-- Detailed Table -->
-        <div class="row mb-4">
+        <div class="row mb-4 printable-section">
             <div class="col-md-12">
                 <div class="card card-default">
-                    <div class="card-header">
+                    <div class="card-header no-print">
                         <h3 class="card-title">{{ __('messages.Details') }}</h3>
                     </div>
                     <div class="card-body">
@@ -175,9 +265,10 @@
                                     @php
                                     $voucher_quantity = 0;
                                     $voucher_value = 0;
-                                    foreach($voucher->voucherProducts as $product) {
-                                        $quantity = $product->quantity ?? 0;
-                                        $price = $product->purchasing_price ?? 0;
+                                    foreach($voucher->voucherProducts as $voucherProduct) {
+                                        $quantity = $voucherProduct->quantity ?? 0;
+                                        // Use purchasing_price if available, otherwise use product's selling_price
+                                        $price = $voucherProduct->purchasing_price ?? ($voucherProduct->product->selling_price ?? 0);
                                         $voucher_quantity += $quantity;
                                         $voucher_value += $quantity * $price;
                                     }
@@ -214,7 +305,7 @@
         </div>
 
         <!-- Statistics by Type -->
-        <div class="row">
+        <div class="row no-print">
             <div class="col-md-6">
                 <div class="card card-default">
                     <div class="card-header">

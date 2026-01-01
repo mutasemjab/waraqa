@@ -8,9 +8,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class NoteVouchersReportExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles
@@ -37,15 +35,17 @@ class NoteVouchersReportExport implements FromCollection, WithHeadings, ShouldAu
             '',
             '',
             '',
+            '',
         ]);
 
         $rows->push([
             __('messages.Total') . ' ' . __('messages.noteVouchers') . ': ' . $this->statistics['total_vouchers'],
             __('messages.Total') . ' ' . __('messages.Quantity') . ': ' . number_format($this->statistics['total_quantity'], 2),
-            __('messages.Total') . ' ' . __('messages.Value') . ': ' . number_format($this->statistics['total_value'], 2) . ' ' . __('messages.KD'),
+            __('messages.Total') . ' ' . __('messages.Value') . ': ' . number_format($this->statistics['total_value'], 2) . ' ' . __('messages.SAR'),
             '',
             '',
-            '',
+            number_format($this->statistics['total_value'], 2) . ' ' . __('messages.SAR'),
+            $this->statistics['total_value'],
             '',
         ]);
 
@@ -59,6 +59,7 @@ class NoteVouchersReportExport implements FromCollection, WithHeadings, ShouldAu
             __('messages.Provider'),
             __('messages.Quantity'),
             __('messages.Value'),
+            '',
             __('messages.note'),
         ]);
 
@@ -66,9 +67,10 @@ class NoteVouchersReportExport implements FromCollection, WithHeadings, ShouldAu
             $voucher_quantity = 0;
             $voucher_value = 0;
 
-            foreach ($voucher->voucherProducts as $product) {
-                $quantity = $product->quantity ?? 0;
-                $price = $product->purchasing_price ?? 0;
+            foreach ($voucher->voucherProducts as $voucherProduct) {
+                $quantity = $voucherProduct->quantity ?? 0;
+                // Use purchasing_price if available, otherwise use product's selling_price
+                $price = $voucherProduct->purchasing_price ?? ($voucherProduct->product->selling_price ?? 0);
                 $voucher_quantity += $quantity;
                 $voucher_value += $quantity * $price;
             }
@@ -87,22 +89,27 @@ class NoteVouchersReportExport implements FromCollection, WithHeadings, ShouldAu
                 $voucher->date_note_voucher->format('Y-m-d'),
                 $voucher->noteVoucherType->name ?? __('messages.Unknown'),
                 $warehouse ?: ($voucher->provider->name ?? '-'),
-                $voucher_quantity,
-                $voucher_value,
+                $voucher_quantity > 0 ? $voucher_quantity : '',
+                $voucher_value > 0 ? number_format($voucher_value, 2) . ' ' . __('messages.SAR') : '',
+                $voucher_value > 0 ? $voucher_value : '',
                 $voucher->note ?? '-',
             ]);
 
             // Add products details
-            foreach ($voucher->voucherProducts as $product) {
-                $product_value = ($product->quantity ?? 0) * ($product->purchasing_price ?? 0);
+            foreach ($voucher->voucherProducts as $voucherProduct) {
+                $quantity = $voucherProduct->quantity ?? 0;
+                // Use purchasing_price if available, otherwise use product's selling_price
+                $price = $voucherProduct->purchasing_price ?? ($voucherProduct->product->selling_price ?? 0);
+                $product_value = $quantity * $price;
                 $rows->push([
-                    '  - ' . ($product->product->name_ar ?? __('messages.Unknown')),
+                    '  - ' . ($voucherProduct->product->name_ar ?? __('messages.Unknown')),
                     '',
                     '',
                     '',
-                    $product->quantity ?? 0,
-                    $product_value,
-                    $product->note ?? '',
+                    $quantity > 0 ? $quantity : '',
+                    $product_value > 0 ? number_format($product_value, 2) . ' ' . __('messages.SAR') : '',
+                    $product_value > 0 ? $product_value : '',
+                    $voucherProduct->note ?? '',
                 ]);
             }
 
@@ -111,32 +118,34 @@ class NoteVouchersReportExport implements FromCollection, WithHeadings, ShouldAu
 
         // Add statistics summary by type
         $rows->push([]); // Empty row
-        $rows->push([__('messages.Statistics_by_Type'), '', '', '', '', '', '']);
+        $rows->push([__('messages.Statistics_by_Type'), '', '', '', '', '', '', '']);
 
         foreach ($this->statistics['by_type'] as $type => $stats) {
             $rows->push([
                 $type,
                 __('messages.Count') . ': ' . $stats['count'],
                 __('messages.Quantity') . ': ' . number_format($stats['quantity'], 2),
-                __('messages.Value') . ': ' . number_format($stats['value'], 2) . ' ' . __('messages.KD'),
+                __('messages.Value') . ': ' . number_format($stats['value'], 2) . ' ' . __('messages.SAR'),
                 '',
-                '',
+                number_format($stats['value'], 2) . ' ' . __('messages.SAR'),
+                $stats['value'],
                 '',
             ]);
         }
 
         // Add provider statistics
         $rows->push([]); // Empty row
-        $rows->push([__('messages.Statistics_by_Provider'), '', '', '', '', '', '']);
+        $rows->push([__('messages.Statistics_by_Provider'), '', '', '', '', '', '', '']);
 
         foreach ($this->statistics['by_provider'] as $provider => $stats) {
             $rows->push([
                 $provider,
                 __('messages.Count') . ': ' . $stats['count'],
                 __('messages.Quantity') . ': ' . number_format($stats['quantity'], 2),
-                __('messages.Value') . ': ' . number_format($stats['value'], 2) . ' ' . __('messages.KD'),
+                __('messages.Value') . ': ' . number_format($stats['value'], 2) . ' ' . __('messages.SAR'),
                 '',
-                '',
+                number_format($stats['value'], 2) . ' ' . __('messages.SAR'),
+                $stats['value'],
                 '',
             ]);
         }
@@ -148,6 +157,7 @@ class NoteVouchersReportExport implements FromCollection, WithHeadings, ShouldAu
     {
         return [
             __('messages.Report'),
+            '',
             '',
             '',
             '',

@@ -109,10 +109,11 @@ class NoteVoucherController extends Controller
                 }
 
                 // Create voucher product record using hasMany relationship
+                // Save product's selling_price as purchasing_price
                 $noteVoucher->voucherProducts()->create([
                     'product_id' => $product->id,
                     'quantity' => $productData['quantity'],
-                    'purchasing_price' => $productData['purchasing_price'] ?? null,
+                    'purchasing_price' => $product->selling_price,
                     'note' => $productData['note'] ?? null,
                 ]);
             }
@@ -206,10 +207,11 @@ class NoteVoucherController extends Controller
                     }
 
                     // Create new voucher product record
+                    // Save product's selling_price as purchasing_price
                     $noteVoucher->voucherProducts()->create([
                         'product_id' => $product->id,
                         'quantity' => $productData['quantity'],
-                        'purchasing_price' => $productData['purchasing_price'] ?? null,
+                        'purchasing_price' => $product->selling_price,
                         'note' => $productData['note'] ?? null,
                     ]);
                 }

@@ -321,53 +321,98 @@ $(document).ready(function() {
         attachQuantityListener($(this));
     });
 
-    // Paid amount change
-    $('#paid_amount').on('input', calculateTotals);
+    // Paid amount change with validation
+    $('#paid_amount').on('input', function() {
+        const paidAmount = parseFloat($(this).val()) || 0;
+
+        // Calculate current grand total
+        let subtotal = 0;
+        let totalTax = 0;
+        $('.product-row').each(function() {
+            const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 15;
+            const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+            const lineSubtotal = priceWithoutTax * quantity;
+            const lineTax = (lineSubtotal * tax) / 100;
+            subtotal += lineSubtotal;
+            totalTax += lineTax;
+        });
+        const grandTotal = subtotal + totalTax;
+
+        if (paidAmount > grandTotal) {
+            Swal.fire({
+                icon: 'error',
+                title: '{{ __("messages.error") }}',
+                text: '{{ __("messages.paid_amount_exceeds_total") }}',
+                confirmButtonText: '{{ __("messages.confirm") }}'
+            });
+            $(this).val(grandTotal.toFixed(2));
+        }
+
+        calculateTotals();
+    });
 
     // Seller search functionality
     let sellerSearchTimer;
+
+    function performSellerSearch(term) {
+        const dropdown = $('#sellers-dropdown');
+
+        $.ajax({
+            url: '{{ route("sellers.search") }}',
+            method: 'GET',
+            data: { term: term, limit: 5 },
+            success: function(data) {
+                if (data.length > 0) {
+                    let html = '';
+                    data.forEach(function(seller) {
+                        html += `<div class="p-2 border-bottom seller-item" data-id="${seller.id}" data-text="${seller.text}" style="cursor: pointer;">
+                                ${seller.text}
+                            </div>`;
+                    });
+                    dropdown.html(html).show();
+
+                    // Add click handlers to seller items
+                    $('.seller-item').on('click', function() {
+                        const id = $(this).data('id');
+                        const text = $(this).data('text');
+                        $('#user_id').val(id);
+                        $('#seller_search').val(text);
+                        dropdown.hide();
+
+                        // Load events for selected seller
+                        loadSellerEvents(id);
+                    });
+                } else {
+                    dropdown.html('<div class="p-2">{{ __("messages.no_results") }}</div>').show();
+                }
+            },
+            error: function(xhr) {
+                console.error('Error searching sellers:', xhr);
+            }
+        });
+    }
+
+    // Show all sellers when focused
+    $('#seller_search').on('focus', function() {
+        const term = $(this).val().trim();
+        if (term.length === 0) {
+            performSellerSearch('');
+        }
+    });
+
     $('#seller_search').on('input', function() {
         const term = $(this).val().trim();
         const dropdown = $('#sellers-dropdown');
 
         if (term.length < 1) {
-            dropdown.hide();
+            performSellerSearch('');
             return;
         }
 
         clearTimeout(sellerSearchTimer);
         sellerSearchTimer = setTimeout(() => {
-            $.ajax({
-                url: '{{ route("sellers.search") }}',
-                method: 'GET',
-                data: { term: term, limit: 5 },
-                success: function(data) {
-                    if (data.length > 0) {
-                        let html = '';
-                        data.forEach(function(seller) {
-                            html += `<div class="p-2 border-bottom seller-item" data-id="${seller.id}" data-text="${seller.text}" style="cursor: pointer;">
-                                    ${seller.text}
-                                </div>`;
-                        });
-                        dropdown.html(html).show();
-
-                        // Add click handlers to seller items
-                        $('.seller-item').on('click', function() {
-                            const id = $(this).data('id');
-                            const text = $(this).data('text');
-                            $('#user_id').val(id);
-                            $('#seller_search').val(text);
-                            dropdown.hide();
-                            $('#user_id').trigger('change');
-                        });
-                    } else {
-                        dropdown.html('<div class="p-2">{{ __("messages.no_results") }}</div>').show();
-                    }
-                },
-                error: function(xhr) {
-                    console.error('Error searching sellers:', xhr);
-                }
-            });
+            performSellerSearch(term);
         }, 300);
     });
 
@@ -378,9 +423,8 @@ $(document).ready(function() {
         }
     });
 
-    // Load seller events when user is selected
-    $(document).on('change', '#user_id', function() {
-        const sellerId = $(this).val();
+    // Load seller events function
+    function loadSellerEvents(sellerId) {
         const eventSelect = $('#event_id');
 
         if (!sellerId) {
@@ -409,6 +453,12 @@ $(document).ready(function() {
                 eventSelect.html('<option value="">{{ __("messages.error_loading_events") }}</option>');
             }
         });
+    }
+
+    // Load seller events when user is selected via change event
+    $(document).on('change', '#user_id', function() {
+        const sellerId = $(this).val();
+        loadSellerEvents(sellerId);
     });
 });
 </script>

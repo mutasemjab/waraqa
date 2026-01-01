@@ -146,9 +146,10 @@ class OrderController extends Controller
 
             // Create voucher products for each product in the order
             foreach ($orderProducts as $orderProduct) {
+                $product = Product::find($orderProduct['product_id']);
                 VoucherProduct::create([
                     'quantity' => $orderProduct['quantity'],
-                    'purchasing_price' => null,
+                    'purchasing_price' => $product ? $product->selling_price : null,
                     'note' => __('messages.product_outgoing_for_order'),
                     'product_id' => $orderProduct['product_id'],
                     'note_voucher_id' => $noteVoucher->id
@@ -189,6 +190,7 @@ public function update(Request $request, Order $order)
 {
     $request->validate([
         'user_id' => 'required|exists:users,id',
+        'from_warehouse_id' => 'required|exists:warehouses,id',
         'event_id' => 'nullable|exists:events,id',
         'products' => 'required|array',
         'products.*.id' => 'required|exists:products,id',
@@ -234,22 +236,6 @@ public function update(Request $request, Order $order)
         $paidAmount = $request->paid_amount ?? 0;
         $remainingAmount = $totalPrices - $paidAmount;
 
-        // Get existing order products for warehouse reversal
-        $existingOrderProducts = OrderProduct::where('order_id', $order->id)->get();
-        
-        // Handle warehouse transfers - First reverse the old transfer
-        $mainWarehouse = Warehouse::first(); // Get first available warehouse
-        $newUserWarehouse = Warehouse::where('user_id', $request->user_id)->first();
-
-   
-
-        // Delete existing note voucher and voucher products for this order
-        $existingNoteVoucher = NoteVoucher::where('order_id', $order->id)->first();
-        if ($existingNoteVoucher) {
-            VoucherProduct::where('note_voucher_id', $existingNoteVoucher->id)->delete();
-            $existingNoteVoucher->delete();
-        }
-
         // Update order
         $order->update([
             'status' => $request->status,
@@ -280,28 +266,25 @@ public function update(Request $request, Order $order)
             ]);
         }
 
-        // Create new note voucher for updated transfer
-        $nextNoteVoucherNumber = DB::table('note_vouchers')->max('number') + 1;
-
-        $noteVoucher = NoteVoucher::create([
-            'number' => $nextNoteVoucherNumber,
-            'date_note_voucher' => now()->toDateString(),
-            'note' => 'تحديث تحويل بضاعة للطلب رقم: ' . $order->number,
-            'from_warehouse_id' => $mainWarehouse->id,
-            'to_warehouse_id' => $newUserWarehouse->id,
-            'order_id' => $order->id,
-            'note_voucher_type_id' => 2 // Out Note Voucher type
-        ]);
-
-        // Create voucher products for each updated product in the order
-        foreach ($orderProducts as $orderProduct) {
-            VoucherProduct::create([
-                'quantity' => $orderProduct['quantity'],
-                'purchasing_price' => null, // No price for transfer
-                'note' => 'تحديث نقل من المستودع الرئيسي إلى مستودع المستخدم',
-                'product_id' => $orderProduct['product_id'],
-                'note_voucher_id' => $noteVoucher->id
+        // Update existing note voucher if exists
+        $existingNoteVoucher = NoteVoucher::where('order_id', $order->id)->first();
+        if ($existingNoteVoucher) {
+            $existingNoteVoucher->update([
+                'from_warehouse_id' => $request->from_warehouse_id,
             ]);
+
+            // Update voucher products
+            VoucherProduct::where('note_voucher_id', $existingNoteVoucher->id)->delete();
+
+            foreach ($orderProducts as $orderProduct) {
+                $product = Product::find($orderProduct['product_id']);
+                VoucherProduct::create([
+                    'quantity' => $orderProduct['quantity'],
+                    'purchasing_price' => $product ? $product->selling_price : null,
+                    'product_id' => $orderProduct['product_id'],
+                    'note_voucher_id' => $existingNoteVoucher->id
+                ]);
+            }
         }
 
         // Update or create debt record
@@ -327,10 +310,10 @@ public function update(Request $request, Order $order)
                 ]);
             }
         } else {
-            // If fully paid, mark debt as paid or delete it
+            // If fully paid, mark debt as paid
             if ($debt) {
                 $debt->update([
-                    'paid_amount' => $debt->total_amount,
+                    'paid_amount' => $totalPrices,
                     'remaining_amount' => 0,
                     'status' => 2
                 ]);

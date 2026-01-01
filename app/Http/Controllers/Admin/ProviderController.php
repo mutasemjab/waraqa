@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Country;
-use App\Models\Driver;
-use App\Models\Option;
 use App\Models\Provider;
-use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class ProviderController extends Controller
 {
@@ -42,11 +38,10 @@ class ProviderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|unique:providers',
-            'email' => 'nullable|email|unique:providers',
+            'phone' => 'required|string|unique:users',
+            'email' => 'nullable|email|unique:users',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg',
-            'fcm_token' => 'nullable|string',
-            'password' => 'required',
+            'password' => 'required|string|min:6',
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
         ]);
@@ -58,18 +53,30 @@ class ProviderController extends Controller
                 ->withInput();
         }
 
-        $userData = $request->except('photo');
-    
+        // Prepare user data
+        $userData = [
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'activate' => $request->activate ?? 1,
+            'country_id' => $request->country_id,
+        ];
 
         // Handle photo upload
         if ($request->has('photo')) {
-                $the_file_path = uploadImage('assets/admin/uploads', $request->photo);
-                 $userData['photo'] = $the_file_path;
-             }
-                
-        $providerData['password'] = Hash::make($request->password);
+            $the_file_path = uploadImage('assets/admin/uploads', $request->photo);
+            $userData['photo'] = $the_file_path;
+        }
 
-        Provider::create($userData);
+        // Create user first
+        $user = User::create($userData);
+
+        // Create provider linked to user
+        Provider::create([
+            'user_id' => $user->id,
+            'status' => 'active',
+        ]);
 
         return redirect()
             ->route('providers.index')
@@ -79,31 +86,31 @@ class ProviderController extends Controller
 
     public function show($id)
     {
-        $provider = Provider::findOrFail($id);
-        
+        $provider = Provider::with('user')->findOrFail($id);
+
         return view('admin.providers.show', compact('provider'));
     }
 
 
     public function edit($id)
     {
-        $provider = Provider::findOrFail($id);
-          $countries= Country::get();
-        return view('admin.providers.edit', compact('provider','countries'));
+        $provider = Provider::with('user')->findOrFail($id);
+        $countries = Country::get();
+        return view('admin.providers.edit', compact('provider', 'countries'));
     }
 
 
     public function update(Request $request, $id)
     {
-        $provider = Provider::findOrFail($id);
+        $provider = Provider::with('user')->findOrFail($id);
+        $user = $provider->user;
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
-            'phone' => 'sometimes|string|unique:providers,phone,' . $id,
-            'email' => 'nullable|email|unique:providers,email,' . $id,
+            'phone' => 'sometimes|string|unique:users,phone,' . $user->id,
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
             'photo' => 'nullable|image|mimes:jpeg,png,jpg',
-            'fcm_token' => 'nullable|string',
-            'password' => 'nullable',
+            'password' => 'nullable|string|min:6',
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
         ]);
@@ -115,18 +122,39 @@ class ProviderController extends Controller
                 ->withInput();
         }
 
-        $providerData = $request->except('photo','password');
+        // Prepare user data to update
+        $userData = [];
+        if ($request->filled('name')) {
+            $userData['name'] = $request->name;
+        }
+        if ($request->filled('phone')) {
+            $userData['phone'] = $request->phone;
+        }
+        if ($request->filled('email')) {
+            $userData['email'] = $request->email;
+        }
+        if ($request->filled('activate')) {
+            $userData['activate'] = $request->activate;
+        }
+        if ($request->filled('country_id')) {
+            $userData['country_id'] = $request->country_id;
+        }
 
         // Handle photo upload
-          if ($request->has('photo')) {
-                $the_file_path = uploadImage('assets/admin/uploads', $request->photo);
-                $providerData['photo'] = $the_file_path;
-             }
-          if ($request->has('password')) {
-                $providerData['password'] = Hash::make($request->password);
-             }
+        if ($request->has('photo')) {
+            $the_file_path = uploadImage('assets/admin/uploads', $request->photo);
+            $userData['photo'] = $the_file_path;
+        }
 
-        $provider->update($providerData);
+        // Handle password
+        if ($request->filled('password')) {
+            $userData['password'] = Hash::make($request->password);
+        }
+
+        // Update user
+        if (!empty($userData)) {
+            $user->update($userData);
+        }
 
         return redirect()
             ->route('providers.index')

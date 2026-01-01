@@ -226,6 +226,9 @@
     input.addEventListener('focus', function() {
         if (this.value.trim().length >= 1) {
             search(this.value.trim());
+        } else {
+            // عرض جميع البيانات عند الـ focus إذا لم يكن هناك بحث
+            search('');
         }
     });
 

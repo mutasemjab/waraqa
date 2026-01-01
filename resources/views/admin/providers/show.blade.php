@@ -30,7 +30,7 @@
                     @else
                     <img src="{{ asset('assets/admin/img/undraw_profile.svg') }}" alt="No Image" class="img-profile rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                     @endif
-                    <h4 class="font-weight-bold">{{ $provider-> }}</h4>
+                    <h4 class="font-weight-bold">{{ $provider->name }}</h4>
                     <p class="text-muted mb-1">{{ $provider->phone }}</p>
                     @if($provider->email)
                     <p class="text-muted mb-1">{{ $provider->email }}</p>

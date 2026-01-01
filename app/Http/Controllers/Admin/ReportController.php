@@ -93,9 +93,10 @@ class ReportController extends Controller
             $voucher_quantity = 0;
             $voucher_value = 0;
 
-            foreach ($voucher->voucherProducts as $product) {
-                $quantity = $product->quantity ?? 0;
-                $price = $product->purchasing_price ?? 0;
+            foreach ($voucher->voucherProducts as $voucherProduct) {
+                $quantity = $voucherProduct->quantity ?? 0;
+                // Use purchasing_price if available, otherwise use product's selling_price
+                $price = $voucherProduct->purchasing_price ?? ($voucherProduct->product->selling_price ?? 0);
 
                 $voucher_quantity += $quantity;
                 $voucher_value += $quantity * $price;
