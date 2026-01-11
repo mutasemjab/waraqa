@@ -131,6 +131,21 @@ class ProviderDashboardController extends Controller
         ));
     }
 
+    public function orders()
+    {
+        $user = Auth::user();
+        $provider = $user->provider;
+
+        // Get orders containing provider's products
+        $orders = Order::whereHas('orderProducts.product', function($q) use ($provider) {
+            $q->where('provider_id', $provider->id);
+        })->with(['user', 'orderProducts.product' => function($q) use ($provider) {
+            $q->where('provider_id', $provider->id);
+        }])->latest()->paginate(15);
+
+        return view('provider.orders', compact('orders'));
+    }
+
     public function users()
     {
         $user = Auth::user();

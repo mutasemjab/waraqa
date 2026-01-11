@@ -334,6 +334,8 @@ return [
     'Edit_Order' => 'تعديل الطلب',
     'View' => 'عرض',
     'Order_Details' => 'تفاصيل الطلب',
+    'order_date' => 'تاريخ الطلب',
+    'optional_leave_empty_for_today' => 'اختياري - اترك فارغاً لاستخدام اليوم',
     'Select_User' => 'اختر البائع',
     'Select_Driver' => 'اختر السائق',
     'Driver_Selection_Info' => 'اتركه فارغاً إذا لم يتم تخصيص سائق',
@@ -484,6 +486,7 @@ return [
     'rejected' => 'مرفوض',
     'unknown' => 'غير معروف',
     'unassigned' => 'غير مُعين',
+    'pending_payment' => 'مكتمل وفي انتظار الدفع',
     
     // Order Information
     'order_number' => 'رقم الطلب',
@@ -1138,7 +1141,7 @@ return [
     'toWarehouse' => 'إلى المستودع',
     'barcode' => 'باركود',
     'Action' => 'الإجراء',
-    'Catalog_Management' => 'إدارة الكاتالوج',
+    'Catalog_Management' => 'ادارة المخزون',
     'noteVoucherTypes' => 'أنواع السندات',
     'noteVouchers' => 'السندات',
     'userDepts' => 'أقسام المستخدمين',
@@ -1282,6 +1285,10 @@ return [
     'choose_event' => 'اختر فعالية',
     'no_valid_events' => 'لا توجد فعاليات صالحة',
     'error_loading_events' => 'خطأ في تحميل الفعاليات',
+    'total_events' => 'إجمالي الفعاليات',
+    'active_events' => 'الفعاليات النشطة',
+    'expired_events' => 'الفعاليات المنتهية',
+    'no_events' => 'لا توجد فعاليات',
 
     // Note Vouchers Report
     'noteVouchers_report' => 'تقرير السندات',

@@ -3,14 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Teacher;
-use App\Models\Clas; // Replace with your actual class model name
-use App\Models\Driver;
 use App\Models\Order;
 use App\Models\Provider;
-use Google\Service\DriveActivity\Drive;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -23,19 +18,20 @@ class DashboardController extends Controller
     public function index()
     {
         $stats = [
-            'total_users' => User::count(),
+            'total_users' => User::role('seller')->count(), // Count only sellers
             'total_providers' => Provider::count(),
             'total_orders' => Order::count(),
-            'pending_orders' => Order::where('status', 1)->count(),
-            'completed_orders' => Order::where('status', 3)->count(),
-            'cancelled_orders' => Order::whereIn('status', [4, 5])->count(),
+            'pending_orders' => Order::where('status', '!=', 1)->count(), // Pending orders (any status != Done)
+            'completed_orders' => Order::where('status', 1)->count(), // Status 1 = Done
+            'cancelled_orders' => Order::where('status', 2)->count(), // Status 2 = Cancelled
             'today_orders' => Order::whereDate('created_at', today())->count(),
-            'revenue_today' => Order::where('status', 3)
+            'revenue_today' => Order::where('status', 1)
                 ->whereDate('created_at', today())
-                ->sum('total_prices'),
-            'revenue_month' => Order::where('status', 3)
+                ->sum('paid_amount'),
+            'revenue_month' => Order::where('status', 1)
                 ->whereMonth('created_at', now()->month)
-                ->sum('total_prices')
+                ->whereYear('created_at', now()->year)
+                ->sum('paid_amount')
         ];
 
         // Recent orders
@@ -43,12 +39,13 @@ class DashboardController extends Controller
             'user:id,name',
         ])->latest()->limit(10)->get();
 
-        // Orders by status for chart
-        $ordersByStatus = Order::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->get()
-            ->pluck('count', 'status')
-            ->toArray();
+        // Orders by status (status only, ignoring payment status)
+        $ordersByStatus = [
+            'completed' => Order::where('status', 1)->count(), // Completed
+            'cancelled' => Order::where('status', 2)->count(), // Cancelled
+            'refund' => Order::where('status', 6)->count(), // Refund
+            'pending' => Order::whereNotIn('status', [1, 2, 6])->count() // Any other pending status
+        ];
 
         return view('admin.dashboard', compact('stats', 'recentOrders', 'ordersByStatus'));
     }

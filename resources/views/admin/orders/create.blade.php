@@ -24,10 +24,19 @@
                         </div>
 
                         <div class="form-group mb-3">
+                            <label for="order_date">{{ __('messages.order_date') }}</label>
+                            <input type="date" name="order_date" id="order_date" class="form-control" required>
+                        </div>
+
+                        <div class="form-group mb-3">
                             <label for="event_id">{{ __('messages.select_event') }}</label>
                             <select name="event_id" id="event_id" class="form-control">
                                 <option value="">{{ __('messages.choose_event') }}</option>
                             </select>
+                            <small class="form-text text-muted d-block mt-2">
+                                <i class="fas fa-info-circle"></i>
+                                <span id="event-info"></span>
+                            </small>
                         </div>
 
                         <div class="form-group mb-3">
@@ -102,6 +111,16 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="status">{{ __('messages.status') }}</label>
+                            <select name="status" id="status" class="form-control" required>
+                                <option value="">{{ __('messages.select_status') ?? 'Select Status' }}</option>
+                                <option value="1">{{ __('messages.completed') }}</option>
+                                <option value="2">{{ __('messages.cancelled') }}</option>
+                                <option value="6">{{ __('messages.refund') ?? 'Refund' }}</option>
+                            </select>
                         </div>
 
                         <div class="form-group mb-3">
@@ -277,7 +296,7 @@ $(document).ready(function() {
     function calculateLineTotal(row) {
         const priceWithoutTax = parseFloat(row.data('price-without-tax')) || 0;
         const quantity = parseInt(row.find('.quantity-input').val()) || 0;
-        const tax = parseFloat(row.find('.product-tax').val()) || 15;
+        const tax = parseFloat(row.find('.product-tax').val()) || 0;
 
         const subtotal = priceWithoutTax * quantity;
         const taxAmount = (subtotal * tax) / 100;
@@ -293,7 +312,7 @@ $(document).ready(function() {
 
         $('.product-row').each(function() {
             const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
-            const tax = parseFloat($(this).find('.product-tax').val()) || 15;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
             const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
 
             // Subtotal is the price without tax × quantity
@@ -330,7 +349,7 @@ $(document).ready(function() {
         let totalTax = 0;
         $('.product-row').each(function() {
             const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
-            const tax = parseFloat($(this).find('.product-tax').val()) || 15;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
             const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
             const lineSubtotal = priceWithoutTax * quantity;
             const lineTax = (lineSubtotal * tax) / 100;
@@ -426,9 +445,11 @@ $(document).ready(function() {
     // Load seller events function
     function loadSellerEvents(sellerId) {
         const eventSelect = $('#event_id');
+        const eventInfo = $('#event-info');
 
         if (!sellerId) {
             eventSelect.html('<option value="">{{ __("messages.choose_event") }}</option>');
+            eventInfo.html('');
             return;
         }
 
@@ -437,13 +458,30 @@ $(document).ready(function() {
             method: 'GET',
             success: function(data) {
                 let options = '<option value="">{{ __("messages.choose_event") }}</option>';
+                let validCount = 0;
+                let invalidCount = 0;
 
                 if (data.length > 0) {
                     data.forEach(function(event) {
-                        options += `<option value="${event.id}">${event.text}</option>`;
+                        if (event.is_valid) {
+                            options += `<option value="${event.id}">${event.text} <span style="color: green;">✓</span></option>`;
+                            validCount++;
+                        } else {
+                            options += `<option value="${event.id}" style="color: #999;">${event.text}</option>`;
+                            invalidCount++;
+                        }
                     });
+
+                    // Update info message
+                    let infoMsg = `{{ __("messages.total_events") }}: ${data.length} | `;
+                    infoMsg += `<span style="color: green;"><i class="fas fa-check-circle"></i> {{ __("messages.active_events") }}: ${validCount}</span>`;
+                    if (invalidCount > 0) {
+                        infoMsg += ` | <span style="color: #999;"><i class="fas fa-times-circle"></i> {{ __("messages.expired_events") }}: ${invalidCount}</span>`;
+                    }
+                    eventInfo.html(infoMsg);
                 } else {
-                    options = '<option value="">{{ __("messages.no_valid_events") }}</option>';
+                    options = '<option value="">{{ __("messages.no_events") }}</option>';
+                    eventInfo.html('');
                 }
 
                 eventSelect.html(options);
@@ -451,6 +489,7 @@ $(document).ready(function() {
             error: function(xhr) {
                 console.error('Error fetching events:', xhr);
                 eventSelect.html('<option value="">{{ __("messages.error_loading_events") }}</option>');
+                eventInfo.html('');
             }
         });
     }

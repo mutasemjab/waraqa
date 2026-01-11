@@ -22,6 +22,7 @@ return new class extends Migration
             $table->tinyInteger('payment_status')->default(2); // 1 Paid   // 2 Unpaid
             $table->tinyInteger('order_type')->default(1);  // 1 Sell   // 2 Refund
             $table->dateTime('date');
+            $table->date('order_date')->nullable();
             $table->text('note')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

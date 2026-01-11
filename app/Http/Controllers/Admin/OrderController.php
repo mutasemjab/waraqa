@@ -58,6 +58,8 @@ class OrderController extends Controller
             'user_id' => 'required|exists:users,id',
             'from_warehouse_id' => 'required|exists:warehouses,id',
             'event_id' => 'nullable|exists:events,id',
+            'order_date' => 'required|date',
+            'status' => 'required|in:1,2,6',
             'products' => 'required|array',
             'products.*.id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|integer|min:1',
@@ -104,7 +106,7 @@ class OrderController extends Controller
             // Create order
             $order = Order::create([
                 'number' => 'ORD-' . time(),
-                'status' => 1,
+                'status' => $request->status,
                 'total_taxes' => $totalTaxes,
                 'total_prices' => $totalPrices,
                 'paid_amount' => $paidAmount,
@@ -112,6 +114,7 @@ class OrderController extends Controller
                 'payment_status' => $remainingAmount > 0 ? 2 : 1,
                 'order_type' => 1,
                 'date' => now(),
+                'order_date' => $request->order_date,
                 'note' => $request->note,
                 'user_id' => $request->user_id,
                 'event_id' => $request->event_id
@@ -192,6 +195,7 @@ public function update(Request $request, Order $order)
         'user_id' => 'required|exists:users,id',
         'from_warehouse_id' => 'required|exists:warehouses,id',
         'event_id' => 'nullable|exists:events,id',
+        'order_date' => 'required|date',
         'products' => 'required|array',
         'products.*.id' => 'required|exists:products,id',
         'products.*.quantity' => 'required|integer|min:1',
@@ -244,6 +248,7 @@ public function update(Request $request, Order $order)
             'paid_amount' => $paidAmount,
             'remaining_amount' => $remainingAmount,
             'payment_status' => $remainingAmount > 0 ? 2 : 1,
+            'order_date' => $request->order_date,
             'note' => $request->note,
             'user_id' => $request->user_id,
             'event_id' => $request->event_id
@@ -340,15 +345,14 @@ public function getSellerEvents($sellerId)
     $now = now();
 
     $events = Event::where('user_id', $seller->id)
-        ->where(function ($query) use ($now) {
-            $query->where('start_date', '<=', $now)
-                ->where('end_date', '>=', $now);
-        })
+        ->orderBy('start_date', 'desc')
         ->get()
-        ->map(function ($event) {
+        ->map(function ($event) use ($now) {
+            $isValid = $event->start_date <= $now && $event->end_date >= $now;
             return [
                 'id' => $event->id,
-                'text' => $event->name
+                'text' => $event->name,
+                'is_valid' => $isValid
             ];
         });
 

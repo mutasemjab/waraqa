@@ -43,10 +43,20 @@
                         </div>
 
                         <div class="form-group mb-3">
+                            <label for="order_date">{{ __('messages.order_date') }}</label>
+                            <input type="date" name="order_date" id="order_date" class="form-control" required
+                                   value="{{ $order->order_date ? $order->order_date->format('Y-m-d') : '' }}">
+                        </div>
+
+                        <div class="form-group mb-3">
                             <label for="event_id">{{ __('messages.select_event') }}</label>
                             <select name="event_id" id="event_id" class="form-control">
                                 <option value="">{{ __('messages.choose_event') }}</option>
                             </select>
+                            <small class="form-text text-muted d-block mt-2">
+                                <i class="fas fa-info-circle"></i>
+                                <span id="event-info"></span>
+                            </small>
                         </div>
 
                         @php
@@ -334,7 +344,7 @@ $(document).ready(function() {
     function calculateLineTotal(row) {
         const priceWithoutTax = parseFloat(row.data('price-without-tax')) || 0;
         const quantity = parseInt(row.find('.quantity-input').val()) || 0;
-        const tax = parseFloat(row.find('.product-tax').val()) || 15;
+        const tax = parseFloat(row.find('.product-tax').val()) || 0;
 
         const subtotal = priceWithoutTax * quantity;
         const taxAmount = (subtotal * tax) / 100;
@@ -350,7 +360,7 @@ $(document).ready(function() {
 
         $('.product-row').each(function() {
             const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
-            const tax = parseFloat($(this).find('.product-tax').val()) || 15;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
             const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
 
             const lineSubtotal = priceWithoutTax * quantity;
@@ -385,7 +395,7 @@ $(document).ready(function() {
         let totalTax = 0;
         $('.product-row').each(function() {
             const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
-            const tax = parseFloat($(this).find('.product-tax').val()) || 15;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
             const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
             const lineSubtotal = priceWithoutTax * quantity;
             const lineTax = (lineSubtotal * tax) / 100;
@@ -475,9 +485,11 @@ $(document).ready(function() {
 
     function loadSellerEvents(sellerId, selectedEventId = null) {
         const eventSelect = $('#event_id');
+        const eventInfo = $('#event-info');
 
         if (!sellerId) {
             eventSelect.html('<option value="">{{ __("messages.choose_event") }}</option>');
+            eventInfo.html('');
             return;
         }
 
@@ -486,14 +498,31 @@ $(document).ready(function() {
             method: 'GET',
             success: function(data) {
                 let options = '<option value="">{{ __("messages.choose_event") }}</option>';
+                let validCount = 0;
+                let invalidCount = 0;
 
                 if (data.length > 0) {
                     data.forEach(function(event) {
                         const selected = selectedEventId && event.id == selectedEventId ? 'selected' : '';
-                        options += `<option value="${event.id}" ${selected}>${event.text}</option>`;
+                        if (event.is_valid) {
+                            options += `<option value="${event.id}" ${selected}>${event.text} <span style="color: green;">✓</span></option>`;
+                            validCount++;
+                        } else {
+                            options += `<option value="${event.id}" ${selected} style="color: #999;">${event.text}</option>`;
+                            invalidCount++;
+                        }
                     });
+
+                    // Update info message
+                    let infoMsg = `{{ __("messages.total_events") }}: ${data.length} | `;
+                    infoMsg += `<span style="color: green;"><i class="fas fa-check-circle"></i> {{ __("messages.active_events") }}: ${validCount}</span>`;
+                    if (invalidCount > 0) {
+                        infoMsg += ` | <span style="color: #999;"><i class="fas fa-times-circle"></i> {{ __("messages.expired_events") }}: ${invalidCount}</span>`;
+                    }
+                    eventInfo.html(infoMsg);
                 } else {
                     options = '<option value="">{{ __("messages.no_valid_events") }}</option>';
+                    eventInfo.html('');
                 }
 
                 eventSelect.html(options);
@@ -501,6 +530,7 @@ $(document).ready(function() {
             error: function(xhr) {
                 console.error('Error fetching events:', xhr);
                 eventSelect.html('<option value="">{{ __("messages.error_loading_events") }}</option>');
+                eventInfo.html('');
             }
         });
     }

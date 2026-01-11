@@ -38,7 +38,7 @@ class UserAuthController extends Controller
 
             // Users don't need specific role, proceed to dashboard
             $request->session()->regenerate();
-            return redirect()->intended(route('user.dashboard'));
+            return redirect(route('user.dashboard'));
         }
 
         return back()->withErrors([
@@ -72,7 +72,7 @@ class UserAuthController extends Controller
             }
 
             $request->session()->regenerate();
-            return redirect()->intended(route('provider.dashboard'));
+            return redirect(route('provider.dashboard'));
         }
 
         return back()->withErrors([

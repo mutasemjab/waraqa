@@ -72,6 +72,9 @@ class ProviderController extends Controller
         // Create user first
         $user = User::create($userData);
 
+        // Assign provider role to user
+        $user->assignRole('provider');
+
         // Create provider linked to user
         Provider::create([
             'user_id' => $user->id,

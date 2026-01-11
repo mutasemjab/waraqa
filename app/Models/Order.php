@@ -13,6 +13,7 @@ class Order extends Model
     
     protected $casts = [
         'date'=>'date',
+        'order_date'=>'date',
     ];
 
 

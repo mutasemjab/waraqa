@@ -157,7 +157,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-sm btn-warning text-white">
+                    <a href="{{ route('orders.index') }}" class="btn btn-sm btn-warning text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -181,7 +181,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['status' => 3]) }}" class="btn btn-sm btn-success text-white">
+                    <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-sm btn-success text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -253,7 +253,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['status' => 4]) }}" class="btn btn-sm btn-danger text-white">
+                    <a href="{{ route('orders.index', ['status' => 2]) }}" class="btn btn-sm btn-danger text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -294,6 +294,7 @@
                                 {{ __('messages.success_rate') }}
                             </div>
                             @php
+                                // Success rate = completed orders / total orders (regardless of payment status)
                                 $successRate = $stats['total_orders'] > 0 ? ($stats['completed_orders'] / $stats['total_orders']) * 100 : 0;
                             @endphp
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($successRate, 1) }}%</div>
@@ -304,7 +305,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['status' => 3]) }}" class="btn btn-sm btn-success text-white">
+                    <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-sm btn-success text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -326,16 +327,16 @@
                     </div>
                     <div class="mt-4 text-center small">
                         <span class="mr-2">
-                            <i class="fas fa-circle text-warning"></i> {{ __('messages.pending') }}
-                        </span>
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-success"></i> {{ __('messages.accepted') }}
-                        </span>
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-info"></i> {{ __('messages.completed') }}
+                            <i class="fas fa-circle text-success"></i> {{ __('messages.completed') }}
                         </span>
                         <span class="mr-2">
                             <i class="fas fa-circle text-danger"></i> {{ __('messages.cancelled') }}
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-secondary"></i> {{ __('messages.refund') }}
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-warning"></i> {{ __('messages.pending') }}
                         </span>
                     </div>
                 </div>
@@ -356,7 +357,7 @@
                                 <tr>
                                     <th>{{ __('messages.order_number') }}</th>
                                     <th>{{ __('messages.user') }}</th>
-                                    <th>{{ __('messages.route') }}</th>
+                                    <th>{{ __('messages.date') }}</th>
                                     <th>{{ __('messages.status') }}</th>
                                 </tr>
                             </thead>
@@ -369,14 +370,26 @@
                                         </a>
                                     </td>
                                     <td>{{ $order->user->name ?? 'N/A' }}</td>
-                                 
+                                    <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
                                     <td>
                                         @php
-                                            $statusClasses = [1 => 'warning', 2 => 'success', 3 => 'info', 4 => 'danger', 5 => 'secondary'];
-                                            $statusNames = [1 => __('messages.pending'), 2 => __('messages.accepted'), 3 => __('messages.completed'), 4 => __('messages.cancelled'), 5 => __('messages.rejected')];
+                                            // Determine status based on order status only
+                                            if ($order->status == 1) {
+                                                $badge = 'success';
+                                                $label = __('messages.completed');
+                                            } elseif ($order->status == 2) {
+                                                $badge = 'danger';
+                                                $label = __('messages.cancelled');
+                                            } elseif ($order->status == 6) {
+                                                $badge = 'secondary';
+                                                $label = __('messages.refund');
+                                            } else {
+                                                $badge = 'warning';
+                                                $label = __('messages.pending');
+                                            }
                                         @endphp
-                                        <span class="badge badge-{{ $statusClasses[$order->status] ?? 'secondary' }} badge-sm">
-                                            {{ $statusNames[$order->status] ?? __('messages.unknown') }}
+                                        <span class="badge badge-{{ $badge }} badge-sm">
+                                            {{ $label }}
                                         </span>
                                     </td>
                                 </tr>
@@ -403,7 +416,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-warning btn-block">
+                            <a href="{{ route('orders.index') }}" class="btn btn-warning btn-block">
                                 <i class="fas fa-clock"></i> {{ __('messages.pending_orders') }}
                                 <span class="badge badge-light ml-2">{{ $stats['pending_orders'] }}</span>
                             </a>
@@ -415,13 +428,13 @@
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('orders.index', ['status' => 3]) }}" class="btn btn-success btn-block">
+                            <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-success btn-block">
                                 <i class="fas fa-check-circle"></i> {{ __('messages.completed_orders') }}
                                 <span class="badge badge-light ml-2">{{ $stats['completed_orders'] }}</span>
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('orders.index', ['status' => 4]) }}" class="btn btn-danger btn-block">
+                            <a href="{{ route('orders.index', ['status' => 2]) }}" class="btn btn-danger btn-block">
                                 <i class="fas fa-times-circle"></i> {{ __('messages.cancelled_orders') }}
                                 <span class="badge badge-light ml-2">{{ $stats['cancelled_orders'] }}</span>
                             </a>
@@ -442,32 +455,30 @@ $(document).ready(function() {
     // Orders by Status Pie Chart
     var ctx = document.getElementById('ordersStatusChart').getContext('2d');
     var ordersData = @json($ordersByStatus);
-    
+
     var statusLabels = {
-        1: '{{ __("messages.pending") }}',
-        2: '{{ __("messages.accepted") }}',
-        3: '{{ __("messages.completed") }}', 
-        4: '{{ __("messages.cancelled") }}',
-        5: '{{ __("messages.rejected") }}'
+        'completed': '{{ __("messages.completed") }}',
+        'cancelled': '{{ __("messages.cancelled") }}',
+        'refund': '{{ __("messages.refund") }}',
+        'pending': '{{ __("messages.pending") }}'
     };
-    
+
     var statusColors = {
-        1: '#f6c23e', // warning
-        2: '#1cc88a', // success
-        3: '#36b9cc', // info
-        4: '#e74a3b', // danger
-        5: '#6c757d'  // secondary
+        'completed': '#1cc88a', // success (green) - Completed
+        'cancelled': '#e74a3b', // danger (red) - Cancelled
+        'refund': '#6c757d', // secondary (gray) - Refund
+        'pending': '#f6c23e'  // warning (yellow) - Pending
     };
-    
+
     var labels = [];
     var data = [];
     var colors = [];
-    
-    Object.keys(ordersData).forEach(function(status) {
-        if (ordersData[status] > 0) {
-            labels.push(statusLabels[status] || 'Unknown');
-            data.push(ordersData[status]);
-            colors.push(statusColors[status] || '#6c757d');
+
+    Object.keys(ordersData).forEach(function(key) {
+        if (ordersData[key] > 0) {
+            labels.push(statusLabels[key] || 'Unknown');
+            data.push(ordersData[key]);
+            colors.push(statusColors[key] || '#858796');
         }
     });
     

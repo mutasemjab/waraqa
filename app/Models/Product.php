@@ -15,7 +15,7 @@ class Product extends Model
 
     public function getPriceWithoutTaxAttribute()
     {
-        $tax = $this->tax ?? 15;
+        $tax = $this->tax ?? 0;
         return $this->selling_price / (1 + ($tax / 100));
     }
 

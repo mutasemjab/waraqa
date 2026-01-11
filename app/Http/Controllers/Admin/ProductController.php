@@ -28,7 +28,7 @@ class ProductController extends Controller
             ->limit(10)
             ->get()
             ->map(function ($product) {
-                $tax = $product->tax ?? 15;
+                $tax = $product->tax ?? 0;
                 $priceWithoutTax = $product->selling_price / (1 + ($tax / 100));
 
                 return [
@@ -84,7 +84,7 @@ class ProductController extends Controller
             'category_id'   => $request->category_id,
             'provider_id'   => $request->provider_id,
             'selling_price' => $request->selling_price,
-            'tax'           => $request->tax ?? 15,
+            'tax'           => $request->tax ?? 0,
             'photo'         => $photoPath,
             'created_at'    => now(),
             'updated_at'    => now(),
@@ -140,7 +140,7 @@ class ProductController extends Controller
             'category_id'   => $request->category_id,
             'provider_id'   => $request->provider_id,
             'selling_price' => $request->selling_price,
-            'tax'           => $request->tax ?? 15,
+            'tax'           => $request->tax ?? 0,
             'photo'         => $photoPath,
             'updated_at'    => now(),
         ]);

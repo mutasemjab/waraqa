@@ -36,34 +36,21 @@
                         </li>
                  @endcanany
                 <!-- User Management Section -->
-                @canany(['seller-table', 'seller-add', 'seller-edit', 'seller-delete', 'provider-table', 'provider-add', 'provider-edit', 'provider-delete'])
-                <li class="nav-item {{ request()->is('admin/sellers*') || request()->is('admin/providers*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-users"></i>
-                        <p>
-                            {{ __('messages.user_management') }}
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
+                @canany(['seller-table', 'seller-add', 'seller-edit', 'seller-delete'])
+                <li class="nav-item">
+                    <a href="{{ route('sellers.index') }}" class="nav-link {{ request()->routeIs('sellers.index', 'sellers.*') ? 'active' : '' }}">
+                        <i class="fas fa-store nav-icon"></i>
+                        <p>{{ __('messages.sellers') }}</p>
                     </a>
-                    <ul class="nav nav-treeview">
-                        @canany(['seller-table', 'seller-add', 'seller-edit', 'seller-delete'])
-                        <li class="nav-item">
-                            <a href="{{ route('sellers.index') }}" class="nav-link {{ request()->routeIs('sellers.index', 'sellers.*') ? 'active' : '' }}">
-                                <i class="fas fa-store nav-icon"></i>
-                                <p>{{ __('messages.sellers') }}</p>
-                            </a>
-                        </li>
-                        @endcanany
+                </li>
+                @endcanany
 
-                        @canany(['provider-table', 'provider-add', 'provider-edit', 'provider-delete'])
-                        <li class="nav-item">
-                            <a href="{{ route('providers.index') }}" class="nav-link {{ request()->routeIs('providers.index', 'providers.*') ? 'active' : '' }}">
-                                <i class="fas fa-car nav-icon"></i>
-                                <p>{{ __('messages.providers') }}</p>
-                            </a>
-                        </li>
-                        @endcanany
-                    </ul>
+                @canany(['provider-table', 'provider-add', 'provider-edit', 'provider-delete'])
+                <li class="nav-item">
+                    <a href="{{ route('providers.index') }}" class="nav-link {{ request()->routeIs('providers.index', 'providers.*') ? 'active' : '' }}">
+                        <i class="fas fa-car nav-icon"></i>
+                        <p>{{ __('messages.providers') }}</p>
+                    </a>
                 </li>
                 @endcanany
                 

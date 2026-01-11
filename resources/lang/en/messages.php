@@ -288,6 +288,8 @@ return [
     'Edit_Order' => 'Edit Order',
     'View' => 'View',
     'Order_Details' => 'Order Details',
+    'order_date' => 'Order Date',
+    'optional_leave_empty_for_today' => 'Optional - leave empty for today',
     'Select_User' => 'Select Seller',
     'Select_Driver' => 'Select Driver',
     'Driver_Selection_Info' => 'Leave empty if no driver assigned',
@@ -1216,6 +1218,10 @@ return [
     'choose_event' => 'Choose an event',
     'no_valid_events' => 'No valid events available',
     'error_loading_events' => 'Error loading events',
+    'total_events' => 'Total Events',
+    'active_events' => 'Active Events',
+    'expired_events' => 'Expired Events',
+    'no_events' => 'No Events',
 
     // Note Vouchers Report
     'noteVouchers_report' => 'Note Vouchers Report',
