@@ -15,7 +15,9 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserDeptController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\Admin\BookRequestController;
+use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\SalesReturnController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Spatie\Permission\Models\Permission;
 /*
@@ -77,8 +79,28 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::resource('noteVouchers', NoteVoucherController::class);
         Route::resource('user_depts', UserDeptController::class);
         Route::resource('bookRequests', BookRequestController::class);
+        Route::resource('purchases', PurchaseController::class);
+
+        // Purchase Actions
+        Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
+        Route::post('purchases/{purchase}/mark-as-received', [PurchaseController::class, 'markAsReceived'])->name('purchases.mark-as-received');
+
+        // Sales Returns
+        Route::prefix('returns')->name('admin.')->group(function () {
+            Route::get('search-orders', [SalesReturnController::class, 'searchOrders'])->name('sales-returns.search-orders');
+            Route::resource('sales-returns', SalesReturnController::class)->names([
+                'index' => 'sales-returns.index',
+                'create' => 'sales-returns.create',
+                'store' => 'sales-returns.store',
+                'show' => 'sales-returns.show',
+                'edit' => 'sales-returns.edit',
+                'update' => 'sales-returns.update',
+                'destroy' => 'sales-returns.destroy',
+            ]);
+        });
 
         // Book Request Responses
+        Route::get('bookRequests/responses/{response}/show', [BookRequestController::class, 'showResponse'])->name('bookRequests.responses.show');
         Route::post('bookRequests/responses/{response}/approve', [BookRequestController::class, 'approve'])->name('bookRequests.responses.approve');
         Route::post('bookRequests/responses/{response}/reject', [BookRequestController::class, 'reject'])->name('bookRequests.responses.reject');
 

@@ -11,6 +11,8 @@ use App\Models\NoteVoucher;
 use App\Models\NoteVoucherType;
 use App\Models\VoucherProduct;
 use App\Models\Warehouse;
+use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use Illuminate\Http\Request;
 
 class BookRequestController extends Controller
@@ -91,32 +93,45 @@ class BookRequestController extends Controller
         return redirect()->route('bookRequests.index')->with('success', 'تم حذف الطلب بنجاح');
     }
 
+    // عرض تفاصيل رد الطلب
+    public function showResponse(BookRequestResponse $response)
+    {
+        $response->load(['bookRequest.product', 'provider']);
+        return view('admin.bookRequests.response-details', compact('response'));
+    }
+
     // الموافقة على رد الطلب
-    public function approve(BookRequestResponse $response)
+    public function approve(Request $request, BookRequestResponse $response)
     {
         try {
-            // تحديث حالة الرد إلى موافق عليه
-            $response->update(['status' => 'approved']);
+            // تحديث السعر والضريبة من الـ request
+            $validated = $request->validate([
+                'price' => 'required|numeric|min:0',
+                'tax_percentage' => 'nullable|numeric|min:0|max:100',
+            ]);
+
+            // تحديث حالة الرد إلى موافق عليه مع السعر والضريبة
+            $response->update(array_merge($validated, ['status' => 'approved']));
 
             // الحصول على المستودع الرئيسي
             $mainWarehouse = Warehouse::first() ?? Warehouse::create(['name' => __('messages.main_warehouse')]);
 
-            // الحصول على نوع سند الإخراج
-            $outVoucherType = NoteVoucherType::where('in_out_type', 2)->first();
-            if (!$outVoucherType) {
-                return back()->with('error', 'نوع سند الإخراج غير موجود');
+            // الحصول على نوع سند الإدخال (شراء من المورد)
+            $inVoucherType = NoteVoucherType::where('in_out_type', 1)->first();
+            if (!$inVoucherType) {
+                return back()->with('error', 'نوع سند الإدخال غير موجود');
             }
 
-            // إنشاء سند تحويل (إخراج) للكمية الموافقة عليها
+            // إنشاء سند إدخال (شراء) من المورد إلى المستودع الرئيسي
             // الحصول على آخر رقم سند
             $lastNumber = NoteVoucher::max('number') ?? 0;
             $newNumber = $lastNumber + 1;
 
             $noteVoucher = NoteVoucher::create([
                 'number' => $newNumber,
-                'note_voucher_type_id' => $outVoucherType->id,
-                'from_warehouse_id' => $mainWarehouse->id,
-                'to_warehouse_id' => null, // سند إخراج فقط
+                'note_voucher_type_id' => $inVoucherType->id,
+                'from_warehouse_id' => null, // من المورد
+                'to_warehouse_id' => $mainWarehouse->id, // إلى المستودع الرئيسي
                 'date_note_voucher' => now(),
                 'provider_id' => $response->provider_id,
             ]);
@@ -126,10 +141,38 @@ class BookRequestController extends Controller
                 'note_voucher_id' => $noteVoucher->id,
                 'product_id' => $response->bookRequest->product_id,
                 'quantity' => $response->available_quantity,
+                'purchasing_price' => $response->price,
+                'tax_percentage' => $response->tax_percentage,
                 'note' => __('messages.approved_book_request') . ' - طلب رقم ' . $response->bookRequest->id,
             ]);
 
-            return back()->with('success', 'تمت الموافقة على الطلب وتم إنشاء سند الإخراج');
+            // إنشاء Purchase (مشترية) تلقائياً
+            $totalAmount = $response->price * $response->available_quantity;
+            $totalTax = ($totalAmount * $response->tax_percentage) / 100;
+
+            $purchaseNumber = 'PUR-' . date('Y') . '-' . str_pad(Purchase::max('id') + 1, 5, '0', STR_PAD_LEFT);
+
+            $purchase = Purchase::create([
+                'purchase_number' => $purchaseNumber,
+                'provider_id' => $response->provider_id,
+                'book_request_response_id' => $response->id,
+                'total_amount' => $totalAmount,
+                'total_tax' => $totalTax,
+                'status' => 'confirmed',
+                'notes' => __('messages.approved_book_request') . ' - طلب رقم ' . $response->bookRequest->id,
+            ]);
+
+            // إضافة المنتج إلى المشترية
+            PurchaseItem::create([
+                'purchase_id' => $purchase->id,
+                'product_id' => $response->bookRequest->product_id,
+                'quantity' => $response->available_quantity,
+                'unit_price' => $response->price,
+                'tax_percentage' => $response->tax_percentage,
+                'total_price' => $totalAmount,
+            ]);
+
+            return back()->with('success', 'تمت الموافقة على الطلب وتم إنشاء سند الإدخال والمشترية');
         } catch (\Exception $e) {
             return back()->with('error', 'حدث خطأ: ' . $e->getMessage());
         }

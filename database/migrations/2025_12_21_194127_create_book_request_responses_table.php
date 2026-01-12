@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignId('provider_id')->constrained('providers')->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->integer('available_quantity');
+            $table->decimal('price', 12, 3)->nullable();
+            $table->decimal('tax_percentage', 5, 2)->default(0);
             $table->string('status')->default('pending'); // pending, approved, rejected
             $table->text('note')->nullable();
             $table->timestamps();

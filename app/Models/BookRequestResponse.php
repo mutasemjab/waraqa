@@ -9,7 +9,7 @@ class BookRequestResponse extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['book_request_id', 'provider_id', 'available_quantity', 'status', 'note'];
+    protected $fillable = ['book_request_id', 'provider_id', 'available_quantity', 'price', 'tax_percentage', 'status', 'note'];
 
     public function bookRequest()
     {

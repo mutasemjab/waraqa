@@ -70,6 +70,8 @@ class BookRequestController extends Controller
 
         $validated = $request->validate([
             'available_quantity' => 'required|integer|min:0',
+            'price' => 'required|numeric|min:0',
+            'tax_percentage' => 'nullable|numeric|min:0|max:100',
             'note' => 'nullable|string',
         ]);
 
@@ -86,6 +88,8 @@ class BookRequestController extends Controller
             'book_request_id' => $bookRequest->id,
             'provider_id' => $provider->id,
             'available_quantity' => $validated['available_quantity'],
+            'price' => $validated['price'],
+            'tax_percentage' => $validated['tax_percentage'] ?? 0,
             'status' => 'pending',
             'note' => $validated['note'] ?? null,
         ]);

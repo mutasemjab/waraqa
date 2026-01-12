@@ -144,11 +144,49 @@
                         <p>{{ __('messages.book_requests') }}</p>
                     </a>
                 </li>
-            
-         
 
-           
-            
+                <!-- Purchases Management -->
+                @canany(['purchase-table', 'purchase-add', 'purchase-edit', 'purchase-delete'])
+                <li class="nav-item">
+                    <a href="{{ route('purchases.index') }}" class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-shopping-cart"></i>
+                        <p>{{ __('messages.purchases') }}</p>
+                    </a>
+                </li>
+                @endcanany
+
+                <!-- Returns Management Group -->
+                <li class="nav-item {{ request()->is('admin/returns*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-undo"></i>
+                        <p>
+                            {{ __('messages.returns') }}
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <!-- Sales Returns -->
+                        <li class="nav-item">
+                            <a href="{{ route('admin.sales-returns.index') }}" class="nav-link {{ request()->routeIs('admin.sales-returns.*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('messages.sales_returns') }}</p>
+                            </a>
+                        </li>
+
+                        {{-- <!-- Purchase Returns - Coming Soon -->
+                        <li class="nav-item">
+                            <a href="#" class="nav-link disabled" style="opacity: 0.5;">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('messages.purchase_returns') }}</p>
+                            </a>
+                        </li> --}}
+                    </ul>
+                </li>
+
+
+
+
+
                          @canany(['userDept-table', 'userDept-add', 'userDept-edit', 'userDept-delete'])
                         <li class="nav-item">
                             <a href="{{ route('user_depts.index') }}" class="nav-link {{ request()->routeIs('user_depts.index') ? 'active' : '' }}">

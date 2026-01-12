@@ -48,27 +48,80 @@
                 <form action="{{ route('provider.bookRequests.storeResponse', $bookRequest->id) }}" method="POST">
                     @csrf
 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label for="available_quantity" class="form-label">
+                                    {{ __('messages.Available_Quantity') }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <input type="number"
+                                           name="available_quantity"
+                                           id="available_quantity"
+                                           class="form-control form-control-lg @error('available_quantity') is-invalid @enderror"
+                                           value="{{ old('available_quantity', 0) }}"
+                                           min="0"
+                                           max="{{ $bookRequest->requested_quantity * 2 }}"
+                                           required
+                                           placeholder="0">
+                                    <span class="input-group-text">{{ __('messages.units') }}</span>
+                                </div>
+                                <small class="form-text text-muted d-block mt-2">
+                                    {{ __('messages.specify_available_quantity_info', ['quantity' => $bookRequest->requested_quantity]) }}
+                                </small>
+                                @error('available_quantity')
+                                    <span class="invalid-feedback d-block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label for="price" class="form-label">
+                                    {{ __('messages.Price') }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <input type="number"
+                                           step="any"
+                                           name="price"
+                                           id="price"
+                                           class="form-control form-control-lg @error('price') is-invalid @enderror"
+                                           value="{{ old('price') }}"
+                                           min="0"
+                                           required
+                                           placeholder="0">
+                                    <span class="input-group-text">{{ __('messages.currency') ?? 'KWD' }}</span>
+                                </div>
+                                @error('price')
+                                    <span class="invalid-feedback d-block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-4">
-                        <label for="available_quantity" class="form-label">
-                            {{ __('messages.Available_Quantity') }}
-                            <span class="text-danger">*</span>
+                        <label for="tax_percentage" class="form-label">
+                            {{ __('messages.Tax_Percentage') }}
+                            <span class="text-muted">({{ __('messages.Optional') }})</span>
                         </label>
                         <div class="input-group">
                             <input type="number"
-                                   name="available_quantity"
-                                   id="available_quantity"
-                                   class="form-control form-control-lg @error('available_quantity') is-invalid @enderror"
-                                   value="{{ old('available_quantity', 0) }}"
+                                   step="0.01"
+                                   name="tax_percentage"
+                                   id="tax_percentage"
+                                   class="form-control form-control-lg @error('tax_percentage') is-invalid @enderror"
+                                   value="{{ old('tax_percentage', 0) }}"
                                    min="0"
-                                   max="{{ $bookRequest->requested_quantity * 2 }}"
-                                   required
-                                   placeholder="0">
-                            <span class="input-group-text">{{ __('messages.units') }}</span>
+                                   max="100"
+                                   placeholder="0.00">
+                            <span class="input-group-text">%</span>
                         </div>
                         <small class="form-text text-muted d-block mt-2">
-                            {{ __('messages.specify_available_quantity_info', ['quantity' => $bookRequest->requested_quantity]) }}
+                            {{ __('messages.tax_percentage_info') ?? 'حدد نسبة الضريبة المطبقة على هذا المنتج' }}
                         </small>
-                        @error('available_quantity')
+                        @error('tax_percentage')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>

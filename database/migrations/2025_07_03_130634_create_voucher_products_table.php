@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->integer('quantity');
             $table->double('purchasing_price')->nullable();
+            $table->decimal('tax_percentage', 5, 2)->default(0);
             $table->text('note')->nullable();
             $table->unsignedBigInteger('product_id')->nullable();
             $table->unsignedBigInteger('note_voucher_id')->nullable();

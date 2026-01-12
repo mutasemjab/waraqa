@@ -114,6 +114,26 @@ class PermissionSeeder extends Seeder
             'bookRequest-delete',
             'bookRequest-approve',
             'bookRequest-reject',
+
+            // Sales Returns Management
+            'sales-return-table',
+            'sales-return-add',
+            'sales-return-edit',
+            'sales-return-delete',
+
+            // Purchase Management
+            'purchase-table',
+            'purchase-add',
+            'purchase-edit',
+            'purchase-delete',
+            'purchase-confirm',
+            'purchase-receive',
+
+            // Purchase Returns Management
+            'purchase-return-table',
+            'purchase-return-add',
+            'purchase-return-edit',
+            'purchase-return-delete',
         ];
 
         $data = array_map(function ($permission) {

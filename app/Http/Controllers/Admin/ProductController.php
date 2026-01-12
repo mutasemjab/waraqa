@@ -28,7 +28,7 @@ class ProductController extends Controller
             ->limit(10)
             ->get()
             ->map(function ($product) {
-                $tax = $product->tax ?? 0;
+                $tax = floatval($product->tax ?? 0);
                 $priceWithoutTax = $product->selling_price / (1 + ($tax / 100));
 
                 return [
@@ -37,6 +37,7 @@ class ProductController extends Controller
                     'tax' => $tax,
                     'selling_price' => $product->selling_price,
                     'price_without_tax' => $priceWithoutTax,
+                    'sku' => $product->sku,
                 ];
             });
 

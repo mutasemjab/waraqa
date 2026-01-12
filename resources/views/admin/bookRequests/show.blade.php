@@ -57,7 +57,7 @@
                 <div class="card-body">
                     @if($bookRequest->responses->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
                                         <th>{{ __('messages.provider') }}</th>
@@ -97,78 +97,11 @@
                                                 {{ $response->created_at->format('Y-m-d H:i') }}
                                             </td>
                                             <td>
-                                                @if($response->status == 'pending')
-                                                    <button type="button" class="btn btn-sm btn-success"
-                                                            data-toggle="modal"
-                                                            data-target="#approveModal{{ $response->id }}">
-                                                        {{ __('messages.Approve') }}
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-danger"
-                                                            data-toggle="modal"
-                                                            data-target="#rejectModal{{ $response->id }}">
-                                                        {{ __('messages.Reject') }}
-                                                    </button>
-                                                @else
-                                                    <span class="text-muted">{{ __('messages.No_Actions') }}</span>
-                                                @endif
+                                                <a href="{{ route('bookRequests.responses.show', $response->id) }}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i> {{ __('messages.Details') }}
+                                                </a>
                                             </td>
                                         </tr>
-
-                                        <!-- Approve Modal -->
-                                        <div class="modal fade" id="approveModal{{ $response->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">{{ __('messages.Approve_Response') }}</h5>
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                            <span aria-hidden="true">&times;</span>
-                                                        </button>
-                                                    </div>
-                                                    <form action="{{ route('bookRequests.responses.approve', $response) }}" method="POST">
-                                                        @csrf
-                                                        <div class="modal-body">
-                                                            <p>{{ __('messages.Confirm_Approve_Message') }}</p>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                                                {{ __('messages.Cancel') }}
-                                                            </button>
-                                                            <button type="submit" class="btn btn-success">
-                                                                {{ __('messages.Approve') }}
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Reject Modal -->
-                                        <div class="modal fade" id="rejectModal{{ $response->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">{{ __('messages.Reject_Response') }}</h5>
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                            <span aria-hidden="true">&times;</span>
-                                                        </button>
-                                                    </div>
-                                                    <form action="{{ route('bookRequests.responses.reject', $response) }}" method="POST">
-                                                        @csrf
-                                                        <div class="modal-body">
-                                                            <p>{{ __('messages.Confirm_Reject_Message') }}</p>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                                                {{ __('messages.Cancel') }}
-                                                            </button>
-                                                            <button type="submit" class="btn btn-danger">
-                                                                {{ __('messages.Reject') }}
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>
