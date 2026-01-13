@@ -39,6 +39,7 @@
                             </small>
                         </div>
 
+
                         <div class="form-group mb-3">
                             <x-search-select
                                 model="App\Models\Warehouse"
@@ -103,6 +104,16 @@
                                                 <span>{{ __('messages.total') }}:</span>
                                                 <span><x-riyal-icon /> <span id="grand-total">0.00</span></span>
                                             </div>
+                                            <hr class="my-2">
+                                            <div class="d-flex justify-content-between align-items-center" id="commission-row" style="display:none;">
+                                                <span>{{ __('messages.commission_percentage') ?? 'Commission %' }}:</span>
+                                                <span><span id="commission-percentage">0</span>%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center text-success" id="commission-value-row" style="display:none;">
+                                                <strong>{{ __('messages.commission_value') ?? 'Commission Value' }}:</strong>
+                                                <strong><x-riyal-icon /> <span id="commission-value">0.00</span></strong>
+                                            </div>
+                                            <hr class="my-2" id="commission-divider" style="display:none;">
                                             <div class="d-flex justify-content-between text-muted align-items-center">
                                                 <span>{{ __('messages.remaining') }}:</span>
                                                 <span><x-riyal-icon /> <span id="remaining-amount">0.00</span></span>
@@ -450,6 +461,7 @@ $(document).ready(function() {
         if (!sellerId) {
             eventSelect.html('<option value="">{{ __("messages.choose_event") }}</option>');
             eventInfo.html('');
+            allEventsData = {};
             return;
         }
 
@@ -461,8 +473,14 @@ $(document).ready(function() {
                 let validCount = 0;
                 let invalidCount = 0;
 
+                // Clear previous events data
+                allEventsData = {};
+
                 if (data.length > 0) {
                     data.forEach(function(event) {
+                        // Store event data for later use
+                        allEventsData[event.id] = event;
+
                         if (event.is_valid) {
                             options += `<option value="${event.id}">${event.text} <span style="color: green;">✓</span></option>`;
                             validCount++;
@@ -490,6 +508,7 @@ $(document).ready(function() {
                 console.error('Error fetching events:', xhr);
                 eventSelect.html('<option value="">{{ __("messages.error_loading_events") }}</option>');
                 eventInfo.html('');
+                allEventsData = {};
             }
         });
     }
@@ -499,6 +518,97 @@ $(document).ready(function() {
         const sellerId = $(this).val();
         loadSellerEvents(sellerId);
     });
+
+    // Store event commission data when event changes
+    let eventCommissionData = {};
+    let allEventsData = {};
+
+    // Update commission box with live calculations
+    const updateCommissionBox = function() {
+        if (!eventCommissionData.id) return;
+
+        const percentage = eventCommissionData.percentage;
+
+        // Calculate grand total
+        let subtotal = 0;
+        let totalTax = 0;
+
+        $('.product-row').each(function() {
+            const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
+            const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+
+            const lineSubtotal = priceWithoutTax * quantity;
+            const lineTax = (lineSubtotal * tax) / 100;
+
+            subtotal += lineSubtotal;
+            totalTax += lineTax;
+        });
+
+        const grandTotal = subtotal + totalTax;
+        const commissionValue = (grandTotal * percentage) / 100;
+
+        $('#commission-percentage').text(percentage.toFixed(2));
+        $('#commission-value').text(commissionValue.toFixed(2));
+
+        // Show commission rows
+        $('#commission-row, #commission-value-row, #commission-divider').show();
+    };
+
+    $(document).on('change', '#event_id', function() {
+        const eventId = $(this).val();
+
+        if (!eventId || !allEventsData[eventId]) {
+            eventCommissionData = {};
+            $('#commission-row, #commission-value-row, #commission-divider').hide();
+            return;
+        }
+
+        // Get event data from stored events
+        const eventData = allEventsData[eventId];
+        eventCommissionData = {
+            id: eventData.id,
+            percentage: parseFloat(eventData.commission_percentage)
+        };
+        updateCommissionBox();
+    });
+
+    // Store original calculateTotals function
+    const originalCalculateTotals = function() {
+        let subtotal = 0;
+        let totalTax = 0;
+
+        $('.product-row').each(function() {
+            const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
+            const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+
+            const lineSubtotal = priceWithoutTax * quantity;
+            const lineTax = (lineSubtotal * tax) / 100;
+
+            subtotal += lineSubtotal;
+            totalTax += lineTax;
+        });
+
+        const grandTotal = subtotal + totalTax;
+        const paidAmount = parseFloat($('#paid_amount').val()) || 0;
+        const remainingAmount = Math.max(0, grandTotal - paidAmount);
+
+        $('#subtotal').text(subtotal.toFixed(2));
+        $('#tax-total').text(totalTax.toFixed(2));
+        $('#grand-total').text(grandTotal.toFixed(2));
+        $('#remaining-amount').text(remainingAmount.toFixed(2));
+
+        // Update commission if event is selected
+        if (eventCommissionData.id) {
+            updateCommissionBox();
+        }
+    };
+
+    // Override calculateTotals to use our version
+    function calculateTotals() {
+        originalCalculateTotals();
+    }
 });
 </script>
 @endsection

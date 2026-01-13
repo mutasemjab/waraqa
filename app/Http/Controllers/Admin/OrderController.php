@@ -352,7 +352,8 @@ public function getSellerEvents($sellerId)
             return [
                 'id' => $event->id,
                 'text' => $event->name,
-                'is_valid' => $isValid
+                'is_valid' => $isValid,
+                'commission_percentage' => $event->commission_percentage
             ];
         });
 

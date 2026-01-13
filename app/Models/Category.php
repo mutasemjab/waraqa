@@ -19,8 +19,7 @@ class Category extends Model
 
     public function getNameAttribute()
     {
-        $lang = request()->header('Accept-Language') ?? App::getLocale();
-
+        $lang = App::getLocale();
         return $lang === 'ar' ? $this->name_ar : $this->name_en;
     }
 }

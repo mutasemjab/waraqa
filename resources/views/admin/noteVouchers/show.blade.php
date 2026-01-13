@@ -24,20 +24,32 @@
         </div>
 
         @if ($noteVoucher->noteVoucherType->in_out_type == 1)
-            <!-- For Receipt Type (in_out_type = 1): From Provider to Warehouse -->
+            <!-- For Receipt Type (in_out_type = 1): From Recipient to Warehouse -->
             <div class="col-md-6">
-                <strong>{{ __('messages.provider') }}:</strong> {{ $noteVoucher->provider->name }}
+                @if ($noteVoucher->provider)
+                    <strong>{{ __('messages.provider') }}:</strong> {{ $noteVoucher->provider->name }}
+                @elseif ($noteVoucher->user)
+                    <strong>{{ __('messages.customer') }}:</strong> {{ $noteVoucher->user->name }}
+                @elseif ($noteVoucher->event)
+                    <strong>{{ __('messages.event') }}:</strong> {{ $noteVoucher->event->name }}
+                @endif
             </div>
             <div class="col-md-6">
                 <strong>{{ __('messages.toWarehouse') }}:</strong> {{ $noteVoucher->toWarehouse->name }}
             </div>
         @elseif ($noteVoucher->noteVoucherType->in_out_type == 2)
-            <!-- For Outgoing Type (in_out_type = 2): From Warehouse to Provider -->
+            <!-- For Outgoing Type (in_out_type = 2): From Warehouse to Recipient -->
             <div class="col-md-6">
                 <strong>{{ __('messages.fromWarehouse') }}:</strong> {{ $noteVoucher->fromWarehouse->name }}
             </div>
             <div class="col-md-6">
-                <strong>{{ __('messages.provider') }}:</strong> {{ $noteVoucher->provider->name }}
+                @if ($noteVoucher->provider)
+                    <strong>{{ __('messages.provider') }}:</strong> {{ $noteVoucher->provider->name }}
+                @elseif ($noteVoucher->user)
+                    <strong>{{ __('messages.customer') }}:</strong> {{ $noteVoucher->user->name }}
+                @elseif ($noteVoucher->event)
+                    <strong>{{ __('messages.event') }}:</strong> {{ $noteVoucher->event->name }}
+                @endif
             </div>
         @else
             <!-- For Transfer Type (in_out_type = 3): From Warehouse to Warehouse -->

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class SearchController extends Controller
 {
@@ -14,12 +15,14 @@ class SearchController extends Controller
             $model = $request->get('model');
             $limit = (int)$request->get('limit', 5);
             $displayColumn = $request->get('displayColumn', 'name');
+            $filter = $request->get('filter', '');
 
             Log::info('SearchController - Input:', [
                 'term' => $term,
                 'model' => $model,
                 'limit' => $limit,
-                'displayColumn' => $displayColumn
+                'displayColumn' => $displayColumn,
+                'filter' => $filter
             ]);
 
             if (!$model || !class_exists($model)) {
@@ -28,6 +31,16 @@ class SearchController extends Controller
             }
 
             $query = $model::query();
+
+            // Apply filters based on model and filter parameter
+            if ($model === 'App\Models\User') {
+                if ($filter === 'without_roles') {
+                    $query->withoutRoles();
+                } elseif (strpos($filter, 'with_role:') === 0) {
+                    $roleName = substr($filter, 10); // Remove 'with_role:' prefix
+                    $query->role($roleName);
+                }
+            }
 
             // Build search query - search in all columns
             if ($term) {

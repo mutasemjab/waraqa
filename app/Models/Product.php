@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\App;
 
 class Product extends Model
 {
@@ -11,7 +12,13 @@ class Product extends Model
 
     protected $guarded = [];
 
-    protected $appends = ['price_without_tax'];
+    protected $appends = ['price_without_tax', 'name'];
+
+    public function getNameAttribute()
+    {
+        $lang = App::getLocale();
+        return $lang === 'ar' ? $this->name_ar : $this->name_en;
+    }
 
     public function getPriceWithoutTaxAttribute()
     {

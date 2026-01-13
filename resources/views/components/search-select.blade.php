@@ -7,6 +7,7 @@
     'required' => false,
     'value' => null,
     'displayColumn' => 'name',
+    'filter' => null,
 ])
 
 @php
@@ -189,7 +190,12 @@
         openDropdown();
 
         const displayColumn = '{{ $displayColumn ?? 'name' }}';
-        const url = `${apiUrl}?model=${encodeURIComponent(model)}&limit=${limit}&term=${encodeURIComponent(term)}&displayColumn=${encodeURIComponent(displayColumn)}`;
+        const filter = '{{ $filter ?? '' }}';
+        let url = `${apiUrl}?model=${encodeURIComponent(model)}&limit=${limit}&term=${encodeURIComponent(term)}&displayColumn=${encodeURIComponent(displayColumn)}`;
+
+        if (filter) {
+            url += `&filter=${encodeURIComponent(filter)}`;
+        }
 
         fetch(url)
             .then(response => response.json())

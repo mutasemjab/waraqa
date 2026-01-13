@@ -33,8 +33,9 @@
 
 
 
-            <!-- For Receipt Type (in_out_type = 1): From Provider to Warehouse -->
+            <!-- For Receipt Type (in_out_type = 1): From Recipient to Warehouse -->
             @if ($note_voucher_type->in_out_type == 1)
+                <!-- Receipt Type: Direct provider field + warehouse destination -->
                 <div class="col-md-6">
                     <x-search-select
                         model="App\Models\Provider"
@@ -70,8 +71,28 @@
                 </div>
 
                 @if ($note_voucher_type->in_out_type == 2)
-                    <!-- For Outgoing Type (in_out_type = 2): From Warehouse to Provider -->
-                    <div class="col-md-6">
+                    <!-- For Outgoing Type (in_out_type = 2): From Warehouse to Recipient -->
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>{{ __('messages.recipient_type') }}</label>
+                            <div class="btn-group btn-group-toggle" data-toggle="buttons" role="group">
+                                <label class="btn btn-outline-primary active">
+                                    <input type="radio" name="recipient_type" value="provider" checked> {{ __('messages.provider') }}
+                                </label>
+                                <label class="btn btn-outline-primary">
+                                    <input type="radio" name="recipient_type" value="seller"> {{ __('messages.seller') }}
+                                </label>
+                                <label class="btn btn-outline-primary">
+                                    <input type="radio" name="recipient_type" value="user"> {{ __('messages.customer') }}
+                                </label>
+                                <label class="btn btn-outline-primary">
+                                    <input type="radio" name="recipient_type" value="event"> {{ __('messages.event') }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6" id="provider-field" style="display: block;">
                         <x-search-select
                             model="App\Models\Provider"
                             fieldName="provider_id"
@@ -79,6 +100,43 @@
                             placeholder="Search..."
                             limit="10"
                             required="true"
+                        />
+                    </div>
+
+                    <div class="col-md-6" id="seller-field" style="display: none;">
+                        <x-search-select
+                            model="App\Models\User"
+                            fieldName="user_id"
+                            label="seller"
+                            placeholder="Search..."
+                            limit="10"
+                            displayColumn="name"
+                            filter="with_role:seller"
+                            required="false"
+                        />
+                    </div>
+
+                    <div class="col-md-6" id="user-field" style="display: none;">
+                        <x-search-select
+                            model="App\Models\User"
+                            fieldName="user_id"
+                            label="customer"
+                            placeholder="Search..."
+                            limit="10"
+                            displayColumn="name"
+                            filter="with_role:customer"
+                            required="false"
+                        />
+                    </div>
+
+                    <div class="col-md-6" id="event-field" style="display: none;">
+                        <x-search-select
+                            model="App\Models\Event"
+                            fieldName="event_id"
+                            label="event"
+                            placeholder="Search..."
+                            limit="10"
+                            required="false"
                         />
                     </div>
                 @elseif ($note_voucher_type->in_out_type == 3)
@@ -130,8 +188,8 @@
                             <input type="text" class="form-control product-search" name="products[0][name]" placeholder="{{ __('messages.Search_product') }}"/>
                         </td>
                         <td><input type="number" class="form-control product-quantity" name="products[0][quantity]" /></td>
-                        <td><input type="number" class="form-control product-price" name="products[0][price]" step="any" disabled /></td>
-                        <td><input type="number" class="form-control product-tax" name="products[0][tax]" step="any" disabled /></td>
+                        <td><input type="number" class="form-control product-price" name="products[0][price]" step="any" /></td>
+                        <td><input type="number" class="form-control product-tax" name="products[0][tax]" step="any" /></td>
                         @if($note_voucher_type->have_price == 1)
                             <td><input type="number" class="form-control product-purchasing-price" name="products[0][purchasing_price]" step="any" /></td>
                         @endif
@@ -217,7 +275,7 @@ function setRedirect(value) {
                     // Fill product details
                     selectedRow.find('.product-id').val(ui.item.id);
                     selectedRow.find('.product-search').val(ui.item.label); // Fill product name
-                    selectedRow.find('.product-price').val(ui.item.price);
+                    selectedRow.find('.product-price').val(ui.item.selling_price);
                     selectedRow.find('.product-tax').val(ui.item.tax);
 
                     // Fetch available quantity
@@ -352,8 +410,8 @@ function setRedirect(value) {
                     <input type="text" class="form-control product-search" name="products[${rowIdx}][name]" placeholder="{{ __('messages.Search_product') }}"/>
                 </td>
                 <td><input type="number" class="form-control product-quantity" name="products[${rowIdx}][quantity]" /></td>
-                <td><input type="number" class="form-control product-price" name="products[${rowIdx}][price]" step="any" disabled /></td>
-                <td><input type="number" class="form-control product-tax" name="products[${rowIdx}][tax]" step="any" disabled /></td>
+                <td><input type="number" class="form-control product-price" name="products[${rowIdx}][price]" step="any" /></td>
+                <td><input type="number" class="form-control product-tax" name="products[${rowIdx}][tax]" step="any" /></td>
         `;
 
         @if($note_voucher_type->have_price == 1)
@@ -381,6 +439,34 @@ function setRedirect(value) {
     initializeProductSearch();
     attachQuantityListener($('tr').first());
     handleBarcodeInput();
+
+    // Handle recipient type toggle
+    $('input[name="recipient_type"]').on('change', function() {
+        const selectedType = $(this).val();
+
+        // Hide all fields and remove required from their inputs
+        $('#provider-field, #seller-field, #user-field, #event-field').hide()
+            .find('input[type="text"]').removeAttr('required');
+
+        // Show selected field and add required to its text input
+        let selectedField = null;
+        if (selectedType === 'provider') {
+            selectedField = $('#provider-field');
+        } else if (selectedType === 'seller') {
+            selectedField = $('#seller-field');
+        } else if (selectedType === 'user') {
+            selectedField = $('#user-field');
+        } else if (selectedType === 'event') {
+            selectedField = $('#event-field');
+        }
+
+        if (selectedField) {
+            selectedField.show().find('input[type="text"]').attr('required', 'required');
+        }
+    });
+
+    // Initialize: remove required from hidden fields on page load
+    $('#seller-field, #user-field, #event-field').find('input[type="text"]').removeAttr('required');
 });
 
 

@@ -21,7 +21,7 @@
                 </div>
             </div>
 
-            <!-- For Receipt Type (in_out_type = 1): From Provider to Warehouse -->
+            <!-- For Receipt Type (in_out_type = 1): Direct provider field + warehouse -->
             @if ($noteVoucher->noteVoucherType->in_out_type == 1)
                 <div class="col-md-6">
                     <x-search-select
@@ -61,8 +61,47 @@
                 </div>
 
                 @if ($noteVoucher->noteVoucherType->in_out_type == 2)
-                    <!-- For Outgoing Type (in_out_type = 2): From Warehouse to Provider -->
-                    <div class="col-md-6">
+                    <!-- For Outgoing Type (in_out_type = 2): From Warehouse to Recipient -->
+                    @php
+                        $recipientType = 'provider'; // default
+                        if ($noteVoucher->provider_id) {
+                            $recipientType = 'provider';
+                        } elseif ($noteVoucher->user_id) {
+                            // Check user role to determine if seller or customer
+                            $user = $noteVoucher->user;
+                            if ($user && $user->hasRole('seller')) {
+                                $recipientType = 'seller';
+                            } elseif ($user && $user->hasRole('customer')) {
+                                $recipientType = 'user';
+                            } else {
+                                $recipientType = 'seller'; // default to seller if no specific role
+                            }
+                        } elseif ($noteVoucher->event_id) {
+                            $recipientType = 'event';
+                        }
+                    @endphp
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>{{ __('messages.recipient_type') }}</label>
+                            <div class="btn-group btn-group-toggle" data-toggle="buttons" role="group">
+                                <label class="btn btn-outline-primary {{ $recipientType === 'provider' ? 'active' : '' }}">
+                                    <input type="radio" name="recipient_type" value="provider" {{ $recipientType === 'provider' ? 'checked' : '' }}> {{ __('messages.provider') }}
+                                </label>
+                                <label class="btn btn-outline-primary {{ $recipientType === 'seller' ? 'active' : '' }}">
+                                    <input type="radio" name="recipient_type" value="seller" {{ $recipientType === 'seller' ? 'checked' : '' }}> {{ __('messages.seller') }}
+                                </label>
+                                <label class="btn btn-outline-primary {{ $recipientType === 'user' ? 'active' : '' }}">
+                                    <input type="radio" name="recipient_type" value="user" {{ $recipientType === 'user' ? 'checked' : '' }}> {{ __('messages.customer') }}
+                                </label>
+                                <label class="btn btn-outline-primary {{ $recipientType === 'event' ? 'active' : '' }}">
+                                    <input type="radio" name="recipient_type" value="event" {{ $recipientType === 'event' ? 'checked' : '' }}> {{ __('messages.event') }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6" id="provider-field" style="display: {{ $recipientType === 'provider' ? 'block' : 'none' }};">
                         <x-search-select
                             model="App\Models\Provider"
                             fieldName="provider_id"
@@ -70,7 +109,47 @@
                             placeholder="Search..."
                             limit="10"
                             value="{{ $noteVoucher->provider_id }}"
-                            required="true"
+                            required="false"
+                        />
+                    </div>
+
+                    <div class="col-md-6" id="seller-field" style="display: {{ $recipientType === 'seller' ? 'block' : 'none' }};">
+                        <x-search-select
+                            model="App\Models\User"
+                            fieldName="user_id"
+                            label="seller"
+                            placeholder="Search..."
+                            limit="10"
+                            displayColumn="name"
+                            filter="with_role:seller"
+                            value="{{ $noteVoucher->user_id }}"
+                            required="false"
+                        />
+                    </div>
+
+                    <div class="col-md-6" id="user-field" style="display: {{ $recipientType === 'user' ? 'block' : 'none' }};">
+                        <x-search-select
+                            model="App\Models\User"
+                            fieldName="user_id"
+                            label="customer"
+                            placeholder="Search..."
+                            limit="10"
+                            displayColumn="name"
+                            filter="with_role:customer"
+                            value="{{ $noteVoucher->user_id }}"
+                            required="false"
+                        />
+                    </div>
+
+                    <div class="col-md-6" id="event-field" style="display: {{ $recipientType === 'event' ? 'block' : 'none' }};">
+                        <x-search-select
+                            model="App\Models\Event"
+                            fieldName="event_id"
+                            label="event"
+                            placeholder="Search..."
+                            limit="10"
+                            value="{{ $noteVoucher->event_id }}"
+                            required="false"
                         />
                     </div>
                 @elseif ($noteVoucher->noteVoucherType->in_out_type == 3)
@@ -122,8 +201,8 @@
                                 <input type="text" class="form-control product-search" name="products[{{ $key }}][name]" value="{{ $voucherProduct->product ? $voucherProduct->product->name_ar : '' }}" />
                             </td>
                             <td><input type="number" class="form-control product-quantity" name="products[{{ $key }}][quantity]" value="{{ $voucherProduct->quantity }}" /></td>
-                            <td><input type="number" class="form-control product-price" name="products[{{ $key }}][price]" value="{{ $voucherProduct->product ? $voucherProduct->product->selling_price : '' }}" step="any" disabled /></td>
-                            <td><input type="number" class="form-control product-tax" name="products[{{ $key }}][tax]" value="{{ $voucherProduct->product ? $voucherProduct->product->tax : '' }}" step="any" disabled /></td>
+                            <td><input type="number" class="form-control product-price" name="products[{{ $key }}][price]" value="{{ $voucherProduct->purchasing_price }}" step="any" /></td>
+                            <td><input type="number" class="form-control product-tax" name="products[{{ $key }}][tax]" value="{{ $voucherProduct->tax_percentage }}" step="any" /></td>
                             @if($noteVoucher->noteVoucherType->have_price == 1)
                                 <td><input type="number" class="form-control product-purchasing-price" name="products[{{ $key }}][purchasing_price]" value="{{ $voucherProduct->purchasing_price }}" step="any"/></td>
                             @endif
@@ -210,7 +289,7 @@
 
                         // Fill product details
                         selectedRow.find('.product-id').val(ui.item.id);
-                        selectedRow.find('.product-price').val(ui.item.price);
+                        selectedRow.find('.product-price').val(ui.item.selling_price);
                         selectedRow.find('.product-tax').val(ui.item.tax);
 
                         // Fetch available quantity
@@ -353,8 +432,8 @@
                         <input type="text" class="form-control product-search" name="products[${rowIdx}][name]" placeholder="{{ __('messages.Search_product') }}"/>
                     </td>
                     <td><input type="number" class="form-control product-quantity" name="products[${rowIdx}][quantity]" /></td>
-                    <td><input type="number" class="form-control product-price" name="products[${rowIdx}][price]" step="any" disabled /></td>
-                    <td><input type="number" class="form-control product-tax" name="products[${rowIdx}][tax]" step="any" disabled /></td>
+                    <td><input type="number" class="form-control product-price" name="products[${rowIdx}][price]" step="any" /></td>
+                    <td><input type="number" class="form-control product-tax" name="products[${rowIdx}][tax]" step="any" /></td>
             `;
 
             @if($noteVoucher->noteVoucherType->have_price == 1)
@@ -424,6 +503,35 @@
             }
         });
         handleBarcodeInput();
+
+        // Handle recipient type toggle
+        $('input[name="recipient_type"]').on('change', function() {
+            const selectedType = $(this).val();
+
+            // Hide all fields and remove required from their inputs
+            $('#provider-field, #seller-field, #user-field, #event-field').hide()
+                .find('input[type="text"]').removeAttr('required');
+
+            // Show selected field and add required to its text input
+            let selectedField = null;
+            if (selectedType === 'provider') {
+                selectedField = $('#provider-field');
+            } else if (selectedType === 'seller') {
+                selectedField = $('#seller-field');
+            } else if (selectedType === 'user') {
+                selectedField = $('#user-field');
+            } else if (selectedType === 'event') {
+                selectedField = $('#event-field');
+            }
+
+            if (selectedField) {
+                selectedField.show().find('input[type="text"]').attr('required', 'required');
+            }
+        });
+
+        // Initialize: remove required from hidden fields on page load
+        $('#provider-field:hidden, #seller-field:hidden, #user-field:hidden, #event-field:hidden')
+            .find('input[type="text"]').removeAttr('required');
     });
 </script>
 

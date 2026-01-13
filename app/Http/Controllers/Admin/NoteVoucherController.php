@@ -71,14 +71,32 @@ class NoteVoucherController extends Controller
             'note' => $request['note'],
         ];
 
-        // For receipt type (in_out_type = 1), provider is from and warehouse is to
+        // For receipt type (in_out_type = 1), recipient can be provider, user (seller), or event
         if ($noteVoucherType->in_out_type == 1) {
-            $noteVoucherData['provider_id'] = $request['provider_id'];
             $noteVoucherData['to_warehouse_id'] = $request['toWarehouse'];
+
+            // Handle different recipient types
+            $recipientType = $request['recipient_type'] ?? 'provider';
+            if ($recipientType === 'provider' && $request->has('provider_id')) {
+                $noteVoucherData['provider_id'] = $request['provider_id'];
+            } elseif (($recipientType === 'seller' || $recipientType === 'user') && $request->has('user_id')) {
+                $noteVoucherData['user_id'] = $request['user_id'];
+            } elseif ($recipientType === 'event' && $request->has('event_id')) {
+                $noteVoucherData['event_id'] = $request['event_id'];
+            }
         } elseif ($noteVoucherType->in_out_type == 2) {
-            // For outgoing type (in_out_type = 2), warehouse is from and provider is to
+            // For outgoing type (in_out_type = 2), warehouse is from and recipient can be provider, user (seller), or event
             $noteVoucherData['from_warehouse_id'] = $request['fromWarehouse'];
-            $noteVoucherData['provider_id'] = $request['provider_id'];
+
+            // Handle different recipient types
+            $recipientType = $request['recipient_type'] ?? 'provider';
+            if ($recipientType === 'provider' && $request->has('provider_id')) {
+                $noteVoucherData['provider_id'] = $request['provider_id'];
+            } elseif (($recipientType === 'seller' || $recipientType === 'user') && $request->has('user_id')) {
+                $noteVoucherData['user_id'] = $request['user_id'];
+            } elseif ($recipientType === 'event' && $request->has('event_id')) {
+                $noteVoucherData['event_id'] = $request['event_id'];
+            }
         } else {
             // For transfer type (in_out_type = 3), warehouse is from and warehouse is to
             $noteVoucherData['from_warehouse_id'] = $request['fromWarehouse'];
@@ -109,11 +127,11 @@ class NoteVoucherController extends Controller
                 }
 
                 // Create voucher product record using hasMany relationship
-                // Save product's selling_price as purchasing_price
                 $noteVoucher->voucherProducts()->create([
                     'product_id' => $product->id,
                     'quantity' => $productData['quantity'],
-                    'purchasing_price' => $product->selling_price,
+                    'purchasing_price' => $productData['price'],
+                    'tax_percentage' => $productData['tax'],
                     'note' => $productData['note'] ?? null,
                 ]);
             }
@@ -135,6 +153,8 @@ class NoteVoucherController extends Controller
             'fromWarehouse',
             'toWarehouse',
             'provider',
+            'user',
+            'event',
             'voucherProducts',
             'noteVoucherType' // Include the related noteVoucherType
         ])->findOrFail($id);
@@ -144,7 +164,7 @@ class NoteVoucherController extends Controller
 
     public function edit($id)
     {
-        $noteVoucher = NoteVoucher::with('noteVoucherType', 'voucherProducts.product', 'provider', 'fromWarehouse', 'toWarehouse')->findOrFail($id);
+        $noteVoucher = NoteVoucher::with('noteVoucherType', 'voucherProducts.product', 'provider', 'user', 'event', 'fromWarehouse', 'toWarehouse')->findOrFail($id);
 
         // Pass only the note voucher to the view (search-select will handle data loading)
         return view('admin.noteVouchers.edit', compact('noteVoucher'));
@@ -167,21 +187,51 @@ class NoteVoucherController extends Controller
                 'note' => $request['note'],
             ];
 
-            // For receipt type (in_out_type = 1), provider is from and warehouse is to
+            // For receipt type (in_out_type = 1), recipient can be provider, user (seller), or event
             if ($noteVoucherType->in_out_type == 1) {
-                $updateData['provider_id'] = $request['provider_id'];
                 $updateData['to_warehouse_id'] = $request['toWarehouse'];
-                $updateData['from_warehouse_id'] = null; // Clear from_warehouse for receipt type
+                $updateData['from_warehouse_id'] = null;
+
+                // Clear all recipient types first
+                $updateData['provider_id'] = null;
+                $updateData['user_id'] = null;
+                $updateData['event_id'] = null;
+
+                // Handle different recipient types
+                $recipientType = $request['recipient_type'] ?? 'provider';
+                if ($recipientType === 'provider' && $request->has('provider_id')) {
+                    $updateData['provider_id'] = $request['provider_id'];
+                } elseif (($recipientType === 'seller' || $recipientType === 'user') && $request->has('user_id')) {
+                    $updateData['user_id'] = $request['user_id'];
+                } elseif ($recipientType === 'event' && $request->has('event_id')) {
+                    $updateData['event_id'] = $request['event_id'];
+                }
             } elseif ($noteVoucherType->in_out_type == 2) {
-                // For outgoing type (in_out_type = 2), warehouse is from and provider is to
+                // For outgoing type (in_out_type = 2), warehouse is from and recipient can be provider, user (seller), or event
                 $updateData['from_warehouse_id'] = $request['fromWarehouse'];
-                $updateData['provider_id'] = $request['provider_id'];
-                $updateData['to_warehouse_id'] = null; // Clear to_warehouse for outgoing type
+                $updateData['to_warehouse_id'] = null;
+
+                // Clear all recipient types first
+                $updateData['provider_id'] = null;
+                $updateData['user_id'] = null;
+                $updateData['event_id'] = null;
+
+                // Handle different recipient types
+                $recipientType = $request['recipient_type'] ?? 'provider';
+                if ($recipientType === 'provider' && $request->has('provider_id')) {
+                    $updateData['provider_id'] = $request['provider_id'];
+                } elseif (($recipientType === 'seller' || $recipientType === 'user') && $request->has('user_id')) {
+                    $updateData['user_id'] = $request['user_id'];
+                } elseif ($recipientType === 'event' && $request->has('event_id')) {
+                    $updateData['event_id'] = $request['event_id'];
+                }
             } else {
                 // For transfer type (in_out_type = 3), warehouse is from and warehouse is to
                 $updateData['from_warehouse_id'] = $request['fromWarehouse'];
                 $updateData['to_warehouse_id'] = $request['toWarehouse'];
-                $updateData['provider_id'] = null; // Clear provider_id for transfer type
+                $updateData['provider_id'] = null;
+                $updateData['user_id'] = null;
+                $updateData['event_id'] = null;
             }
 
             $noteVoucher->update($updateData);
@@ -207,11 +257,11 @@ class NoteVoucherController extends Controller
                     }
 
                     // Create new voucher product record
-                    // Save product's selling_price as purchasing_price
                     $noteVoucher->voucherProducts()->create([
                         'product_id' => $product->id,
                         'quantity' => $productData['quantity'],
-                        'purchasing_price' => $product->selling_price,
+                        'purchasing_price' => $productData['price'],
+                        'tax_percentage' => $productData['tax'],
                         'note' => $productData['note'] ?? null,
                     ]);
                 }

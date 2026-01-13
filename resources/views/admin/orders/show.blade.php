@@ -177,8 +177,34 @@
                             </div>
                         </div>
 
-                        <!-- Debt Information -->
-                        @if($order->userDebt && $order->userDebt->status == 1)
+                        <!-- Event Commission -->
+                        @if($order->event)
+                        <div class="col-md-6">
+                            <div class="card border-primary">
+                                <div class="card-header bg-light">
+                                    <h5>{{ __('messages.event_commission') ?? 'Event Commission' }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <strong>{{ __('messages.commission_percentage') ?? 'Commission %' }}:</strong><br>
+                                            <span class="badge badge-info" style="font-size: 0.95rem;">{{ number_format($order->event->commission_percentage, 2) }}%</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>{{ __('messages.commission_value') ?? 'Commission Value' }}:</strong><br>
+                                            <span class="badge badge-success" style="font-size: 0.95rem;"><x-riyal-icon style="width: 12px; height: 12px;" /> {{ number_format(($order->total_prices * $order->event->commission_percentage) / 100, 2) }}</span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ __('messages.event') }}: {{ $order->event->name }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Debt Information -->
+                    @if($order->userDebt && $order->userDebt->status == 1)
+                    <div class="row mt-3">
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
@@ -201,10 +227,10 @@
                                             <td>{{ $order->userDebt->updated_at->format('M d, Y H:i') }}</td>
                                         </tr>
                                     </table>
-                                    
+
                                     @if($order->remaining_amount > 0)
-                                    <button type="button" class="btn btn-success btn-sm" 
-                                            data-bs-toggle="modal" 
+                                    <button type="button" class="btn btn-success btn-sm"
+                                            data-bs-toggle="modal"
                                             data-bs-target="#paymentModal">
                                         {{ __('messages.receive_payment') }}
                                     </button>
@@ -212,8 +238,8 @@
                                 </div>
                             </div>
                         </div>
-                        @endif
                     </div>
+                    @endif
                 </div>
             </div>
         </div>

@@ -79,6 +79,20 @@ class User extends Authenticatable
         return $this->hasMany(BookRequestResponse::class, 'user_id');
     }
 
+    // Scope for filtering users without any roles (sellers/regular users)
+    public function scopeWithoutRoles($query)
+    {
+        return $query->whereDoesntHave('roles');
+    }
+
+    // Scope for filtering users with customer role
+    public function scopeWithCustomerRole($query)
+    {
+        return $query->whereHas('roles', function ($q) {
+            $q->where('name', 'customer');
+        });
+    }
+
     // Helper methods for role checking
     public function isAdmin()
     {

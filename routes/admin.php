@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SellerController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\NoteVoucherController;
 use App\Http\Controllers\Admin\NoteVoucherTypeController;
@@ -18,6 +19,12 @@ use App\Http\Controllers\Admin\BookRequestController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\PurchaseReturnController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\OrderReportController;
+use App\Http\Controllers\Admin\SalesReturnReportController;
+use App\Http\Controllers\Admin\PurchaseReturnReportController;
+use App\Http\Controllers\Admin\CustomerReportController;
+use App\Http\Controllers\Admin\EventReportController;
+use App\Http\Controllers\Admin\WarehouseMovementReportController;
 use App\Http\Controllers\Admin\SalesReturnController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Spatie\Permission\Models\Permission;
@@ -42,6 +49,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
         Route::get('/products/{productId}/available-quantity', [ProductController::class, 'availableQuantity'])->name('products.available-quantity');
         Route::get('/sellers/search', [SellerController::class, 'search'])->name('sellers.search');
+        Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
         Route::get('/sellers/{sellerId}/events', [OrderController::class, 'getSellerEvents'])->name('sellers.events');
         Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
         Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
@@ -73,6 +81,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::resource('products', ProductController::class);
         Route::resource('settings', SettingController::class);
         Route::resource('sellers', SellerController::class);
+        Route::resource('customers', CustomerController::class);
         Route::resource('countries', CountryController::class);
         Route::resource('orders', OrderController::class);
         Route::resource('providers', ProviderController::class);
@@ -126,6 +135,18 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         // Reports
         Route::get('reports/note-vouchers', [ReportController::class, 'noteVouchersReport'])->name('admin.reports.noteVouchers');
+        Route::get('reports/warehouse-movement', [WarehouseMovementReportController::class, 'index'])->name('admin.reports.warehouseMovement');
+        Route::get('reports/orders', [OrderReportController::class, 'index'])->name('admin.reports.orders');
+        Route::get('reports/sales-returns', [SalesReturnReportController::class, 'index'])->name('admin.reports.salesReturns');
+        Route::get('reports/purchase-returns', [PurchaseReturnReportController::class, 'index'])->name('admin.reports.purchaseReturns');
+        Route::get('reports/customers', [CustomerReportController::class, 'index'])->name('admin.reports.customers');
+        Route::get('reports/customers/search', [CustomerReportController::class, 'search'])->name('admin.customers.search');
+        Route::get('reports/customers/{customerId}/data', [CustomerReportController::class, 'getCustomerData'])->name('admin.customers.report.data');
+        Route::get('reports/events', [EventReportController::class, 'index'])->name('admin.reports.events');
+        Route::get('reports/events/search', [EventReportController::class, 'search'])->name('admin.events.search');
+        Route::get('reports/events/{eventId}/data', [EventReportController::class, 'getEventData'])->name('admin.events.report.data');
+        Route::get('reports/providers', 'App\Http\Controllers\Admin\ProvidersReportController@index')->name('admin.reports.providers.index');
+        Route::get('reports/providers/products/{providerId}', 'App\Http\Controllers\Admin\ProvidersReportController@getProducts')->name('admin.reports.providers.getProducts');
     });
 });
 

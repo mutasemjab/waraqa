@@ -59,6 +59,7 @@
                             </small>
                         </div>
 
+
                         @php
                             $orderNoteVoucher = \App\Models\NoteVoucher::where('order_id', $order->id)->first();
                             $currentWarehouseId = $orderNoteVoucher ? $orderNoteVoucher->from_warehouse_id : null;
@@ -139,6 +140,16 @@
                                                 <span>{{ __('messages.total') }}:</span>
                                                 <span><x-riyal-icon /> <span id="grand-total">{{ number_format($order->total_prices, 2) }}</span></span>
                                             </div>
+                                            <hr class="my-2">
+                                            <div class="d-flex justify-content-between align-items-center" id="commission-row" style="display:none;">
+                                                <span>{{ __('messages.commission_percentage') ?? 'Commission %' }}:</span>
+                                                <span><span id="commission-percentage">0</span>%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center text-success" id="commission-value-row" style="display:none;">
+                                                <strong>{{ __('messages.commission_value') ?? 'Commission Value' }}:</strong>
+                                                <strong><x-riyal-icon /> <span id="commission-value">0.00</span></strong>
+                                            </div>
+                                            <hr class="my-2" id="commission-divider" style="display:none;">
                                             <div class="d-flex justify-content-between text-muted align-items-center">
                                                 <span>{{ __('messages.remaining') }}:</span>
                                                 <span><x-riyal-icon /> <span id="remaining-amount">{{ number_format($order->remaining_amount, 2) }}</span></span>
@@ -378,6 +389,11 @@ $(document).ready(function() {
         $('#tax-total').text(totalTax.toFixed(2));
         $('#grand-total').text(grandTotal.toFixed(2));
         $('#remaining-amount').text(remainingAmount.toFixed(2));
+
+        // Update commission if event is selected
+        if (eventCommissionData.id) {
+            updateCommissionBox();
+        }
     }
 
     // Initialize product search and quantity listeners
@@ -483,6 +499,41 @@ $(document).ready(function() {
         }
     });
 
+    let allEventsData = {};
+    let eventCommissionData = {};
+
+    // Update commission box with live calculations
+    const updateCommissionBox = function() {
+        if (!eventCommissionData.id) return;
+
+        const percentage = eventCommissionData.percentage;
+
+        // Calculate grand total
+        let subtotal = 0;
+        let totalTax = 0;
+
+        $('.product-row').each(function() {
+            const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
+            const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+
+            const lineSubtotal = priceWithoutTax * quantity;
+            const lineTax = (lineSubtotal * tax) / 100;
+
+            subtotal += lineSubtotal;
+            totalTax += lineTax;
+        });
+
+        const grandTotal = subtotal + totalTax;
+        const commissionValue = (grandTotal * percentage) / 100;
+
+        $('#commission-percentage').text(percentage.toFixed(2));
+        $('#commission-value').text(commissionValue.toFixed(2));
+
+        // Show commission rows
+        $('#commission-row, #commission-value-row, #commission-divider').show();
+    };
+
     function loadSellerEvents(sellerId, selectedEventId = null) {
         const eventSelect = $('#event_id');
         const eventInfo = $('#event-info');
@@ -490,6 +541,7 @@ $(document).ready(function() {
         if (!sellerId) {
             eventSelect.html('<option value="">{{ __("messages.choose_event") }}</option>');
             eventInfo.html('');
+            allEventsData = {};
             return;
         }
 
@@ -501,8 +553,14 @@ $(document).ready(function() {
                 let validCount = 0;
                 let invalidCount = 0;
 
+                // Clear previous events data
+                allEventsData = {};
+
                 if (data.length > 0) {
                     data.forEach(function(event) {
+                        // Store event data for later use
+                        allEventsData[event.id] = event;
+
                         const selected = selectedEventId && event.id == selectedEventId ? 'selected' : '';
                         if (event.is_valid) {
                             options += `<option value="${event.id}" ${selected}>${event.text} <span style="color: green;">✓</span></option>`;
@@ -520,6 +578,16 @@ $(document).ready(function() {
                         infoMsg += ` | <span style="color: #999;"><i class="fas fa-times-circle"></i> {{ __("messages.expired_events") }}: ${invalidCount}</span>`;
                     }
                     eventInfo.html(infoMsg);
+
+                    // If there was a selected event, show commission rows
+                    if (selectedEventId && allEventsData[selectedEventId]) {
+                        const eventData = allEventsData[selectedEventId];
+                        eventCommissionData = {
+                            id: eventData.id,
+                            percentage: parseFloat(eventData.commission_percentage)
+                        };
+                        updateCommissionBox();
+                    }
                 } else {
                     options = '<option value="">{{ __("messages.no_valid_events") }}</option>';
                     eventInfo.html('');
@@ -531,6 +599,7 @@ $(document).ready(function() {
                 console.error('Error fetching events:', xhr);
                 eventSelect.html('<option value="">{{ __("messages.error_loading_events") }}</option>');
                 eventInfo.html('');
+                allEventsData = {};
             }
         });
     }
@@ -538,6 +607,25 @@ $(document).ready(function() {
     $(document).on('change', '#user_id', function() {
         const sellerId = $(this).val();
         loadSellerEvents(sellerId);
+    });
+
+    // Handle event selection change
+    $(document).on('change', '#event_id', function() {
+        const eventId = $(this).val();
+
+        if (!eventId || !allEventsData[eventId]) {
+            eventCommissionData = {};
+            $('#commission-row, #commission-value-row, #commission-divider').hide();
+            return;
+        }
+
+        // Get event data from stored events
+        const eventData = allEventsData[eventId];
+        eventCommissionData = {
+            id: eventData.id,
+            percentage: parseFloat(eventData.commission_percentage)
+        };
+        updateCommissionBox();
     });
 
     // Load events for current user on page load
