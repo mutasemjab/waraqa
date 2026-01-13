@@ -173,13 +173,13 @@
                             </a>
                         </li>
 
-                        {{-- <!-- Purchase Returns - Coming Soon -->
+                        <!-- Purchase Returns -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link disabled" style="opacity: 0.5;">
+                            <a href="{{ route('admin.purchase-returns.index') }}" class="nav-link {{ request()->routeIs('admin.purchase-returns.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.purchase_returns') }}</p>
                             </a>
-                        </li> --}}
+                        </li>
                     </ul>
                 </li>
 

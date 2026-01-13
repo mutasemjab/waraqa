@@ -1549,8 +1549,8 @@ return [
     "no_items_found" => "لم يتم العثور على عناصر",
     "no_results_found" => "لم يتم العثور على نتائج",
     "pending" => "قيد الانتظار",
-    "approved" => "موافق عليه",
-    "received" => "مستلم",
+    "sent" => "تم الإرسال",
+    "received" => "وصل",
     "add_new" => "إضافة جديد",
     "view" => "عرض",
     "edit" => "تعديل",
@@ -1581,5 +1581,8 @@ return [
     'Tax' => 'الضريبة',
     'Unit_Price' => 'سعر الوحدة',
     'view_and_manage_your_orders' => 'عرض وإدارة طلباتك',
+    'purchase_number' => 'رقم عملية الشراء',
+    'purchase_date' => 'تاريخ الشراء',
+    'purchase_details' => 'تفاصيل عملية الشراء',
 
 ];

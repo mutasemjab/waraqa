@@ -27,6 +27,17 @@ class Purchase extends Model
         'received_date',
     ];
 
+    protected $appends = ['display_text'];
+
+    public function getDisplayTextAttribute()
+    {
+        $providerName = 'N/A';
+        if ($this->relationLoaded('provider') && $this->provider) {
+            $providerName = $this->provider->name ?? 'N/A';
+        }
+        return $this->purchase_number . ' - ' . $providerName . ' (' . $this->created_at->format('M d, Y') . ')';
+    }
+
     public function provider()
     {
         return $this->belongsTo(Provider::class);

@@ -125,6 +125,12 @@ class PurchaseController extends Controller
     public function show(Purchase $purchase)
     {
         $purchase->load(['provider', 'items.product', 'bookRequestResponse']);
+
+        // Return JSON if it's an AJAX request
+        if (request()->expectsJson()) {
+            return response()->json($purchase);
+        }
+
         return view('admin.purchases.show', compact('purchase'));
     }
 

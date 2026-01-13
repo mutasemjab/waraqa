@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\UserDeptController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\Admin\BookRequestController;
 use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\PurchaseReturnController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SalesReturnController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
@@ -42,6 +43,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/products/{productId}/available-quantity', [ProductController::class, 'availableQuantity'])->name('products.available-quantity');
         Route::get('/sellers/search', [SellerController::class, 'search'])->name('sellers.search');
         Route::get('/sellers/{sellerId}/events', [OrderController::class, 'getSellerEvents'])->name('sellers.events');
+        Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
         Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('logout', [LoginController::class, 'logout'])->name('admin.logout');
 
@@ -96,6 +98,20 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 'edit' => 'sales-returns.edit',
                 'update' => 'sales-returns.update',
                 'destroy' => 'sales-returns.destroy',
+            ]);
+        });
+
+        // Purchase Returns
+        Route::prefix('returns')->name('admin.')->group(function () {
+            Route::get('search-purchases', [PurchaseReturnController::class, 'searchPurchases'])->name('purchase-returns.search-purchases');
+            Route::resource('purchase-returns', PurchaseReturnController::class)->names([
+                'index' => 'purchase-returns.index',
+                'create' => 'purchase-returns.create',
+                'store' => 'purchase-returns.store',
+                'show' => 'purchase-returns.show',
+                'edit' => 'purchase-returns.edit',
+                'update' => 'purchase-returns.update',
+                'destroy' => 'purchase-returns.destroy',
             ]);
         });
 

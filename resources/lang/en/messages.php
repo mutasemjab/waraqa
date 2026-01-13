@@ -1491,7 +1491,7 @@ return [
     "no_items_found" => "No items found",
     "no_results_found" => "No results found",
     "pending" => "Pending",
-    "approved" => "Approved",
+    "sent" => "Sent",
     "received" => "Received",
     "add_new" => "Add New",
     "view" => "View",
@@ -1522,5 +1522,8 @@ return [
     'Purchase_Summary' => 'Purchase Summary',
     'Tax' => 'Tax',
     'Unit_Price' => 'Unit Price',
+    'purchase_number' => 'Purchase Number',
+    'purchase_date' => 'Purchase Date',
+    'purchase_details' => 'Purchase Details',
 
 ];
