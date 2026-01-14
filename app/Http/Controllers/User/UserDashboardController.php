@@ -3,6 +3,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\OrderProduct;
+use App\Models\Country;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,8 +23,8 @@ class UserDashboardController extends Controller
         // Get user statistics
         $stats = [
             'total_orders' => $user->orders()->count(),
-            'pending_orders' => $user->orders()->where('status', 1)->count(),
-            'completed_orders' => $user->orders()->where('status', 2)->count(),
+            'pending_orders' => $user->orders()->where('status', '!=', 1)->count(),
+            'completed_orders' => $user->orders()->where('status', 1)->count(),
             'total_debt' => $user->userDepts()->sum('remaining_amount'),
             'total_spent' => $user->orders()->sum('total_prices'),
             'paid_orders' => $user->orders()->where('payment_status', 1)->count(),
@@ -93,7 +94,8 @@ class UserDashboardController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        return view('user.profile', compact('user'));
+        $countries = Country::all();
+        return view('user.profile', compact('user', 'countries'));
     }
 
     public function updateProfile(Request $request)

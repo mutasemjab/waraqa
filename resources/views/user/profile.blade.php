@@ -77,7 +77,7 @@
                                     @if(isset($countries))
                                         @foreach($countries as $country)
                                             <option value="{{ $country->id }}" {{ old('country_id', $user->country_id) == $country->id ? 'selected' : '' }}>
-                                                {{ $country->name }}
+                                                {{ app()->getLocale() === 'ar' ? $country->name_ar : $country->name_en }}
                                             </option>
                                         @endforeach
                                     @endif
@@ -234,21 +234,11 @@
                 
                 <div class="info-item mb-3">
                     <strong>{{ __('messages.country') }}:</strong>
-                    <span class="text-muted">{{ $user->country->name ?? __('messages.not_specified') }}</span>
+                    <span class="text-muted">{{ $user->country ? (app()->getLocale() === 'ar' ? $user->country->name_ar : $user->country->name_en) : __('messages.not_specified') }}</span>
                 </div>
             </div>
         </div>
-        
-        <!-- Warehouse Information -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-warehouse me-2"></i>{{ __('messages.my_warehouse') }}
-                </h5>
-            </div>
-       
-        </div>
-        
+
         <!-- Quick Actions -->
         <div class="card">
             <div class="card-header">

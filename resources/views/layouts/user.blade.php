@@ -16,6 +16,7 @@
             --dark-color: #1f2937;
             --light-color: #f8fafc;
             --sidebar-width: 260px;
+            --icon-spacing: 25px;
         }
         
         body {
@@ -75,6 +76,7 @@
             display: flex;
             align-items: center;
             position: relative;
+            gap: var(--icon-spacing);
         }
         
         .nav-link:hover {
@@ -91,7 +93,6 @@
         
         .nav-link i {
             width: 20px;
-            margin-right: 10px;
             text-align: center;
         }
         
@@ -124,7 +125,7 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 15px 25px;
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #e5e7eb;
         }
@@ -152,7 +153,6 @@
         .navbar-right {
             display: flex;
             align-items: center;
-            margin-left: auto;
         }
         
         .user-dropdown {
@@ -176,19 +176,21 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-right: var(--icon-spacing);
             border: 2px solid var(--primary-color);
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
         }
-        
-        .user-details h6 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--dark-color);
-        }
-        
-        .user-details span {
-            font-size: 0.8rem;
-            color: #6b7280;
+
+        .user-avatar.has-image {
+            background: transparent;
+            font-size: 0;
         }
         
         .dropdown-menu {
@@ -220,7 +222,7 @@
         
         .dropdown-item i {
             width: 20px;
-            margin-right: 10px;
+            margin-right: var(--icon-spacing);
         }
         
         /* Content Area */
@@ -283,6 +285,7 @@
             padding: 25px;
             display: flex;
             align-items: center;
+            gap: var(--icon-spacing);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
             position: relative;
@@ -313,7 +316,7 @@
             justify-content: center;
             font-size: 1.5rem;
             color: white;
-            margin-right: 20px;
+            flex-shrink: 0;
         }
         
         .stat-icon.primary { background: linear-gradient(135deg, var(--primary-color), #6366f1); }
@@ -478,22 +481,6 @@
                     <span>{{ __('messages.profile') }}</span>
                 </a>
             </div>
-            
-            <div class="nav-item">
-                <a href="{{ route('user.sales.index') }}" class="nav-link {{ request()->routeIs('user.sales.index*') ? 'active' : '' }}">
-                    <i class="fas fa-warehouse"></i>
-                    <span>{{ __('messages.my_warehouse') }}</span>
-                </a>
-            </div>
-            
-          
-            
-            <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-headset"></i>
-                    <span>{{ __('messages.support') }}</span>
-                </a>
-            </div>
         </nav>
     </div>
     
@@ -510,24 +497,22 @@
             
             <div class="navbar-right">
                 <div class="user-dropdown">
-                    <div class="user-info" data-bs-toggle="dropdown">
-                        <img src="{{ auth()->user()->photo_url }}" alt="User" class="user-avatar">
-                        <div class="user-details">
-                            <h6>{{ auth()->user()->name }}</h6>
-                            <span>{{ __('messages.user') }}</span>
+                    <div class="user-info" id="userMenuToggle">
+                        <div class="user-avatar" id="userAvatar">
+                            @if(auth()->user()->photo_url && file_exists(storage_path('app/public/' . auth()->user()->photo_url)))
+                                <img src="{{ asset('storage/' . auth()->user()->photo_url) }}" alt="User" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                            @else
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            @endif
                         </div>
-                        <i class="fas fa-chevron-down ms-2"></i>
                     </div>
-                    
-                    <div class="dropdown-menu">
+
+                    <div class="dropdown-menu" id="userDropdown">
                         <a href="{{ route('user.profile') }}" class="dropdown-item">
                             <i class="fas fa-user"></i>{{ __('messages.profile') }}
                         </a>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-cog"></i>{{ __('messages.settings') }}
-                        </a>
                         <div class="dropdown-divider"></div>
-                        <a href="{{ route('logout') }}" class="dropdown-item" 
+                        <a href="{{ route('logout') }}" class="dropdown-item"
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <i class="fas fa-sign-out-alt"></i>{{ __('messages.logout') }}
                         </a>
@@ -563,12 +548,29 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
+        // User menu toggle
+        const userMenuToggle = document.getElementById('userMenuToggle');
+        const userDropdown = document.getElementById('userDropdown');
+
+        if (userMenuToggle && userDropdown) {
+            userMenuToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!userMenuToggle.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userDropdown.style.display = 'none';
+                }
+            });
+        }
+
         // Sidebar toggle functionality
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         const sidebarToggle = document.getElementById('sidebarToggle');
         const mobileOverlay = document.getElementById('mobileOverlay');
-        
+
         sidebarToggle.addEventListener('click', function() {
             if (window.innerWidth <= 768) {
                 // Mobile behavior

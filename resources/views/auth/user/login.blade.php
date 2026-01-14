@@ -144,7 +144,7 @@
             <div class="login-header">
                 <i class="fas fa-user"></i>
                 <h4 class="mb-0">{{ __('messages.welcome_back') }}</h4>
-                <p class="mb-0 opacity-75">{{ __('messages.user') }} - {{ __('messages.login_to_continue') }}</p>
+                <p class="mb-0 opacity-75">{{ __('messages.Seller') }} - {{ __('messages.login_to_continue') }}</p>
             </div>
 
             <div class="login-body">

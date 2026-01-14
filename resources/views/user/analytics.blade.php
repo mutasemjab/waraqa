@@ -74,7 +74,14 @@
                 </h5>
             </div>
             <div class="card-body">
-                <canvas id="categoryChart" height="300"></canvas>
+                @if($categorySpending->count() > 0)
+                    <canvas id="categoryChart" height="300"></canvas>
+                @else
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ __('messages.no_data_available') }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -95,10 +102,20 @@
                         <span>{{ $paymentStats['fully_paid'] }}</span>
                     </div>
                     <div class="progress mb-2">
+                        <div class="progress-bar bg-success" style="width: {{ array_sum($paymentStats) > 0 ? ($paymentStats['fully_paid'] / array_sum($paymentStats)) * 100 : 0 }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ __('messages.partially_paid') }}</span>
+                        <span>{{ $paymentStats['partially_paid'] }}</span>
+                    </div>
+                    <div class="progress mb-2">
                         <div class="progress-bar bg-warning" style="width: {{ array_sum($paymentStats) > 0 ? ($paymentStats['partially_paid'] / array_sum($paymentStats)) * 100 : 0 }}%"></div>
                     </div>
                 </div>
-                
+
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1">
                         <span>{{ __('messages.unpaid') }}</span>
@@ -280,17 +297,7 @@ const monthlyChart = new Chart(monthlyCtx, {
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        return 'success" style="width: {{ array_sum($paymentStats) > 0 ? ($paymentStats['fully_paid'] / array_sum($paymentStats)) * 100 : 0 }}%"></div>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>{{ __('messages.partially_paid') }}</span>
-                        <span>{{ $paymentStats['partially_paid'] }}</span>
-                    </div>
-                    <div class="progress mb-2">
-                        <div class="progress-bar bg- + value.toLocaleString();
+                        return '{{ __("messages.riyal") }} ' + value.toLocaleString();
                     }
                 }
             }
@@ -299,47 +306,50 @@ const monthlyChart = new Chart(monthlyCtx, {
 });
 
 // Category Spending Chart
-const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-const categoryChart = new Chart(categoryCtx, {
-    type: 'doughnut',
-    data: {
-        labels: [
-            @foreach($categorySpending as $category)
-                '{{ $category->name_ar }}',
-            @endforeach
-        ],
-        datasets: [{
-            data: [
+const categoryChartElement = document.getElementById('categoryChart');
+if (categoryChartElement) {
+    const categoryCtx = categoryChartElement.getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [
                 @foreach($categorySpending as $category)
-                    {{ $category->total_spent }},
+                    '{{ $category->name_ar }}',
                 @endforeach
             ],
-            backgroundColor: [
-                '#4f46e5',
-                '#06b6d4',
-                '#10b981',
-                '#f59e0b',
-                '#ef4444',
-                '#8b5cf6',
-                '#ec4899',
-                '#6b7280'
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 20,
-                    usePointStyle: true
+            datasets: [{
+                data: [
+                    @foreach($categorySpending as $category)
+                        {{ $category->total_spent }},
+                    @endforeach
+                ],
+                backgroundColor: [
+                    '#4f46e5',
+                    '#06b6d4',
+                    '#10b981',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6',
+                    '#ec4899',
+                    '#6b7280'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
                 }
             }
         }
-    }
-});
+    });
+}
 
 // Export to CSV function
 function exportToCSV() {

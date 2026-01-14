@@ -30,9 +30,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
     // Authentication Routes (accessible when not logged in)
     Route::middleware('guest')->group(function () {
-        // User Login Routes
-        Route::get('/user/login', [UserAuthController::class, 'showUserLoginForm'])->name('user.login');
-        Route::post('/user/login', [UserAuthController::class, 'loginUser']);
+        // Seller Login Routes
+        Route::get('/seller/login', [UserAuthController::class, 'showUserLoginForm'])->name('user.login');
+        Route::post('/seller/login', [UserAuthController::class, 'loginUser']);
 
         // Provider Login Routes
         Route::get('/provider/login', [UserAuthController::class, 'showProviderLoginForm'])->name('provider.login');
@@ -47,8 +47,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
     // Logout route (accessible when logged in)
     Route::post('/logout', [UserAuthController::class, 'logout'])->name('logout');
 
-    // User Dashboard Routes (using 'web' guard - the default)
-    Route::middleware(['auth:web'])->prefix('user')->name('user.')->group(function () {
+    // Seller Dashboard Routes (using 'web' guard with 'seller' role)
+    Route::middleware(['auth:web', 'role:seller'])->prefix('seller')->name('user.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
 

@@ -1657,5 +1657,6 @@ return [
     'revenue' => 'Revenue',
     'this_month' => 'This Month',
     'total_sold' => 'Total Sold',
+    "riyal" => 'riyal'
 
 ];

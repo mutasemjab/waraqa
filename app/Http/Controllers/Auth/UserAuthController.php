@@ -33,10 +33,18 @@ class UserAuthController extends Controller
             'activate' => 1
         ];
 
-        // Use 'web' guard for users
+        // Use 'web' guard for sellers
         if (Auth::guard('web')->attempt($credentials, $request->filled('remember'))) {
+            $user = Auth::user();
 
-            // Users don't need specific role, proceed to dashboard
+            // Check if user has seller role
+            if (!$user->hasRole('seller')) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => __('messages.invalid_credentials'),
+                ])->withInput($request->except('password'));
+            }
+
             $request->session()->regenerate();
             return redirect(route('user.dashboard'));
         }
@@ -89,6 +97,8 @@ class UserAuthController extends Controller
             $redirectRoute = 'admin.showlogin';
         } elseif ($user && $user->hasRole('provider')) {
             $redirectRoute = 'provider.login';
+        } elseif ($user && $user->hasRole('seller')) {
+            $redirectRoute = 'user.login';
         } else {
             $redirectRoute = 'user.login';
         }

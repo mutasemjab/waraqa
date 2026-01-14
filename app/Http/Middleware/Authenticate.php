@@ -22,8 +22,11 @@ class Authenticate extends Middleware
             } elseif ($request->is('provider') || $request->is('provider/*')) {
                 // Provider routes - redirect to provider login
                 return route('provider.login');
+            } elseif ($request->is('seller') || $request->is('seller/*')) {
+                // Seller routes - redirect to seller login
+                return route('user.login');
             } else {
-                // User routes or general routes - redirect to user login
+                // Other routes - redirect to seller login
                 return route('user.login');
             }
         }
