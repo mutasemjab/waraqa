@@ -44,7 +44,7 @@
                 
                 @if($product->category)
                     <div class="mt-3">
-                        <span class="badge bg-primary">{{ $product->category->name_ar }}</span>
+                        <span class="badge bg-primary">{{ app()->getLocale() == 'ar' ? $product->category->name_ar : $product->category->name_en }}</span>
                     </div>
                 @endif
             </div>
@@ -210,30 +210,32 @@
                 @if($salesHistory->count() > 0)
                     <div class="timeline">
                         @foreach($salesHistory as $sale)
-                            <div class="timeline-item">
-                                <div class="timeline-marker bg-success"></div>
-                                <div class="timeline-content">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1">{{ $sale->noteVoucher->fromWarehouse->user->name }}</h6>
-                                            <p class="text-muted mb-1">
-                                                {{ __('messages.sold') }} {{ $sale->quantity }} {{ __('messages.items') }}
+                            @if($sale->noteVoucher && $sale->noteVoucher->fromWarehouse && $sale->noteVoucher->fromWarehouse->user)
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-success"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ $sale->noteVoucher->fromWarehouse->user->name }}</h6>
+                                                <p class="text-muted mb-1">
+                                                    {{ __('messages.sold') }} {{ $sale->quantity }} {{ __('messages.items') }}
+                                                    @if($sale->purchasing_price)
+                                                        {{ __('messages.at') }} <x-riyal-icon /> {{ number_format($sale->purchasing_price, 2) }}
+                                                    @endif
+                                                </p>
+                                                <small class="text-muted">{{ $sale->noteVoucher->date_note_voucher }}</small>
+                                            </div>
+                                            <div class="text-end">
                                                 @if($sale->purchasing_price)
-                                                    {{ __('messages.at') }} <x-riyal-icon /> {{ number_format($sale->purchasing_price, 2) }}
+                                                    <div class="fw-bold text-success">
+                                                        <x-riyal-icon /> {{ number_format($sale->quantity * $sale->purchasing_price, 2) }}
+                                                    </div>
                                                 @endif
-                                            </p>
-                                            <small class="text-muted">{{ $sale->noteVoucher->date_note_voucher }}</small>
-                                        </div>
-                                        <div class="text-end">
-                                            @if($sale->purchasing_price)
-                                                <div class="fw-bold text-success">
-                                                    <x-riyal-icon /> {{ number_format($sale->quantity * $sale->purchasing_price, 2) }}
-                                                </div>
-                                            @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         @endforeach
                     </div>
                 @else

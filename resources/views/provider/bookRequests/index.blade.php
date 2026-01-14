@@ -71,7 +71,11 @@
                             <tr>
                                 <td>
                                     <strong>
-                                        {{ app()->getLocale() == 'ar' ? $request->product->name_ar : $request->product->name_en }}
+                                        @if($request->product)
+                                            {{ app()->getLocale() == 'ar' ? $request->product->name_ar : $request->product->name_en }}
+                                        @else
+                                            {{ __('messages.product_deleted') }}
+                                        @endif
                                     </strong>
                                 </td>
                                 <td>

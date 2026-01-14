@@ -1,17 +1,17 @@
 @extends('layouts.provider')
 
-@section('title', __('messages.Orders'))
-@section('page-title', __('messages.Orders'))
+@section('title', __('messages.orders'))
+@section('page-title', __('messages.orders'))
 
 @section('content')
 <div class="page-header mb-4">
-    <h1 class="page-title">{{ __('messages.Orders') }}</h1>
-    <p class="page-subtitle">{{ __('messages.manage_orders') }}</p>
+    <h1 class="page-title">{{ __('messages.my_orders') }}</h1>
+    <p class="page-subtitle">{{ __('messages.manage_your_purchases') }}</p>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h5 class="mb-0">{{ __('messages.orders_list') }}</h5>
+        <h5 class="mb-0">{{ __('messages.purchases_list') }}</h5>
     </div>
     <div class="card-body">
         @if($orders->count() > 0)
@@ -19,12 +19,13 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>{{ __('messages.order_number') }}</th>
-                            <th>{{ __('messages.user') }}</th>
+                            <th>{{ __('messages.purchase_number') }}</th>
+                            <th>{{ __('messages.products') }}</th>
+                            <th>{{ __('messages.quantity') }}</th>
                             <th>{{ __('messages.date') }}</th>
-                            <th>{{ __('messages.total_price') }}</th>
+                            <th>{{ __('messages.total_amount') }}</th>
+                            <th>{{ __('messages.expected_delivery') }}</th>
                             <th>{{ __('messages.status') }}</th>
-                            <th>{{ __('messages.payment_status') }}</th>
                             <th>{{ __('messages.actions') }}</th>
                         </tr>
                     </thead>
@@ -32,31 +33,44 @@
                         @foreach($orders as $order)
                         <tr>
                             <td>
-                                <a href="{{ route('provider.orders') }}" class="text-decoration-none fw-bold">
-                                    {{ $order->number ?? 'N/A' }}
-                                </a>
+                                <strong class="text-decoration-none">
+                                    {{ $order->purchase_number ?? 'N/A' }}
+                                </strong>
                             </td>
-                            <td>{{ $order->user->name ?? 'N/A' }}</td>
-                            <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
-                            <td><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</td>
+                            <td>
+                                <small>
+                                    @foreach($order->items as $item)
+                                        <div>{{ $item->product ? (app()->getLocale() == 'ar' ? $item->product->name_ar : $item->product->name_en) : 'N/A' }}</div>
+                                    @endforeach
+                                </small>
+                            </td>
+                            <td>
+                                <small>
+                                    @php
+                                        $totalQty = $order->items->sum('quantity');
+                                    @endphp
+                                    {{ $totalQty }} {{ __('messages.items') }}
+                                </small>
+                            </td>
+                            <td>{{ $order->created_at->format('Y-m-d') }}</td>
+                            <td><x-riyal-icon /> {{ number_format($order->total_amount, 3) }}</td>
+                            <td>{{ $order->expected_delivery_date ? $order->expected_delivery_date->format('Y-m-d') : '-' }}</td>
                             <td>
                                 @php
-                                    $statusClass = $order->status == 1 ? 'success' : ($order->status == 2 ? 'danger' : 'warning');
-                                    $statusText = $order->status == 1 ? __('messages.completed') : ($order->status == 2 ? __('messages.cancelled') : __('messages.pending'));
+                                    $statusColors = [
+                                        'pending' => 'warning',
+                                        'confirmed' => 'info',
+                                        'received' => 'success',
+                                        'paid' => 'primary'
+                                    ];
+                                    $statusColor = $statusColors[$order->status] ?? 'secondary';
                                 @endphp
-                                <span class="badge bg-{{ $statusClass }}">{{ $statusText }}</span>
+                                <span class="badge bg-{{ $statusColor }}">{{ ucfirst($order->status) }}</span>
                             </td>
                             <td>
-                                @php
-                                    $paymentClass = $order->payment_status == 1 ? 'success' : 'warning';
-                                    $paymentText = $order->payment_status == 1 ? __('messages.paid') : __('messages.unpaid');
-                                @endphp
-                                <span class="badge bg-{{ $paymentClass }}">{{ $paymentText }}</span>
-                            </td>
-                            <td>
-                                <a href="{{ route('provider.orders') }}" class="btn btn-sm btn-info" title="{{ __('messages.view') }}">
+                                <button class="btn btn-sm btn-info" title="{{ __('messages.view') }}" onclick="viewPurchaseDetails({{ $order->id }})">
                                     <i class="fas fa-eye"></i>
-                                </a>
+                                </button>
                             </td>
                         </tr>
                         @endforeach
@@ -71,10 +85,19 @@
         @else
             <div class="alert alert-info" role="alert">
                 <i class="fas fa-info-circle me-2"></i>
-                {{ __('messages.no_orders_found') }}
+                {{ __('messages.no_purchases_found') }}
             </div>
         @endif
     </div>
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+function viewPurchaseDetails(purchaseId) {
+    // This can be implemented to show purchase details in a modal
+    console.log('Viewing purchase:', purchaseId);
+}
+</script>
+@endpush

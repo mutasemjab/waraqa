@@ -16,6 +16,7 @@
             --dark-color: #1f2937;
             --light-color: #f0fdf4;
             --sidebar-width: 260px;
+            --icon-spacing: 25px;
         }
         
         body {
@@ -75,6 +76,7 @@
             display: flex;
             align-items: center;
             position: relative;
+            gap: var(--icon-spacing);
         }
         
         .nav-link:hover {
@@ -91,7 +93,6 @@
         
         .nav-link i {
             width: 20px;
-            margin-right: 10px;
             text-align: center;
         }
         
@@ -175,19 +176,21 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-right: var(--icon-spacing);
             border: 2px solid var(--primary-color);
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
         }
-        
-        .user-details h6 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--dark-color);
-        }
-        
-        .user-details span {
-            font-size: 0.8rem;
-            color: #6b7280;
+
+        .user-avatar.has-image {
+            background: transparent;
+            font-size: 0;
         }
         
         .dropdown-menu {
@@ -219,7 +222,7 @@
         
         .dropdown-item i {
             width: 20px;
-            margin-right: 10px;
+            margin-right: var(--icon-spacing);
         }
         
         /* Content Area */
@@ -282,6 +285,7 @@
             padding: 25px;
             display: flex;
             align-items: center;
+            gap: var(--icon-spacing);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
             position: relative;
@@ -312,7 +316,7 @@
             justify-content: center;
             font-size: 1.5rem;
             color: white;
-            margin-right: 20px;
+            flex-shrink: 0;
         }
         
         .stat-icon.primary { background: linear-gradient(135deg, var(--primary-color), #047857); }
@@ -504,7 +508,6 @@
                 <a href="{{ route('provider.orders') }}" class="nav-link {{ request()->routeIs('provider.orders*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-list"></i>
                     <span>{{ __('messages.orders') }}</span>
-                    <span class="notification-badge">5</span>
                 </a>
             </div>
 
@@ -516,45 +519,16 @@
             </div>
 
             <div class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="{{ route('provider.analytics') }}" class="nav-link {{ request()->routeIs('provider.analytics*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
                     <span>{{ __('messages.analytics') }}</span>
                 </a>
             </div>
-            
-            <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-warehouse"></i>
-                    <span>{{ __('messages.inventory') }}</span>
-                </a>
-            </div>
-            
-            <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-users"></i>
-                    <span>{{ __('messages.customers') }}</span>
-                </a>
-            </div>
-            
+
             <div class="nav-item">
                 <a href="{{ route('provider.profile') }}" class="nav-link {{ request()->routeIs('provider.profile*') ? 'active' : '' }}">
                     <i class="fas fa-user-cog"></i>
                     <span>{{ __('messages.profile') }}</span>
-                </a>
-            </div>
-            
-            <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-bell"></i>
-                    <span>{{ __('messages.notifications') }}</span>
-                    <span class="notification-badge">3</span>
-                </a>
-            </div>
-            
-            <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-headset"></i>
-                    <span>{{ __('messages.support') }}</span>
                 </a>
             </div>
         </nav>
@@ -573,24 +547,22 @@
             
             <div class="navbar-right">
                 <div class="user-dropdown">
-                    <div class="user-info" data-bs-toggle="dropdown">
-                        <img src="{{ auth()->user()->photo_url }}" alt="Provider" class="user-avatar">
-                        <div class="user-details">
-                            <h6>{{ auth()->user()->name }}</h6>
-                            <span>{{ __('messages.provider') }}</span>
+                    <div class="user-info" id="userMenuToggle">
+                        <div class="user-avatar" id="userAvatar">
+                            @if(auth()->user()->photo_url && file_exists(storage_path('app/public/' . auth()->user()->photo_url)))
+                                <img src="{{ asset('storage/' . auth()->user()->photo_url) }}" alt="Provider" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                            @else
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            @endif
                         </div>
-                        <i class="fas fa-chevron-down ms-2"></i>
                     </div>
-                    
-                    <div class="dropdown-menu">
+
+                    <div class="dropdown-menu" id="userDropdown">
                         <a href="{{ route('provider.profile') }}" class="dropdown-item">
                             <i class="fas fa-user"></i>{{ __('messages.profile') }}
                         </a>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-cog"></i>{{ __('messages.settings') }}
-                        </a>
                         <div class="dropdown-divider"></div>
-                        <a href="{{ route('logout') }}" class="dropdown-item" 
+                        <a href="{{ route('logout') }}" class="dropdown-item"
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <i class="fas fa-sign-out-alt"></i>{{ __('messages.logout') }}
                         </a>
@@ -626,12 +598,29 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
+        // User menu toggle
+        const userMenuToggle = document.getElementById('userMenuToggle');
+        const userDropdown = document.getElementById('userDropdown');
+
+        if (userMenuToggle && userDropdown) {
+            userMenuToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!userMenuToggle.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userDropdown.style.display = 'none';
+                }
+            });
+        }
+
         // Sidebar toggle functionality
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         const sidebarToggle = document.getElementById('sidebarToggle');
         const mobileOverlay = document.getElementById('mobileOverlay');
-        
+
         sidebarToggle.addEventListener('click', function() {
             if (window.innerWidth <= 768) {
                 sidebar.classList.toggle('show');
@@ -641,19 +630,19 @@
                 mainContent.classList.toggle('expanded');
             }
         });
-        
+
         mobileOverlay.addEventListener('click', function() {
             sidebar.classList.remove('show');
             mobileOverlay.classList.remove('show');
         });
-        
+
         window.addEventListener('resize', function() {
             if (window.innerWidth > 768) {
                 sidebar.classList.remove('show');
                 mobileOverlay.classList.remove('show');
             }
         });
-        
+
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
@@ -661,7 +650,7 @@
                 bsAlert.close();
             });
         }, 5000);
-        
+
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', function() {
                 const submitBtn = form.querySelector('button[type="submit"]');

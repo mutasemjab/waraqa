@@ -15,11 +15,23 @@
                         @csrf
 
                         <div class="form-group mb-3">
-                            <label for="user_id">{{ __('messages.select_user') }}</label>
+                            <label>{{ __('messages.buyer_type') }}</label>
+                            <div class="btn-group btn-group-toggle" data-toggle="buttons" role="group">
+                                <label class="btn btn-outline-primary active">
+                                    <input type="radio" name="buyer_type" value="seller" checked> {{ __('messages.seller') }}
+                                </label>
+                                <label class="btn btn-outline-primary">
+                                    <input type="radio" name="buyer_type" value="customer"> {{ __('messages.customer') }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="user_id" id="user-search-label">{{ __('messages.select_seller') }}</label>
                             <input type="hidden" name="user_id" id="user_id" value="">
-                            <input type="text" id="seller_search" class="form-control"
+                            <input type="text" id="user_search" class="form-control"
                                    placeholder="{{ __('messages.search') }}" autocomplete="off">
-                            <div id="sellers-dropdown" class="border rounded mt-1" style="display:none; position: absolute; width: 100%; max-height: 300px; overflow-y: auto; background: white; z-index: 1000;">
+                            <div id="users-dropdown" class="border rounded mt-1" style="display:none; position: absolute; width: 100%; max-height: 300px; overflow-y: auto; background: white; z-index: 1000;">
                             </div>
                         </div>
 
@@ -153,6 +165,10 @@
 <script>
 $(document).ready(function() {
     let rowIdx = 1;
+    let userSearchTimer;
+    let buyerType = 'seller'; // Default type
+    let allEventsData = {};
+    let eventCommissionData = {};
 
     function initializeProductSearch() {
         $('.product-search').autocomplete({
@@ -382,74 +398,97 @@ $(document).ready(function() {
         calculateTotals();
     });
 
-    // Seller search functionality
-    let sellerSearchTimer;
-
-    function performSellerSearch(term) {
-        const dropdown = $('#sellers-dropdown');
+    // User search functionality
+    function performUserSearch(term) {
+        const dropdown = $('#users-dropdown');
+        const searchUrl = buyerType === 'seller'
+            ? '{{ route("sellers.search") }}'
+            : '{{ route("customers.search") }}';
 
         $.ajax({
-            url: '{{ route("sellers.search") }}',
+            url: searchUrl,
             method: 'GET',
             data: { term: term, limit: 5 },
             success: function(data) {
                 if (data.length > 0) {
                     let html = '';
-                    data.forEach(function(seller) {
-                        html += `<div class="p-2 border-bottom seller-item" data-id="${seller.id}" data-text="${seller.text}" style="cursor: pointer;">
-                                ${seller.text}
+                    data.forEach(function(user) {
+                        html += `<div class="p-2 border-bottom user-item" data-id="${user.id}" data-text="${user.text}" style="cursor: pointer;">
+                                ${user.text}
                             </div>`;
                     });
                     dropdown.html(html).show();
 
-                    // Add click handlers to seller items
-                    $('.seller-item').on('click', function() {
+                    // Add click handlers to user items
+                    $('.user-item').on('click', function() {
                         const id = $(this).data('id');
                         const text = $(this).data('text');
                         $('#user_id').val(id);
-                        $('#seller_search').val(text);
+                        $('#user_search').val(text);
                         dropdown.hide();
 
-                        // Load events for selected seller
-                        loadSellerEvents(id);
+                        // Load events for selected user if it's a seller
+                        if (buyerType === 'seller') {
+                            loadSellerEvents(id);
+                        } else {
+                            // Clear events for customers
+                            clearEvents();
+                        }
                     });
                 } else {
                     dropdown.html('<div class="p-2">{{ __("messages.no_results") }}</div>').show();
                 }
             },
             error: function(xhr) {
-                console.error('Error searching sellers:', xhr);
+                console.error('Error searching users:', xhr);
             }
         });
     }
 
-    // Show all sellers when focused
-    $('#seller_search').on('focus', function() {
+    // Update label and clear search when buyer type changes
+    $(document).on('change', 'input[name="buyer_type"]', function() {
+        buyerType = $(this).val();
+        const label = $('#user-search-label');
+
+        if (buyerType === 'seller') {
+            label.text('{{ __("messages.select_seller") }}');
+        } else {
+            label.text('{{ __("messages.select_customer") }}');
+        }
+
+        // Clear previous selections
+        $('#user_id').val('');
+        $('#user_search').val('');
+        $('#users-dropdown').html('').hide();
+        clearEvents();
+    });
+
+    // Show all users when focused
+    $('#user_search').on('focus', function() {
         const term = $(this).val().trim();
         if (term.length === 0) {
-            performSellerSearch('');
+            performUserSearch('');
         }
     });
 
-    $('#seller_search').on('input', function() {
+    $('#user_search').on('input', function() {
         const term = $(this).val().trim();
-        const dropdown = $('#sellers-dropdown');
 
         if (term.length < 1) {
-            performSellerSearch('');
+            performUserSearch('');
             return;
         }
 
-        clearTimeout(sellerSearchTimer);
-        sellerSearchTimer = setTimeout(() => {
-            performSellerSearch(term);
+        clearTimeout(userSearchTimer);
+        userSearchTimer = setTimeout(() => {
+            performUserSearch(term);
         }, 300);
     });
 
     // Close dropdown when clicking outside
     $(document).on('click', function(e) {
-        if (!$(e.target).closest('#seller_search, #sellers-dropdown').length) {
-            $('#sellers-dropdown').hide();
+        if (!$(e.target).closest('#user_search, #users-dropdown').length) {
+            $('#users-dropdown').hide();
         }
     });
 
@@ -513,15 +552,24 @@ $(document).ready(function() {
         });
     }
 
+    // Clear events function
+    function clearEvents() {
+        $('#event_id').html('<option value="">{{ __("messages.choose_event") }}</option>');
+        $('#event-info').html('');
+        allEventsData = {};
+        eventCommissionData = {};
+        $('#commission-row, #commission-value-row, #commission-divider').hide();
+    }
+
     // Load seller events when user is selected via change event
     $(document).on('change', '#user_id', function() {
-        const sellerId = $(this).val();
-        loadSellerEvents(sellerId);
+        const userId = $(this).val();
+        if (buyerType === 'seller') {
+            loadSellerEvents(userId);
+        } else {
+            clearEvents();
+        }
     });
-
-    // Store event commission data when event changes
-    let eventCommissionData = {};
-    let allEventsData = {};
 
     // Update commission box with live calculations
     const updateCommissionBox = function() {

@@ -775,6 +775,8 @@ return [
     'total_debt' => 'Total Debt',
     'total_products' => 'Total Products',
     'total_revenue' => 'Total Revenue',
+    'monthly_revenue' => 'Monthly Revenue',
+    'items_sold' => 'Items Sold',
     'total_sales' => 'Total Sales',
     'paid_orders' => 'Paid Orders',
     'active_debts' => 'Active Debts',
@@ -1626,5 +1628,34 @@ return [
     'purchase_status_confirmed' => 'Confirmed',
     'purchase_status_received' => 'Received',
     'purchase_status_paid' => 'Paid',
+
+    // Order creation
+    'buyer_type' => 'Buyer Type',
+    'select_seller' => 'Select Seller',
+    'select_customer' => 'Select Customer',
+
+    // Analytics Dashboard - Missing translations
+    'analyze_your_business_performance' => 'Analyze Your Business Performance',
+    'current_month_revenue' => 'Current Month Revenue',
+    'expected_delivery' => 'Expected Delivery',
+    'from_all_orders' => 'From All Orders',
+    'high' => 'High',
+    'image' => 'Image',
+    'last_month' => 'Last Month',
+    'low' => 'Low',
+    'manage_your_purchases' => 'Manage Your Purchases',
+    'medium' => 'Medium',
+    'monthly_sales_trends' => 'Monthly Sales Trends',
+    'no_image' => 'No Image',
+    'no_product_data_yet' => 'No Product Data Yet',
+    'no_purchases_found' => 'No Purchases Found',
+    'no_sales_data_yet' => 'No Sales Data Yet',
+    'previous_month_revenue' => 'Previous Month Revenue',
+    'product_deleted' => 'Product Deleted',
+    'product_performance' => 'Product Performance',
+    'purchases_list' => 'Purchases List',
+    'revenue' => 'Revenue',
+    'this_month' => 'This Month',
+    'total_sold' => 'Total Sold',
 
 ];

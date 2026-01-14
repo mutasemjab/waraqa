@@ -833,6 +833,8 @@ return [
     'total_debt' => 'إجمالي الدين',
     'total_products' => 'إجمالي المنتجات',
     'total_revenue' => 'إجمالي الإيرادات',
+    'monthly_revenue' => 'إيرادات هذا الشهر',
+    'items_sold' => 'الكميات المباعة',
     'total_sales' => 'إجمالي المبيعات',
     'paid_orders' => 'الطلبات المدفوعة',
     'active_debts' => 'الديون النشطة',
@@ -1690,5 +1692,34 @@ return [
     'purchase_status_confirmed' => 'مؤكد',
     'purchase_status_received' => 'مستلم',
     'purchase_status_paid' => 'مدفوع',
+
+    // Order creation
+    'buyer_type' => 'نوع المشتري',
+    'select_seller' => 'اختر بائع',
+    'select_customer' => 'اختر عميل',
+
+    // Analytics Dashboard - Missing translations
+    'analyze_your_business_performance' => 'تحليل أداء عملك',
+    'current_month_revenue' => 'إيرادات الشهر الحالي',
+    'expected_delivery' => 'التسليم المتوقع',
+    'from_all_orders' => 'من جميع الطلبات',
+    'high' => 'مرتفع',
+    'image' => 'صورة',
+    'last_month' => 'الشهر الماضي',
+    'low' => 'منخفض',
+    'manage_your_purchases' => 'إدارة عمليات الشراء الخاصة بك',
+    'medium' => 'متوسط',
+    'monthly_sales_trends' => 'اتجاهات المبيعات الشهرية',
+    'no_image' => 'لا توجد صورة',
+    'no_product_data_yet' => 'لا توجد بيانات منتجات حتى الآن',
+    'no_purchases_found' => 'لم يتم العثور على أي عمليات شراء',
+    'no_sales_data_yet' => 'لا توجد بيانات مبيعات حتى الآن',
+    'previous_month_revenue' => 'إيرادات الشهر السابق',
+    'product_deleted' => 'تم حذف المنتج',
+    'product_performance' => 'أداء المنتج',
+    'purchases_list' => 'قائمة المشتريات',
+    'revenue' => 'الإيرادات',
+    'this_month' => 'هذا الشهر',
+    'total_sold' => 'إجمالي المباع',
 
 ];

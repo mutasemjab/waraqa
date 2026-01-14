@@ -32,7 +32,11 @@
                         <div class="col-md-6">
                             <p class="mb-1">
                                 <strong>{{ __('messages.Product') }}:</strong><br>
-                                {{ app()->getLocale() == 'ar' ? $bookRequest->product->name_ar : $bookRequest->product->name_en }}
+                                @if($bookRequest->product)
+                                    {{ app()->getLocale() == 'ar' ? $bookRequest->product->name_ar : $bookRequest->product->name_en }}
+                                @else
+                                    {{ __('messages.product_deleted') }}
+                                @endif
                             </p>
                         </div>
                         <div class="col-md-6">

@@ -4,12 +4,9 @@ namespace App\Http\Controllers\Provider;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\VoucherProduct;
-use App\Models\NoteVoucher;
 use App\Models\User;
-use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,31 +19,63 @@ class ProviderDashboardController extends Controller
         $this->middleware(['auth:web', 'role:provider']);
     }
 
+    public function profile()
+    {
+        $user = Auth::user();
+        return view('provider.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
+            'phone' => 'required|string|unique:users,phone,' . $user->id,
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $updateData = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ];
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $photoName = time() . '_' . $photo->getClientOriginalName();
+            $photo->storeAs('public/users', $photoName);
+            $updateData['photo'] = 'users/' . $photoName;
+        }
+
+        $user->update($updateData);
+
+        return back()->with('success', __('messages.profile_updated_successfully'));
+    }
+
     public function index()
     {
         $user = Auth::user();
         $provider = $user->provider;
-        
+
         // Get provider statistics
         $stats = [
             'total_products' => $provider->products()->count(),
-            'pending_orders' => $this->getPendingOrdersCount($provider->id),
-            'completed_orders' => $this->getCompletedOrdersCount($provider->id),
-            'total_revenue' => $this->getTotalRevenue($provider->id),
+            'total_orders' => $this->getTotalOrdersCount($provider->id),
             'total_sold_items' => $this->getTotalSoldItems($provider->id),
-            'active_users' => $this->getActiveUsersCount($provider->id),
+            'total_revenue' => $this->getTotalRevenue($provider->id),
+            'monthly_revenue' => $this->getMonthlyRevenue($provider->id),
         ];
 
         // Recent orders containing provider's products
         $recentOrders = $this->getRecentOrders($provider->id, 5);
-        
+
         // Top selling products
         $topProducts = $this->getTopSellingProducts($provider->id, 4);
-        
-        // Recent sales (user sales of provider's products)
-        $recentSales = $this->getRecentSales($provider->id, 5);
 
-        return view('provider.dashboard', compact('stats', 'recentOrders', 'topProducts', 'recentSales'));
+        return view('provider.dashboard', compact('stats', 'recentOrders', 'topProducts'));
     }
 
     public function products(Request $request)
@@ -136,100 +165,53 @@ class ProviderDashboardController extends Controller
         $user = Auth::user();
         $provider = $user->provider;
 
-        // Get orders containing provider's products
-        $orders = Order::whereHas('orderProducts.product', function($q) use ($provider) {
-            $q->where('provider_id', $provider->id);
-        })->with(['user', 'orderProducts.product' => function($q) use ($provider) {
-            $q->where('provider_id', $provider->id);
-        }])->latest()->paginate(15);
+        // Get purchases (provider's orders)
+        $orders = \App\Models\Purchase::where('provider_id', $provider->id)
+            ->with(['items.product', 'warehouse', 'bookRequestResponse'])
+            ->latest()
+            ->paginate(15);
 
         return view('provider.orders', compact('orders'));
     }
 
-    public function users()
-    {
-        $user = Auth::user();
-        $provider = $user->provider;
-
-        // Get users who have purchased provider's products
-        $users = $this->getProviderCustomers($provider->id);
-
-        return view('provider.users', compact('users'));
-    }
-
-    public function userDetails($userId)
-    {
-        $authUser = Auth::user();
-        $provider = $authUser->provider;
-        $user = User::findOrFail($userId);
-        
-        // Get user's activity with provider's products
-        $userActivity = $this->getUserActivityWithProvider($userId, $provider->id);
-        
-        return view('provider.user-details', compact('user', 'userActivity'));
-    }
-
     // Helper Methods
 
-    private function getPendingOrdersCount($providerId)
+    private function getTotalOrdersCount($providerId)
     {
-        return OrderProduct::whereHas('product', function($q) use ($providerId) {
-            $q->where('provider_id', $providerId);
-        })->whereHas('order', function($q) {
-            $q->where('status', 1); // Pending
-        })->distinct('order_id')->count();
-    }
-
-    private function getCompletedOrdersCount($providerId)
-    {
-        return OrderProduct::whereHas('product', function($q) use ($providerId) {
-            $q->where('provider_id', $providerId);
-        })->whereHas('order', function($q) {
-            $q->where('status', 2); // Completed
-        })->distinct('order_id')->count();
+        return \App\Models\Purchase::where('provider_id', $providerId)->count();
     }
 
     private function getTotalRevenue($providerId)
     {
-        return OrderProduct::whereHas('product', function($q) use ($providerId) {
-            $q->where('provider_id', $providerId);
-        })->sum('total_price_after_tax');
+        return \App\Models\Purchase::where('provider_id', $providerId)
+            ->sum('total_amount');
     }
 
     private function getTotalSoldItems($providerId)
     {
-        // Items sold by users (from their warehouses)
-        return VoucherProduct::whereHas('product', function($q) use ($providerId) {
-            $q->where('provider_id', $providerId);
-        })->whereHas('noteVoucher', function($q) {
-            $q->whereNotNull('from_warehouse_id')
-              ->whereNull('to_warehouse_id') // Sales to customers
-              ->whereHas('noteVoucherType', function($qt) {
-                  $qt->where('in_out_type', 2); // Out type
-              });
-        })->sum('quantity');
+        return \App\Models\Purchase::where('provider_id', $providerId)
+            ->with('items')
+            ->get()
+            ->sum(function($purchase) {
+                return $purchase->items->sum('quantity');
+            });
     }
 
-    private function getActiveUsersCount($providerId)
+    private function getMonthlyRevenue($providerId)
     {
-        return OrderProduct::whereHas('product', function($q) use ($providerId) {
-                $q->where('provider_id', $providerId);
-            })
-            ->whereHas('order') // تأكد من وجود الطلب
-            ->with('order')
-            ->get()
-            ->pluck('order.user_id') // اجمع user_id من الطلبات
-            ->unique()
-            ->count();
+        return \App\Models\Purchase::where('provider_id', $providerId)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->sum('total_amount');
     }
 
     private function getRecentOrders($providerId, $limit)
     {
-        return Order::whereHas('orderProducts.product', function($q) use ($providerId) {
-            $q->where('provider_id', $providerId);
-        })->with(['user', 'orderProducts.product' => function($q) use ($providerId) {
-            $q->where('provider_id', $providerId);
-        }])->latest()->take($limit)->get();
+        return \App\Models\Purchase::where('provider_id', $providerId)
+            ->with(['items.product', 'warehouse', 'bookRequestResponse'])
+            ->latest()
+            ->take($limit)
+            ->get();
     }
 
     private function getTopSellingProducts($providerId, $limit)
@@ -251,24 +233,8 @@ class ProviderDashboardController extends Controller
             ->get();
     }
 
-    private function getRecentSales($providerId, $limit)
-    {
-        return NoteVoucher::whereHas('voucherProducts.product', function($q) use ($providerId) {
-            $q->where('provider_id', $providerId);
-        })->whereNotNull('from_warehouse_id')
-          ->whereNull('to_warehouse_id')
-          ->with(['fromWarehouse.user', 'voucherProducts.product' => function($q) use ($providerId) {
-              $q->where('provider_id', $providerId);
-          }])
-          ->latest('date_note_voucher')
-          ->take($limit)
-          ->get();
-    }
-
     private function getProductAnalytics($productId)
     {
-        $product = Product::find($productId);
-        
         return [
             'total_ordered' => OrderProduct::where('product_id', $productId)->sum('quantity'),
             'total_sold_by_users' => VoucherProduct::where('product_id', $productId)
@@ -278,7 +244,11 @@ class ProviderDashboardController extends Controller
             'current_in_warehouses' => $this->getCurrentInventoryInWarehouses($productId),
             'total_revenue' => OrderProduct::where('product_id', $productId)->sum('total_price_after_tax'),
             'average_selling_price' => VoucherProduct::where('product_id', $productId)->avg('purchasing_price'),
-            'total_users' => OrderProduct::where('product_id', $productId)->distinct('order.user_id')->count(),
+            'total_users' => OrderProduct::where('product_id', $productId)
+                ->join('orders', 'order_products.order_id', '=', 'orders.id')
+                ->pluck('orders.user_id')
+                ->unique()
+                ->count(),
         ];
     }
 
@@ -396,17 +366,15 @@ class ProviderDashboardController extends Controller
     {
         return User::whereHas('orders.orderProducts.product', function($q) use ($providerId) {
             $q->where('provider_id', $providerId);
-        })->withSum(['orders.orderProducts as total_spent' => function($q) use ($providerId) {
-            $q->whereHas('product', function($product) use ($providerId) {
-                $product->where('provider_id', $providerId);
-            });
-        }], 'total_price_after_tax')
+        })->with(['orders.orderProducts.product' => function($q) use ($providerId) {
+            $q->where('provider_id', $providerId);
+        }])
           ->withCount(['orders as total_orders' => function($q) use ($providerId) {
               $q->whereHas('orderProducts.product', function($product) use ($providerId) {
                   $product->where('provider_id', $providerId);
               });
           }])
-          ->orderBy('total_spent', 'desc')
+          ->orderBy('created_at', 'desc')
           ->take(10)
           ->get();
     }
@@ -432,80 +400,4 @@ class ProviderDashboardController extends Controller
         ];
     }
 
-    private function getProviderCustomers($providerId)
-    {
-        return User::whereHas('orders.orderProducts.product', function($q) use ($providerId) {
-            $q->where('provider_id', $providerId);
-        })->with(['warehouse'])
-          ->withSum(['orders.orderProducts as total_spent' => function($q) use ($providerId) {
-              $q->whereHas('product', function($product) use ($providerId) {
-                  $product->where('provider_id', $providerId);
-              });
-          }], 'total_price_after_tax')
-          ->withCount(['orders as total_orders' => function($q) use ($providerId) {
-              $q->whereHas('orderProducts.product', function($product) use ($providerId) {
-                  $product->where('provider_id', $providerId);
-              });
-          }])
-          ->orderBy('total_spent', 'desc')
-          ->paginate(15);
-    }
-
-    private function getUserActivityWithProvider($userId, $providerId)
-    {
-        return [
-            'orders' => Order::where('user_id', $userId)
-                ->whereHas('orderProducts.product', function($q) use ($providerId) {
-                    $q->where('provider_id', $providerId);
-                })->with(['orderProducts.product' => function($q) use ($providerId) {
-                    $q->where('provider_id', $providerId);
-                }])->latest()->get(),
-            'sales' => NoteVoucher::whereHas('fromWarehouse.user', function($q) use ($userId) {
-                $q->where('id', $userId);
-            })->whereHas('voucherProducts.product', function($q) use ($providerId) {
-                $q->where('provider_id', $providerId);
-            })->with(['voucherProducts.product' => function($q) use ($providerId) {
-                $q->where('provider_id', $providerId);
-            }])->latest('date_note_voucher')->get(),
-            'current_inventory' => $this->getUserCurrentInventoryForProvider($userId, $providerId),
-        ];
-    }
-
-    private function getUserCurrentInventoryForProvider($userId, $providerId)
-    {
-        $user = User::find($userId);
-        if (!$user->warehouse) return collect();
-
-        return Product::where('provider_id', $providerId)
-            ->select('products.*')
-            ->selectRaw('
-                COALESCE(received.received_quantity, 0) - COALESCE(sold.sold_quantity, 0) as current_quantity
-            ')
-            ->leftJoinSub(
-                VoucherProduct::select('product_id')
-                    ->selectRaw('SUM(quantity) as received_quantity')
-                    ->whereHas('noteVoucher', function($q) use ($user) {
-                        $q->where('to_warehouse_id', $user->warehouse->id);
-                    })
-                    ->groupBy('product_id'),
-                'received',
-                'products.id',
-                '=',
-                'received.product_id'
-            )
-            ->leftJoinSub(
-                VoucherProduct::select('product_id')
-                    ->selectRaw('SUM(quantity) as sold_quantity')
-                    ->whereHas('noteVoucher', function($q) use ($user) {
-                        $q->where('from_warehouse_id', $user->warehouse->id);
-                    })
-                    ->groupBy('product_id'),
-                'sold',
-                'products.id',
-                '=',
-                'sold.product_id'
-            )
-            ->having('current_quantity', '>', 0)
-            ->get();
-    }
 }

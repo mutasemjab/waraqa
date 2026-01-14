@@ -18,7 +18,11 @@
                     <div class="col-md-6">
                         <h6 class="text-muted">{{ __('messages.Product') }}</h6>
                         <h5>
-                            {{ app()->getLocale() == 'ar' ? $bookRequest->product->name_ar : $bookRequest->product->name_en }}
+                            @if($bookRequest->product)
+                                {{ app()->getLocale() == 'ar' ? $bookRequest->product->name_ar : $bookRequest->product->name_en }}
+                            @else
+                                {{ __('messages.product_deleted') }}
+                            @endif
                         </h5>
                     </div>
                     <div class="col-md-6">
@@ -125,25 +129,27 @@
                     <p><strong>{{ __('messages.Dar_Waraqa_Admin') }}</strong></p>
                 </div>
 
-                <div class="mb-3">
-                    <small class="text-muted">{{ __('messages.Category') }}</small>
-                    <p>
-                        <strong>
-                            @if($bookRequest->product->category)
-                                {{ app()->getLocale() == 'ar' ? $bookRequest->product->category->name_ar : $bookRequest->product->category->name_en }}
-                            @else
-                                {{ __('messages.uncategorized') }}
-                            @endif
-                        </strong>
-                    </p>
-                </div>
+                @if($bookRequest->product)
+                    <div class="mb-3">
+                        <small class="text-muted">{{ __('messages.Category') }}</small>
+                        <p>
+                            <strong>
+                                @if($bookRequest->product->category)
+                                    {{ app()->getLocale() == 'ar' ? $bookRequest->product->category->name_ar : $bookRequest->product->category->name_en }}
+                                @else
+                                    {{ __('messages.uncategorized') }}
+                                @endif
+                            </strong>
+                        </p>
+                    </div>
 
-                <div class="mb-3">
-                    <small class="text-muted">{{ __('messages.Price') }}</small>
-                    <p>
-                        <strong>{{ number_format($bookRequest->product->selling_price, 2) }}</strong>
-                    </p>
-                </div>
+                    <div class="mb-3">
+                        <small class="text-muted">{{ __('messages.Price') }}</small>
+                        <p>
+                            <strong>{{ number_format($bookRequest->product->selling_price, 2) }}</strong>
+                        </p>
+                    </div>
+                @endif
 
                 <hr>
 
