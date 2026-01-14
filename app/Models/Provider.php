@@ -100,4 +100,9 @@ class Provider extends Model
     {
         return $this->hasMany(BookRequestResponse::class);
     }
+
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class);
+    }
 }

@@ -23,10 +23,7 @@ class EventReportController extends Controller
         $term = $request->get('term', '');
         $limit = $request->get('limit', 10);
 
-        $events = Event::where(function ($query) use ($term) {
-            $query->where('name', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%");
-        })
+        $events = Event::where('name', 'like', "%{$term}%")
         ->orderBy('start_date', 'desc')
         ->limit($limit)
         ->get()
@@ -92,7 +89,8 @@ class EventReportController extends Controller
                 'total_commission' => number_format($totalCommission, 2),
                 'net_revenue' => number_format($totalRevenue - $totalCommission, 2),
             ],
-            'orders' => $orders->map(function ($order) {
+            'orders' => $orders->map(function ($order) use ($commissionPercentage) {
+                $eventCommissionValue = ($order->total_prices * $commissionPercentage) / 100;
                 return [
                     'id' => $order->id,
                     'number' => $order->number,
@@ -101,18 +99,10 @@ class EventReportController extends Controller
                     'status' => $this->getStatusBadge($order->status),
                     'payment_status' => $this->getPaymentStatusBadge($order->payment_status),
                     'total_prices' => number_format($order->total_prices ?? 0, 2),
-                    'total_taxes' => number_format($order->total_taxes ?? 0, 2),
                     'paid_amount' => number_format($order->paid_amount ?? 0, 2),
                     'remaining_amount' => number_format($order->remaining_amount ?? 0, 2),
-                    'products_count' => $order->orderProducts->count(),
-                    'products' => $order->orderProducts->map(function ($product) {
-                        return [
-                            'name' => $product->product->name_ar ?? $product->product->name_en ?? 'Unknown',
-                            'quantity' => $product->quantity,
-                            'unit_price' => number_format($product->unit_price ?? 0, 2),
-                            'total_price' => number_format(($product->quantity * $product->unit_price) ?? 0, 2),
-                        ];
-                    }),
+                    'commission_percentage' => $commissionPercentage,
+                    'commission_value' => number_format($eventCommissionValue, 2),
                 ];
             }),
         ]);

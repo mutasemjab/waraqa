@@ -193,7 +193,7 @@
                 </li>
 
                 <!-- Analytics Group -->
-                <li class="nav-item {{ request()->is('admin/reports/warehouse-movement*') || request()->is('admin/reports/providers*') || request()->is('admin/reports/orders*') || request()->is('admin/reports/sales-returns*') || request()->is('admin/reports/purchase-returns*') || request()->is('admin/reports/customers*') || request()->is('admin/reports/events*') ? 'menu-open' : '' }}">
+                <li class="nav-item {{ request()->is('admin/reports/warehouse-movement*') || request()->is('admin/reports/providers*') || request()->is('admin/reports/orders*') || request()->is('admin/reports/sales-returns*') || request()->is('admin/reports/purchase-returns*') || request()->is('admin/reports/purchases*') || request()->is('admin/reports/customers*') || request()->is('admin/reports/events*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-chart-bar"></i>
                         <p>
@@ -218,6 +218,12 @@
                             <a href="{{ route('admin.reports.purchaseReturns') }}" class="nav-link {{ request()->routeIs('admin.reports.purchaseReturns') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.purchase_returns_report') }}</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.reports.purchases') }}" class="nav-link {{ request()->routeIs('admin.reports.purchases') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('messages.purchases_report') }}</p>
                             </a>
                         </li>
                         <li class="nav-item">

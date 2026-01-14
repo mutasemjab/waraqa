@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\OrderReportController;
 use App\Http\Controllers\Admin\SalesReturnReportController;
 use App\Http\Controllers\Admin\PurchaseReturnReportController;
+use App\Http\Controllers\Admin\PurchaseReportController;
 use App\Http\Controllers\Admin\CustomerReportController;
 use App\Http\Controllers\Admin\EventReportController;
 use App\Http\Controllers\Admin\WarehouseMovementReportController;
@@ -139,6 +140,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('reports/orders', [OrderReportController::class, 'index'])->name('admin.reports.orders');
         Route::get('reports/sales-returns', [SalesReturnReportController::class, 'index'])->name('admin.reports.salesReturns');
         Route::get('reports/purchase-returns', [PurchaseReturnReportController::class, 'index'])->name('admin.reports.purchaseReturns');
+        Route::get('reports/purchases', [PurchaseReportController::class, 'index'])->name('admin.reports.purchases');
         Route::get('reports/customers', [CustomerReportController::class, 'index'])->name('admin.reports.customers');
         Route::get('reports/customers/search', [CustomerReportController::class, 'search'])->name('admin.customers.search');
         Route::get('reports/customers/{customerId}/data', [CustomerReportController::class, 'getCustomerData'])->name('admin.customers.report.data');
@@ -146,7 +148,10 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('reports/events/search', [EventReportController::class, 'search'])->name('admin.events.search');
         Route::get('reports/events/{eventId}/data', [EventReportController::class, 'getEventData'])->name('admin.events.report.data');
         Route::get('reports/providers', 'App\Http\Controllers\Admin\ProvidersReportController@index')->name('admin.reports.providers.index');
+        Route::get('reports/providers/search', 'App\Http\Controllers\Admin\ProvidersReportController@search')->name('admin.providers.search');
+        Route::get('reports/providers/{providerId}/data', 'App\Http\Controllers\Admin\ProvidersReportController@getProviderData')->name('admin.providers.report.data');
         Route::get('reports/providers/products/{providerId}', 'App\Http\Controllers\Admin\ProvidersReportController@getProducts')->name('admin.reports.providers.getProducts');
+        Route::get('reports/providers/{providerId}/book-requests', 'App\Http\Controllers\Admin\ProvidersReportController@getBookRequestsData')->name('admin.reports.providers.bookRequests');
     });
 });
 

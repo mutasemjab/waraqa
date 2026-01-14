@@ -43,6 +43,11 @@ class Purchase extends Model
         return $this->belongsTo(Provider::class);
     }
 
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
     public function bookRequestResponse()
     {
         return $this->belongsTo(BookRequestResponse::class);

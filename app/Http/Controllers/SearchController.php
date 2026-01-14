@@ -39,6 +39,11 @@ class SearchController extends Controller
                 } elseif (strpos($filter, 'with_role:') === 0) {
                     $roleName = substr($filter, 10); // Remove 'with_role:' prefix
                     $query->role($roleName);
+                } elseif (strpos($filter, 'with_roles:') === 0) {
+                    // Support multiple roles: with_roles:seller,customer
+                    $rolesString = substr($filter, 11); // Remove 'with_roles:' prefix
+                    $roles = array_map('trim', explode(',', $rolesString));
+                    $query->role($roles);
                 }
             }
 

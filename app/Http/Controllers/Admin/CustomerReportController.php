@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Order;
-use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 
 class CustomerReportController extends Controller
@@ -29,6 +28,9 @@ class CustomerReportController extends Controller
             $query->where('name', 'like', "%{$term}%")
                 ->orWhere('email', 'like', "%{$term}%")
                 ->orWhere('phone', 'like', "%{$term}%");
+        })
+        ->whereHas('roles', function ($query) {
+            $query->whereIn('name', ['seller', 'customer']);
         })
         ->limit($limit)
         ->get()
@@ -58,9 +60,6 @@ class CustomerReportController extends Controller
         $totalRemaining = $customer->orders()->sum('remaining_amount') ?? 0;
         $totalTaxes = $customer->orders()->sum('total_taxes') ?? 0;
 
-        // Get wallet balance
-        $walletBalance = WalletTransaction::where('user_id', $customerId)->sum('amount') ?? 0;
-
         // Get orders with details
         $orders = $customer->orders()
             ->with(['orderProducts.product'])
@@ -84,7 +83,6 @@ class CustomerReportController extends Controller
                 'total_paid' => number_format($totalPaid, 2),
                 'total_remaining' => number_format($totalRemaining, 2),
                 'total_taxes' => number_format($totalTaxes, 2),
-                'wallet_balance' => number_format($walletBalance, 2),
             ],
             'orders' => $orders->map(function ($order) {
                 return [

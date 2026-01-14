@@ -30,10 +30,63 @@ class OrderController extends Controller
         $this->middleware('permission:order-edit')->only(['edit', 'update']);
     }
 
-        // Admin: List all orders
-    public function index()
+    // Admin: List all orders with filters
+    public function index(Request $request)
     {
-        $orders = Order::with(['user', 'orderProducts.product'])->latest()->paginate(15);
+        $query = Order::with(['user', 'orderProducts.product']);
+
+        // Filter by status
+        if ($request->filled('status')) {
+            if ($request->status === 'pending') {
+                // Pending = not completed, cancelled, or refunded
+                $query->whereNotIn('status', [1, 2, 6]);
+            } elseif ($request->status === 'not_done') {
+                // Not done = any status except 1 (done)
+                $query->where('status', '!=', 1);
+            } else {
+                $query->where('status', $request->status);
+            }
+        }
+
+        // Filter by payment status
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        // Filter by user
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Filter by date (single date)
+        if ($request->filled('date')) {
+            $query->whereDate('order_date', $request->date);
+        }
+
+        // Filter by date range
+        if ($request->filled('from_date')) {
+            $query->whereDate('order_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('order_date', '<=', $request->to_date);
+        }
+
+        // Filter by order number
+        if ($request->filled('order_number')) {
+            $query->where('number', 'like', '%' . $request->order_number . '%');
+        }
+
+        // Filter by month (format: YYYY-MM)
+        if ($request->filled('month')) {
+            $monthYear = explode('-', $request->month);
+            if (count($monthYear) === 2) {
+                $query->whereYear('order_date', $monthYear[0])
+                      ->whereMonth('order_date', $monthYear[1]);
+            }
+        }
+
+        $orders = $query->latest()->paginate(15)->withQueryString();
+
         return view('admin.orders.index', compact('orders'));
     }
 

@@ -157,7 +157,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index') }}" class="btn btn-sm btn-warning text-white">
+                    <a href="{{ route('orders.index', ['status' => 'not_done']) }}" class="btn btn-sm btn-warning text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -277,7 +277,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index') }}" class="btn btn-sm btn-secondary text-white">
+                    <a href="{{ route('orders.index', ['month' => now()->format('Y-m'), 'status' => 1]) }}" class="btn btn-sm btn-secondary text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -416,7 +416,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('orders.index') }}" class="btn btn-warning btn-block">
+                            <a href="{{ route('orders.index', ['status' => 'not_done']) }}" class="btn btn-warning btn-block">
                                 <i class="fas fa-clock"></i> {{ __('messages.pending_orders') }}
                                 <span class="badge badge-light ml-2">{{ $stats['pending_orders'] }}</span>
                             </a>

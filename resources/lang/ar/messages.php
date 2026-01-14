@@ -1669,5 +1669,26 @@ return [
     'unique_customers' => 'عملاء فريدون',
     'wallet_balance' => 'رصيد المحفظة',
     'warehouse' => 'المستودع',
+    'all' => 'الكل',
+    'total_quantity_in' => 'إجمالي الكمية الواردة',
+    'total_quantity_out' => 'إجمالي الكمية الصادرة',
+    'qty_in' => 'الكمية الواردة',
+    'qty_out' => 'الكمية الصادرة',
+    'value_in' => 'القيمة الواردة',
+    'value_out' => 'القيمة الصادرة',
+    'event_commission_percentage' => 'نسبة الفعالية',
+    'event_commission_value' => 'قيمة الفعالية',
+    'select_provider_to_view_report' => 'اختر المورد لعرض التقرير',
+    'products_details' => 'تفاصيل المنتجات',
+
+    // Purchases Report
+    'purchases_report' => 'تقرير عمليات الشراء',
+    'total_purchases' => 'إجمالي عمليات الشراء',
+    'total_with_tax' => 'الإجمالي مع الضريبة',
+    'items_count' => 'عدد الأصناف',
+    'purchase_status_pending' => 'قيد الانتظار',
+    'purchase_status_confirmed' => 'مؤكد',
+    'purchase_status_received' => 'مستلم',
+    'purchase_status_paid' => 'مدفوع',
 
 ];

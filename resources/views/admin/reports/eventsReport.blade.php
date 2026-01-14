@@ -74,16 +74,6 @@
                                     <p><strong>{{ __('messages.end_date') }}:</strong></p>
                                     <p id="event-end-date">-</p>
                                 </div>
-                                <div class="col-md-3">
-                                    <p><strong>{{ __('messages.creator') }}:</strong></p>
-                                    <p id="event-creator">-</p>
-                                </div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-md-12">
-                                    <p><strong>{{ __('messages.description') }}:</strong></p>
-                                    <p id="event-description" class="text-muted">-</p>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -390,8 +380,6 @@ $(document).ready(function() {
         $('#event-name').text(event.name);
         $('#event-start-date').text(event.start_date);
         $('#event-end-date').text(event.end_date);
-        $('#event-creator').text(event.creator);
-        $('#event-description').text(event.description || '-');
 
         // Statistics
         $('#stat-total-orders').text(stats.total_orders);
@@ -401,14 +389,15 @@ $(document).ready(function() {
         $('#stat-commission-percentage').text(event.commission_percentage + '%');
 
         // Financial summary
+        const riyalIcon = '<svg class="riyal-icon" style="width: 18px; height: 18px; display: inline-block; margin: 0 4px; vertical-align: middle;" viewBox="0 0 1124.14 1256.39" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></svg>';
         $('#stat-total-revenue').text(stats.total_revenue);
-        $('#stat-total-revenue-full').html(stats.total_revenue + ' <x-riyal-icon />');
-        $('#stat-total-taxes').html(stats.total_taxes + ' <x-riyal-icon />');
-        $('#stat-total-paid').html(stats.total_paid + ' <x-riyal-icon />');
-        $('#stat-total-remaining').html(stats.total_remaining + ' <x-riyal-icon />');
+        $('#stat-total-revenue-full').html(stats.total_revenue + ' ' + riyalIcon);
+        $('#stat-total-taxes').html(stats.total_taxes + ' ' + riyalIcon);
+        $('#stat-total-paid').html(stats.total_paid + ' ' + riyalIcon);
+        $('#stat-total-remaining').html(stats.total_remaining + ' ' + riyalIcon);
         $('#stat-commission').text(stats.total_commission);
-        $('#stat-commission-full').html(stats.total_commission + ' <x-riyal-icon />');
-        $('#stat-net-revenue').html(stats.net_revenue + ' <x-riyal-icon />');
+        $('#stat-commission-full').html(stats.total_commission + ' ' + riyalIcon);
+        $('#stat-net-revenue').html(stats.net_revenue + ' ' + riyalIcon);
 
         // Orders table
         if (orders.length > 0) {
@@ -422,14 +411,17 @@ $(document).ready(function() {
                                 <th>{{ __('messages.customer') }}</th>
                                 <th>{{ __('messages.Status') }}</th>
                                 <th>{{ __('messages.payment_status') }}</th>
-                                <th>{{ __('messages.products') }}</th>
                                 <th>{{ __('messages.total_prices') }}</th>
                                 <th>{{ __('messages.paid_amount') }}</th>
                                 <th>{{ __('messages.remaining_amount') }}</th>
+                                <th>{{ __('messages.event_commission_percentage') }}</th>
+                                <th>{{ __('messages.event_commission_value') }}</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
+
+            const riyalIcon = '<svg class="riyal-icon" style="width: 18px; height: 18px; display: inline-block; margin: 0 4px; vertical-align: middle;" viewBox="0 0 1124.14 1256.39" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></svg>';
 
             orders.forEach(function(order) {
                 ordersHtml += `
@@ -439,14 +431,11 @@ $(document).ready(function() {
                         <td>${order.customer}</td>
                         <td>${order.status}</td>
                         <td>${order.payment_status}</td>
-                        <td>
-                            <small>
-                                ${order.products.map(p => `<div>${p.name} (${p.quantity})</div>`).join('')}
-                            </small>
-                        </td>
-                        <td>${order.total_prices} <x-riyal-icon /></td>
-                        <td>${order.paid_amount} <x-riyal-icon /></td>
-                        <td>${order.remaining_amount} <x-riyal-icon /></td>
+                        <td>${order.total_prices} ${riyalIcon}</td>
+                        <td>${order.paid_amount} ${riyalIcon}</td>
+                        <td>${order.remaining_amount} ${riyalIcon}</td>
+                        <td>${order.commission_percentage}%</td>
+                        <td>${order.commission_value} ${riyalIcon}</td>
                     </tr>
                 `;
             });

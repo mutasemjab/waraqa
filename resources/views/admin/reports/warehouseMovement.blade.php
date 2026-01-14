@@ -124,7 +124,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="warehouse_id">{{ __('messages.Warehouse') }}</label>
-                                        <select class="form-control select2" id="warehouse_id" name="warehouse_id">
+                                        <select class="form-control" id="warehouse_id" name="warehouse_id">
                                             <option value="">{{ __('messages.All') }}</option>
                                             @foreach ($warehouses as $warehouse)
                                             <option value="{{ $warehouse->id }}" {{ request('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
@@ -139,7 +139,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="product_id">{{ __('messages.Product') }}</label>
-                                        <select class="form-control select2" id="product_id" name="product_id">
+                                        <select class="form-control" id="product_id" name="product_id">
                                             <option value="">{{ __('messages.All') }}</option>
                                             @foreach ($products as $product)
                                             <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>
@@ -154,7 +154,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="provider_id">{{ __('messages.Provider') }}</label>
-                                        <select class="form-control select2" id="provider_id" name="provider_id">
+                                        <select class="form-control" id="provider_id" name="provider_id">
                                             <option value="">{{ __('messages.All') }}</option>
                                             @foreach ($providers as $provider)
                                             <option value="{{ $provider->id }}" {{ request('provider_id') == $provider->id ? 'selected' : '' }}>
@@ -212,7 +212,7 @@
                 <div class="info-box">
                     <span class="info-box-icon bg-success"><i class="fas fa-arrow-down"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">{{ __('messages.Total') }} {{ __('messages.Quantity') }} In</span>
+                        <span class="info-box-text">{{ __('messages.total_quantity_in') }}</span>
                         <span class="info-box-number">{{ number_format($statistics['total_quantity_in'], 2) }}</span>
                     </div>
                 </div>
@@ -222,7 +222,7 @@
                 <div class="info-box">
                     <span class="info-box-icon bg-warning"><i class="fas fa-arrow-up"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">{{ __('messages.Total') }} {{ __('messages.Quantity') }} Out</span>
+                        <span class="info-box-text">{{ __('messages.total_quantity_out') }}</span>
                         <span class="info-box-number">{{ number_format($statistics['total_quantity_out'], 2) }}</span>
                     </div>
                 </div>
@@ -274,10 +274,11 @@
                                         <td>{{ number_format(($voucherProduct->quantity ?? 0) * ($voucherProduct->purchasing_price ?? ($voucherProduct->product->selling_price ?? 0)), 2) }} <x-riyal-icon /></td>
                                         <td>
                                             @if($movement->fromWarehouse)
-                                            <span class="badge badge-info">From: {{ $movement->fromWarehouse->name }}</span>
-                                            @endif
-                                            @if($movement->toWarehouse)
-                                            <span class="badge badge-success">To: {{ $movement->toWarehouse->name }}</span>
+                                            <span class="badge badge-primary">{{ $movement->fromWarehouse->name }}</span>
+                                            @elseif($movement->toWarehouse)
+                                            <span class="badge badge-primary">{{ $movement->toWarehouse->name }}</span>
+                                            @else
+                                            <span class="badge badge-secondary">-</span>
                                             @endif
                                         </td>
                                         <td>{{ $movement->provider->name ?? '-' }}</td>
@@ -318,10 +319,10 @@
                                 <thead>
                                     <tr>
                                         <th>{{ __('messages.Product') }}</th>
-                                        <th>{{ __('messages.Qty') }} In</th>
-                                        <th>{{ __('messages.Qty') }} Out</th>
-                                        <th>{{ __('messages.Value') }} In</th>
-                                        <th>{{ __('messages.Value') }} Out</th>
+                                        <th>{{ __('messages.qty_in') }}</th>
+                                        <th>{{ __('messages.qty_out') }}</th>
+                                        <th>{{ __('messages.value_in') }}</th>
+                                        <th>{{ __('messages.value_out') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -381,18 +382,4 @@
         </div>
     </div>
 </div>
-@endsection
-
-@section('script')
-<script>
-    $(document).ready(function() {
-        $('.select2').select2({
-            language: {
-                noResults: function() {
-                    return "لا توجد نتائج";
-                }
-            }
-        });
-    });
-</script>
 @endsection

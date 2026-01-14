@@ -1605,5 +1605,26 @@ return [
     'unique_customers' => 'Unique Customers',
     'wallet_balance' => 'Wallet Balance',
     'warehouse' => 'Warehouse',
+    'all' => 'All',
+    'total_quantity_in' => 'Total Quantity In',
+    'total_quantity_out' => 'Total Quantity Out',
+    'qty_in' => 'Quantity In',
+    'qty_out' => 'Quantity Out',
+    'value_in' => 'Value In',
+    'value_out' => 'Value Out',
+    'event_commission_percentage' => 'Event Commission Percentage',
+    'event_commission_value' => 'Event Commission Value',
+    'select_provider_to_view_report' => 'Select a provider to view the report',
+    'products_details' => 'Products Details',
+
+    // Purchases Report
+    'purchases_report' => 'Purchases Report',
+    'total_purchases' => 'Total Purchases',
+    'total_with_tax' => 'Total with Tax',
+    'items_count' => 'Items Count',
+    'purchase_status_pending' => 'Pending',
+    'purchase_status_confirmed' => 'Confirmed',
+    'purchase_status_received' => 'Received',
+    'purchase_status_paid' => 'Paid',
 
 ];
