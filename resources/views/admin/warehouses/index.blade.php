@@ -32,38 +32,30 @@
             @if (@isset($data) && !@empty($data) && count($data) > 0)
             <table id="example2" class="table table-bordered table-hover">
                 <thead class="custom_thead">
-
-
                     <th>{{ __('messages.Name') }}</th>
-
-
+                    <th>{{ __('messages.Total_Quantity') }}</th>
                     <th></th>
                 </thead>
                 <tbody>
                     @foreach ($data as $info)
                     <tr>
-
-
                         <td>{{ $info->name }}</td>
-
-
-
+                        <td>{{ $info->total_quantity }}</td>
                         <td>
+                            @can('warehouse-table')
+                            <a href="{{ route('warehouses.show', $info->id) }}" class="btn btn-sm btn-info">{{ __('messages.View') }}</a>
+                            @endcan
                             @can('warehouse-edit')
-                            <a href="{{ route('warehouses.edit', $info->id) }}" class="btn btn-sm  btn-primary">{{
-                                __('messages.Edit') }}</a>
+                            <a href="{{ route('warehouses.edit', $info->id) }}" class="btn btn-sm  btn-primary">{{ __('messages.Edit') }}</a>
                             @endcan
                             @can('warehouse-delete')
-                            <form action="{{ route('warehouses.destroy', $info->id) }}" method="POST">
+                            <form action="{{ route('warehouses.destroy', $info->id) }}" method="POST" style="display:inline-block">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">{{ __('messages.Delete') }}</button>
                             </form>
                             @endcan
-
                         </td>
-
-
                     </tr>
                     @endforeach
 

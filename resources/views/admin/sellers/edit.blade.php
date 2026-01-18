@@ -79,6 +79,12 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="commission_percentage">{{ __('messages.Default_Commission_Percentage') }}</label>
+                            <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" value="{{ old('commission_percentage', $seller->commission_percentage) }}" min="0" max="100" step="0.01" placeholder="0.00">
+                            <small class="form-text text-muted">{{ __('messages.commission_percentage_hint') }}</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="photo">{{ __('messages.Photo') }}</label>
                             <div class="custom-file">
                                 <input type="file" class="custom-file-input" id="photo" name="photo">
@@ -105,8 +111,9 @@
                     </a>
                 </div>
 
-                <!-- Hidden input to track deleted events -->
+                <!-- Hidden inputs to track deleted and updated events -->
                 <input type="hidden" id="deleted_events" name="deleted_events" value="">
+                <input type="hidden" id="updated_events" name="updated_events" value="">
             </form>
         </div>
     </div>
@@ -154,7 +161,7 @@
 
                 <div class="form-group">
                     <label for="commission_percentage">{{ __('messages.Commission_Percentage') }} <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" min="0" max="100" step="0.01" required>
+                    <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" min="0" max="100" step="1" required>
                 </div>
 
                 <div class="form-group text-center mt-4">
@@ -192,12 +199,39 @@
         // Events handling
         let eventsData = [];
         let deletedEvents = [];
+        let updatedEvents = [];
+        let editingEventId = null;
         let existingEvents = @json($seller->events);
+
+        // Function to convert datetime string to datetime-local format
+        function formatDateTimeForInput(dateString) {
+            if (!dateString) return '';
+            // Parse the date string (could be from datetime cast in Laravel)
+            let date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                // If parsing fails, return as is
+                return dateString;
+            }
+            // Format as YYYY-MM-DDTHH:mm
+            let year = date.getFullYear();
+            let month = String(date.getMonth() + 1).padStart(2, '0');
+            let day = String(date.getDate()).padStart(2, '0');
+            let hours = String(date.getHours()).padStart(2, '0');
+            let minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
 
         // Display existing events
         function renderExistingEvents() {
             let html = '';
             existingEvents.forEach((event) => {
+                // Function to format date for display
+                let formatDateForDisplay = function(dateStr) {
+                    let date = new Date(dateStr);
+                    if (isNaN(date.getTime())) return dateStr;
+                    return date.toLocaleString('ar-EG');
+                };
+
                 html += `
                     <div class="card mb-2" id="event-${event.id}">
                         <div class="card-body">
@@ -206,6 +240,9 @@
                                     <strong>${event.name}</strong>
                                 </div>
                                 <div class="col-md-6 text-right">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="editExistingEvent(${event.id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeExistingEvent(${event.id})">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -213,10 +250,10 @@
                             </div>
                             <div class="row mt-2">
                                 <div class="col-md-4">
-                                    <small>{{ __('messages.Start_Date') }}: ${event.start_date}</small>
+                                    <small>{{ __('messages.Start_Date') }}: ${formatDateForDisplay(event.start_date)}</small>
                                 </div>
                                 <div class="col-md-4">
-                                    <small>{{ __('messages.End_Date') }}: ${event.end_date}</small>
+                                    <small>{{ __('messages.End_Date') }}: ${formatDateForDisplay(event.end_date)}</small>
                                 </div>
                                 <div class="col-md-4">
                                     <small>{{ __('messages.Commission_Percentage') }}: ${event.commission_percentage}%</small>
@@ -229,6 +266,46 @@
             $('#existing-events-list').html(html);
         }
 
+        // Edit existing event from database
+        window.editExistingEvent = function(eventId) {
+            const event = existingEvents.find(e => e.id === eventId);
+            if (event) {
+                editingEventId = eventId;
+                $('#event_name').val(event.name);
+                $('#start_date').val(formatDateTimeForInput(event.start_date));
+                $('#end_date').val(formatDateTimeForInput(event.end_date));
+                $('#commission_percentage').val(event.commission_percentage);
+                $('#save-event-btn').html('<i class="fas fa-check"></i> {{ __("messages.Update_Event") }}');
+                $('#save-event-btn').removeClass('btn-success').addClass('btn-warning');
+                $('#events-section').slideDown();
+                $('#add-event-btn').hide();
+                // Scroll to events section
+                $('html, body').animate({
+                    scrollTop: $('#events-section').offset().top - 100
+                }, 500);
+            }
+        };
+
+        // Edit new event (not yet saved to database)
+        window.editNewEvent = function(index) {
+            const event = eventsData[index];
+            if (event) {
+                editingEventId = 'new-' + index;
+                $('#event_name').val(event.name);
+                $('#start_date').val(event.start_date);
+                $('#end_date').val(event.end_date);
+                $('#commission_percentage').val(event.commission_percentage);
+                $('#save-event-btn').html('<i class="fas fa-check"></i> {{ __("messages.Update_Event") }}');
+                $('#save-event-btn').removeClass('btn-success').addClass('btn-warning');
+                $('#events-section').slideDown();
+                $('#add-event-btn').hide();
+                // Scroll to events section
+                $('html, body').animate({
+                    scrollTop: $('#events-section').offset().top - 100
+                }, 500);
+            }
+        };
+
         // Show events section
         $('#add-event-btn').on('click', function() {
             $('#events-section').slideDown();
@@ -240,38 +317,85 @@
             $('#events-section').slideUp();
             $('#add-event-btn').show();
             $('#event-form')[0].reset();
+            editingEventId = null;
+            $('#save-event-btn').html('<i class="fas fa-plus"></i> {{ __("messages.Add_Event") }}');
+            $('#save-event-btn').removeClass('btn-warning').addClass('btn-success');
         });
 
-        // Save new event
+        // Save new event or update existing event
         $('#save-event-btn').on('click', function() {
-            if ($('#event-form')[0].checkValidity() === false) {
+            let name = $('#event_name').val().trim();
+            let startDate = $('#start_date').val().trim();
+            let endDate = $('#end_date').val().trim();
+            let commission = $('#commission_percentage').val().trim();
+
+            // Check if all fields are filled
+            if (!name || !startDate || !endDate || !commission) {
                 alert('{{ __('messages.Please_fill_all_required_fields') }}');
                 return;
             }
 
+            // Check if end_date is after start_date
+            if (new Date(endDate) <= new Date(startDate)) {
+                alert('{{ __('messages.End_Date') }} يجب أن يكون بعد {{ __('messages.Start_Date') }}');
+                return;
+            }
+
             let eventData = {
-                name: $('#event_name').val(),
-                start_date: $('#start_date').val(),
-                end_date: $('#end_date').val(),
-                commission_percentage: $('#commission_percentage').val()
+                name: name,
+                start_date: startDate,
+                end_date: endDate,
+                commission_percentage: commission
             };
 
-            eventsData.push(eventData);
-            renderNewEvents();
-            $('#event-form')[0].reset();
+            if (editingEventId) {
+                if (typeof editingEventId === 'string' && editingEventId.startsWith('new-')) {
+                    // Update new event (not yet saved to database)
+                    const index = parseInt(editingEventId.replace('new-', ''));
+                    if (eventsData[index]) {
+                        eventsData[index] = eventData;
+                        renderNewEvents();
+                    }
+                } else {
+                    // Update existing event from database
+                    const eventIndex = existingEvents.findIndex(e => e.id === editingEventId);
+                    if (eventIndex !== -1) {
+                        existingEvents[eventIndex] = { ...existingEvents[eventIndex], ...eventData };
+                        updatedEvents.push({
+                            id: editingEventId,
+                            ...eventData
+                        });
+                        renderExistingEvents();
+                    }
+                }
+                // $('#events-section').slideUp();
+                // $('#add-event-btn').show();
+                $('#event-form')[0].reset();
+                editingEventId = null;
+                $('#save-event-btn').html('<i class="fas fa-plus"></i> {{ __("messages.Add_Event") }}');
+                $('#save-event-btn').removeClass('btn-warning').addClass('btn-success');
+            } else {
+                // Create new event
+                eventsData.push(eventData);
+                renderNewEvents();
+                $('#event-form')[0].reset();
+            }
         });
 
         function renderNewEvents() {
             let html = '';
             eventsData.forEach((event, index) => {
                 html += `
-                    <div class="card mb-2">
+                    <div class="card mb-2" id="new-event-${index}">
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
                                     <strong>${event.name}</strong>
                                 </div>
                                 <div class="col-md-6 text-right">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="editNewEvent(${index})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeNewEvent(${index})">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -314,8 +438,15 @@
             $('#deleted_events').val(deletedEvents.join(','));
         }
 
+        function updateUpdatedEvents() {
+            $('#updated_events').val(JSON.stringify(updatedEvents));
+        }
+
         // Add events data to form submission
         $('#seller-form').on('submit', function(e) {
+            updateDeletedEvents();
+            updateUpdatedEvents();
+
             if (eventsData.length > 0) {
                 eventsData.forEach((event, index) => {
                     $(this).append(`

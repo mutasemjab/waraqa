@@ -55,13 +55,58 @@ class NoteVoucherController extends Controller
 
 
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
+        // Validation
+        $request->validate([
+            'note_voucher_type_id' => 'required|exists:note_voucher_types,id',
+            'date_note_voucher' => 'required|date',
+            'products' => 'required|array|min:1',
+            'products.*.quantity' => 'required|numeric|min:1',
+            'products.*.price' => 'required|numeric|min:0',
+            // Ensure product is identified either by ID or name
+            'products.*.product_id' => 'nullable|required_without:products.*.name|exists:products,id',
+        ]);
+
+        $noteVoucherType = NoteVoucherType::findOrFail($request->note_voucher_type_id);
+        
+        $rules = [];
+        if ($noteVoucherType->in_out_type == 1) { // Receipt
+             $rules['toWarehouse'] = 'required|exists:warehouses,id';
+             
+             $recipientType = $request->recipient_type ?? 'provider';
+             if ($recipientType === 'provider') {
+                 $rules['provider_id'] = 'required|exists:providers,id';
+             } elseif (in_array($recipientType, ['seller', 'user'])) {
+                 $rules['user_id'] = 'required|exists:users,id';
+             } elseif ($recipientType === 'event') {
+                 $rules['event_id'] = 'required|exists:events,id';
+             }
+        } elseif ($noteVoucherType->in_out_type == 2) { // Sending
+             $rules['fromWarehouse'] = 'required|exists:warehouses,id';
+             
+             $recipientType = $request->recipient_type ?? 'provider';
+             if ($recipientType === 'provider') {
+                 $rules['provider_id'] = 'required|exists:providers,id';
+             } elseif (in_array($recipientType, ['seller', 'user'])) {
+                 $rules['user_id'] = 'required|exists:users,id';
+             } elseif ($recipientType === 'event') {
+                 $rules['event_id'] = 'required|exists:events,id';
+             }
+        } elseif ($noteVoucherType->in_out_type == 3) { // Transfer
+             $rules['fromWarehouse'] = 'required|exists:warehouses,id';
+             $rules['toWarehouse'] = 'required|exists:warehouses,id|different:fromWarehouse';
+        }
+        
+        if (!empty($rules)) {
+            $request->validate($rules);
+        }
+
         $lastNoteVoucher = NoteVoucher::orderBy('id', 'desc')->first();
         $newNumber = $lastNoteVoucher ? $lastNoteVoucher->id + 1 : 1;
 
         // Get note voucher type to check if it's receipt (in_out_type = 1)
-        $noteVoucherType = NoteVoucherType::findOrFail($request['note_voucher_type_id']);
+        // $noteVoucherType = NoteVoucherType::findOrFail($request['note_voucher_type_id']); // Already fetched above
 
         // Create the note voucher
         $noteVoucherData = [

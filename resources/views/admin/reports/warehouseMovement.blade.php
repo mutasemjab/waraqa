@@ -254,24 +254,24 @@
                                     <tr>
                                         <th>{{ __('messages.date_note_voucher') }}</th>
                                         <th>{{ __('messages.Type') }}</th>
-                                        <th>{{ __('messages.Product') }}</th>
-                                        <th>{{ __('messages.Quantity') }}</th>
-                                        <th>{{ __('messages.Price') }}</th>
-                                        <th>{{ __('messages.Value') }}</th>
                                         <th>{{ __('messages.Warehouse') }}</th>
                                         <th>{{ __('messages.Provider') }}</th>
+                                        <th>{{ __('messages.Total') }} {{ __('messages.Value') }}</th>
+                                        <th class="no-print">{{ __('messages.Details') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($movements as $movement)
-                                    @foreach($movement->voucherProducts as $voucherProduct)
+                                    @php
+                                        $totalValue = 0;
+                                        foreach($movement->voucherProducts as $vp) {
+                                            $price = $vp->purchasing_price ?? ($vp->product->selling_price ?? 0);
+                                            $totalValue += ($vp->quantity ?? 0) * $price;
+                                        }
+                                    @endphp
                                     <tr>
                                         <td>{{ $movement->date_note_voucher->format('Y-m-d') }}</td>
                                         <td>{{ $movement->noteVoucherType->name ?? '-' }}</td>
-                                        <td>{{ $voucherProduct->product->name ?? '-' }}</td>
-                                        <td>{{ number_format($voucherProduct->quantity ?? 0, 2) }}</td>
-                                        <td>{{ number_format($voucherProduct->purchasing_price ?? ($voucherProduct->product->selling_price ?? 0), 2) }} <x-riyal-icon /></td>
-                                        <td>{{ number_format(($voucherProduct->quantity ?? 0) * ($voucherProduct->purchasing_price ?? ($voucherProduct->product->selling_price ?? 0)), 2) }} <x-riyal-icon /></td>
                                         <td>
                                             @if($movement->fromWarehouse)
                                             <span class="badge badge-primary">{{ $movement->fromWarehouse->name }}</span>
@@ -282,8 +282,13 @@
                                             @endif
                                         </td>
                                         <td>{{ $movement->provider->name ?? '-' }}</td>
+                                        <td>{{ number_format($totalValue, 2) }} <x-riyal-icon /></td>
+                                        <td class="no-print">
+                                            <a href="{{ route('admin.reports.warehouseMovement.show', $movement->id) }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i> {{ __('messages.Details') }}
+                                            </a>
+                                        </td>
                                     </tr>
-                                    @endforeach
                                     @endforeach
                                 </tbody>
                             </table>

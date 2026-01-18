@@ -9,7 +9,6 @@ use App\Http\Controllers\Admin\SellerController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\NoteVoucherController;
-use App\Http\Controllers\Admin\NoteVoucherTypeController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
@@ -40,7 +39,9 @@ use Spatie\Permission\Models\Permission;
 |
 */
 
-define('PAGINATION_COUNT', 11);
+if (!defined('PAGINATION_COUNT')) {
+    define('PAGINATION_COUNT', 11);
+}
 
 Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath']], function () {
 
@@ -52,7 +53,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/sellers/search', [SellerController::class, 'search'])->name('sellers.search');
         Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
         Route::get('/sellers/{sellerId}/events', [OrderController::class, 'getSellerEvents'])->name('sellers.events');
-        Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
         Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('logout', [LoginController::class, 'logout'])->name('admin.logout');
 
@@ -87,7 +87,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::resource('orders', OrderController::class);
         Route::resource('providers', ProviderController::class);
         Route::resource('warehouses', WarehouseController::class);
-        Route::resource('noteVoucherTypes', NoteVoucherTypeController::class);
         Route::resource('noteVouchers', NoteVoucherController::class);
         Route::resource('user_depts', UserDeptController::class);
         Route::resource('bookRequests', BookRequestController::class);
@@ -137,6 +136,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         // Reports
         Route::get('reports/note-vouchers', [ReportController::class, 'noteVouchersReport'])->name('admin.reports.noteVouchers');
         Route::get('reports/warehouse-movement', [WarehouseMovementReportController::class, 'index'])->name('admin.reports.warehouseMovement');
+        Route::get('reports/warehouse-movement/{id}', [WarehouseMovementReportController::class, 'show'])->name('admin.reports.warehouseMovement.show');
         Route::get('reports/orders', [OrderReportController::class, 'index'])->name('admin.reports.orders');
         Route::get('reports/sales-returns', [SalesReturnReportController::class, 'index'])->name('admin.reports.salesReturns');
         Route::get('reports/purchase-returns', [PurchaseReturnReportController::class, 'index'])->name('admin.reports.purchaseReturns');
@@ -147,6 +147,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('reports/events', [EventReportController::class, 'index'])->name('admin.reports.events');
         Route::get('reports/events/search', [EventReportController::class, 'search'])->name('admin.events.search');
         Route::get('reports/events/{eventId}/data', [EventReportController::class, 'getEventData'])->name('admin.events.report.data');
+        Route::get('reports/providers/export', 'App\Http\Controllers\Admin\ProvidersReportController@export')->name('admin.reports.providers.export');
         Route::get('reports/providers', 'App\Http\Controllers\Admin\ProvidersReportController@index')->name('admin.reports.providers.index');
         Route::get('reports/providers/search', 'App\Http\Controllers\Admin\ProvidersReportController@search')->name('admin.providers.search');
         Route::get('reports/providers/{providerId}/data', 'App\Http\Controllers\Admin\ProvidersReportController@getProviderData')->name('admin.providers.report.data');

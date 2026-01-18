@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\Event;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -58,10 +59,11 @@ class SellerController extends Controller
             'phone' => 'required|string|unique:users',
             'password' => 'required',
             'email' => 'nullable|email|unique:users',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'fcm_token' => 'nullable|string',
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
+            'commission_percentage' => 'nullable|numeric|min:0|max:100',
             'events' => 'nullable|array',
             'events.*.name' => 'required_with:events|string|max:255',
             'events.*.start_date' => 'required_with:events|date_format:Y-m-d\TH:i',
@@ -89,6 +91,12 @@ class SellerController extends Controller
 
         // Assign seller role
         $seller->assignRole('seller');
+
+        // Create warehouse for seller
+        Warehouse::create([
+            'name' => $seller->name,
+            'user_id' => $seller->id,
+        ]);
 
         // Create events if provided
         if ($request->has('events') && is_array($request->events)) {
@@ -150,10 +158,11 @@ class SellerController extends Controller
             'password' => 'nullable',
             'phone' => 'sometimes|string|unique:users,phone,' . $id,
             'email' => 'nullable|email|unique:users,email,' . $id,
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'fcm_token' => 'nullable|string',
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
+            'commission_percentage' => 'nullable|numeric|min:0|max:100',
             'events' => 'nullable|array',
             'events.*.name' => 'required_with:events|string|max:255',
             'events.*.start_date' => 'required_with:events|date_format:Y-m-d\TH:i',
@@ -168,7 +177,7 @@ class SellerController extends Controller
                 ->withInput();
         }
 
-        $userData = $request->except('photo', 'password', 'events', 'deleted_events');
+        $userData = $request->except('photo', 'password', 'events', 'deleted_events', 'updated_events');
 
         // Handle photo upload
         if ($request->has('photo')) {
@@ -181,6 +190,23 @@ class SellerController extends Controller
         }
 
         $seller->update($userData);
+
+        // Handle updated events
+        if ($request->has('updated_events') && !empty($request->updated_events)) {
+            $updatedEvents = json_decode($request->updated_events, true);
+            if (is_array($updatedEvents)) {
+                foreach ($updatedEvents as $eventData) {
+                    if (isset($eventData['id'])) {
+                        Event::where('id', $eventData['id'])->where('user_id', $seller->id)->update([
+                            'name' => $eventData['name'],
+                            'start_date' => $eventData['start_date'],
+                            'end_date' => $eventData['end_date'],
+                            'commission_percentage' => $eventData['commission_percentage'],
+                        ]);
+                    }
+                }
+            }
+        }
 
         // Handle new events
         if ($request->has('events') && is_array($request->events)) {
@@ -248,7 +274,8 @@ class SellerController extends Controller
             ->map(function ($seller) {
                 return [
                     'id' => $seller->id,
-                    'text' => $seller->name
+                    'text' => $seller->name,
+                    'commission_percentage' => $seller->commission_percentage
                 ];
             });
 

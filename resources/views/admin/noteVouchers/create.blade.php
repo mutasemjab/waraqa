@@ -149,6 +149,7 @@
                             placeholder="Search..."
                             limit="10"
                             required="true"
+                            excludeField="fromWarehouse"
                         />
                     </div>
                 @endif
@@ -221,22 +222,31 @@ function setRedirect(value) {
     function initializeProductSearch() {
         $('.product-search').autocomplete({
             source: function(request, response) {
-                // Validation: Check if warehouse is selected for outgoing and transfer vouchers
                 const noteVoucherTypeId = {{ $note_voucher_type->in_out_type }};
-                if ((noteVoucherTypeId === 2 || noteVoucherTypeId === 3)) {
-                    const warehouseInput = $('input[name="fromWarehouse"]').closest('.col-md-6').find('input[type="hidden"]');
-                    const warehouseId = warehouseInput.val() || warehouseInput.data('value');
+                let warehouseId = null;
 
-                    if (!warehouseId) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: '{{ __("messages.warning") }}',
-                            text: '{{ __("messages.select_warehouse_first") }}',
-                            confirmButtonText: '{{ __("messages.confirm") }}'
-                        });
-                        response([]);
-                        return;
-                    }
+                // Determine which warehouse to check based on voucher type
+                if (noteVoucherTypeId === 1) { // Entry: Check To Warehouse
+                     const warehouseInput = $('#toWarehouse');
+                     warehouseId = warehouseInput.val();
+                } else { // Exit/Transfer: Check From Warehouse
+                     const warehouseInput = $('#fromWarehouse');
+                     warehouseId = warehouseInput.val();
+                }
+
+                // Warn if warehouse is not selected (For all types to be safe, or just 2/3)
+                // We enforce checking warehouse for correct stock visibility
+                if (!warehouseId) {
+                     // Only strictly block search for internal/outgoing. For entry, maybe optional? 
+                     // But user wants "available quantity" checks, so we need a warehouse.
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '{{ __("messages.warning") }}',
+                        text: '{{ __("messages.select_warehouse_first") }}',
+                        confirmButtonText: '{{ __("messages.confirm") }}'
+                    });
+                    response([]);
+                    return;
                 }
 
                 $.ajax({
@@ -274,21 +284,26 @@ function setRedirect(value) {
 
                     // Fill product details
                     selectedRow.find('.product-id').val(ui.item.id);
-                    selectedRow.find('.product-search').val(ui.item.label); // Fill product name
-                    selectedRow.find('.product-price').val(ui.item.selling_price);
+                    selectedRow.find('.product-search').val(ui.item.label);
+                    selectedRow.find('.product-price').val(ui.item.price);
                     selectedRow.find('.product-tax').val(ui.item.tax);
 
                     // Fetch available quantity
                     let url = '{{ route("products.available-quantity", ":productId") }}'.replace(':productId', ui.item.id);
 
-                    // If this is an outgoing or transfer voucher, add warehouse_id filter
                     const noteVoucherTypeId = {{ $note_voucher_type->in_out_type }};
-                    if ((noteVoucherTypeId === 2 || noteVoucherTypeId === 3)) {
-                        const warehouseInput = $('input[name="fromWarehouse"]').closest('.col-md-6').find('input[type="hidden"]');
-                        const warehouseId = warehouseInput.val() || warehouseInput.data('value');
-                        if (warehouseId) {
-                            url += '?warehouse_id=' + warehouseId;
-                        }
+                    let warehouseId = null;
+
+                    if (noteVoucherTypeId === 1) {
+                         const warehouseInput = $('#toWarehouse');
+                         warehouseId = warehouseInput.val();
+                    } else {
+                         const warehouseInput = $('#fromWarehouse');
+                         warehouseId = warehouseInput.val();
+                    }
+
+                    if (warehouseId) {
+                        url += '?warehouse_id=' + warehouseId;
                     }
 
                     $.ajax({
@@ -297,6 +312,10 @@ function setRedirect(value) {
                         success: function(data) {
                             console.log('Available quantity fetched:', data.available_quantity);
                             selectedRow.data('available-quantity', data.available_quantity);
+                            
+                            // Visual feedback for available quantity
+                            // selectedRow.find('.product-quantity').attr('placeholder', 'Max: ' + data.available_quantity);
+                            
                             attachQuantityListener(selectedRow);
                         },
                         error: function(xhr) {
@@ -304,53 +323,49 @@ function setRedirect(value) {
                         }
                     });
 
-                    return false; // Prevent default behavior
+                    return false;
                 }
             }
         });
     }
 
     function attachQuantityListener(row) {
-        // Only validate quantity for outgoing (type 2) and transfer (type 3) vouchers
         const noteVoucherTypeId = {{ $note_voucher_type->in_out_type }};
-
-        if (noteVoucherTypeId !== 2 && noteVoucherTypeId !== 3) {
-            return; // Don't validate for receipt type (type 1)
-        }
-
         const quantityInput = row.find('.product-quantity');
 
-        // Remove existing listener using namespace
+        // Remove existing listener
         quantityInput.off('input.quantity-validation');
 
-        // Attach new listener with namespace
+        // Attach new listener
         quantityInput.on('input.quantity-validation', function() {
-            const enteredQuantity = parseInt($(this).val()) || 0;
-            const availableQuantity = row.data('available-quantity');
+            const enteredQuantity = parseFloat($(this).val()) || 0;
+            const availableQuantity = parseFloat(row.data('available-quantity'));
 
-            if (availableQuantity === undefined) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: '{{ __("messages.warning") }}',
-                    text: '{{ __("messages.select_warehouse_first") }}',
-                    confirmButtonText: '{{ __("messages.confirm") }}'
-                });
-                $(this).val('');
-                return;
+            if (isNaN(availableQuantity)) {
+                 // Optimization: Only warn if we really expect an available quantity (i.e. product selected)
+                 // For now, silent return or console log
+                 return;
             }
 
-            if (enteredQuantity > availableQuantity) {
-                const message = '{{ __("messages.quantity_exceeds_available") }}'
-                    .replace(':entered', enteredQuantity)
-                    .replace(':available', availableQuantity);
+            // Validation Logic
+            // We STRICTLY enforce quantity check for Type 2 (Exit) and Type 3 (Transfer)
+            // For Type 1 (Entry), checking "Entered < Available" is illogical (we are adding stock), 
+            // so we skip the block, unless specifically asked otherwise.
+            
+            if (noteVoucherTypeId === 2 || noteVoucherTypeId === 3) {
+                if (enteredQuantity > availableQuantity) {
+                    const message = '{{ __("messages.quantity_exceeds_available") }}'
+                        .replace(':entered', enteredQuantity)
+                        .replace(':available', availableQuantity);
 
-                Swal.fire({
-                    icon: 'error',
-                    title: '{{ __("messages.error") }}',
-                    text: message,
-                    confirmButtonText: '{{ __("messages.confirm") }}'
-                });
-                $(this).val(availableQuantity);
+                    Swal.fire({
+                        icon: 'error',
+                        title: '{{ __("messages.error") }}',
+                        text: message,
+                        confirmButtonText: '{{ __("messages.confirm") }}'
+                    });
+                    $(this).val(availableQuantity);
+                }
             }
         });
     }

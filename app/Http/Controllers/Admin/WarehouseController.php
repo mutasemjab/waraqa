@@ -110,4 +110,12 @@ class WarehouseController extends Controller
             return redirect()->back()->with(['error' => 'Something went wrong: ' . $ex->getMessage()]);
         }
     }
+    public function show($id)
+    {
+        $warehouse = Warehouse::findOrFail($id);
+        $movements = $warehouse->movements()->paginate(10);
+        
+        return view('admin.warehouses.show', compact('warehouse', 'movements'));
+    }
+
 }

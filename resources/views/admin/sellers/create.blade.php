@@ -76,6 +76,12 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="commission_percentage">{{ __('messages.Default_Commission_Percentage') }}</label>
+                            <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" value="{{ old('commission_percentage') }}" min="0" max="100" step="0.01" placeholder="0.00">
+                            <small class="form-text text-muted">{{ __('messages.commission_percentage_hint') }}</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="photo">{{ __('messages.Photo') }}</label>
                             <div class="custom-file">
                                 <input type="file" class="custom-file-input" id="photo" name="photo">
@@ -132,7 +138,7 @@
 
                 <div class="form-group">
                     <label for="commission_percentage">{{ __('messages.Commission_Percentage') }} <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" min="0" max="100" step="0.01" required>
+                    <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" min="0" max="100" step="1" required>
                 </div>
 
                 <div class="form-group text-center mt-4">
@@ -169,6 +175,7 @@
 
         // Events handling
         let eventsData = [];
+        let editingEventIndex = null;
 
         // Show events section
         $('#add-event-btn').on('click', function() {
@@ -181,23 +188,67 @@
             $('#events-section').slideUp();
             $('#add-event-btn').show();
             $('#event-form')[0].reset();
+            editingEventIndex = null;
+            $('#save-event-btn').html('<i class="fas fa-plus"></i> {{ __("messages.Add_Event") }}');
+            $('#save-event-btn').removeClass('btn-warning').addClass('btn-success');
         });
 
-        // Save event
+        // Edit event
+        window.editEvent = function(index) {
+            const event = eventsData[index];
+            if (event) {
+                editingEventIndex = index;
+                $('#event_name').val(event.name);
+                $('#start_date').val(event.start_date);
+                $('#end_date').val(event.end_date);
+                $('#commission_percentage').val(event.commission_percentage);
+                $('#save-event-btn').html('<i class="fas fa-check"></i> {{ __("messages.Update_Event") }}');
+                $('#save-event-btn').removeClass('btn-success').addClass('btn-warning');
+                $('#events-section').slideDown();
+                $('#add-event-btn').hide();
+                // Scroll to events section
+                $('html, body').animate({
+                    scrollTop: $('#events-section').offset().top - 100
+                }, 500);
+            }
+        };
+
+        // Save event (new or edit)
         $('#save-event-btn').on('click', function() {
-            if ($('#event-form')[0].checkValidity() === false) {
+            let name = $('#event_name').val().trim();
+            let startDate = $('#start_date').val().trim();
+            let endDate = $('#end_date').val().trim();
+            let commission = $('#commission_percentage').val().trim();
+
+            // Check if all fields are filled
+            if (!name || !startDate || !endDate || !commission) {
                 alert('{{ __('messages.Please_fill_all_required_fields') }}');
                 return;
             }
 
+            // Check if end_date is after start_date
+            if (new Date(endDate) <= new Date(startDate)) {
+                alert('{{ __('messages.End_Date') }} يجب أن يكون بعد {{ __('messages.Start_Date') }}');
+                return;
+            }
+
             let eventData = {
-                name: $('#event_name').val(),
-                start_date: $('#start_date').val(),
-                end_date: $('#end_date').val(),
-                commission_percentage: $('#commission_percentage').val()
+                name: name,
+                start_date: startDate,
+                end_date: endDate,
+                commission_percentage: commission
             };
 
-            eventsData.push(eventData);
+            if (editingEventIndex !== null) {
+                // Update existing event
+                eventsData[editingEventIndex] = eventData;
+                editingEventIndex = null;
+                $('#save-event-btn').html('<i class="fas fa-plus"></i> {{ __("messages.Add_Event") }}');
+                $('#save-event-btn').removeClass('btn-warning').addClass('btn-success');
+            } else {
+                // Add new event
+                eventsData.push(eventData);
+            }
             renderEvents();
             $('#event-form')[0].reset();
         });
@@ -213,6 +264,9 @@
                                     <strong>${event.name}</strong>
                                 </div>
                                 <div class="col-md-6 text-right">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="editEvent(${index})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeEvent(${index})">
                                         <i class="fas fa-trash"></i>
                                     </button>

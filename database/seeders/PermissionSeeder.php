@@ -93,12 +93,6 @@ class PermissionSeeder extends Seeder
             'warehouse-edit',
             'warehouse-delete',
 
-            // Note Voucher Type Management
-            'noteVoucherType-table',
-            'noteVoucherType-add',
-            'noteVoucherType-edit',
-            'noteVoucherType-delete',
-
             // Note Voucher Management
             'noteVoucher-table',
             'noteVoucher-add',

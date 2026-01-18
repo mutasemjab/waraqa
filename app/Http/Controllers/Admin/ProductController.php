@@ -70,7 +70,7 @@ class ProductController extends Controller
             'provider_id'   => 'nullable|exists:providers,id',
             'selling_price' => 'required|numeric|min:0',
             'tax'           => 'nullable|numeric|min:0',
-            'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
         ]);
 
         $photoPath = null;
@@ -125,7 +125,7 @@ class ProductController extends Controller
             'provider_id'   => 'nullable|exists:providers,id',
             'selling_price' => 'required|numeric|min:0',
             'tax'           => 'nullable|numeric|min:0',
-            'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'photo'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
         ]);
 
         $photoPath = $product->photo;
@@ -162,22 +162,36 @@ class ProductController extends Controller
             ], 400);
         }
 
-        // Build base query for getting input (receipt) quantities
+        // 1. Calculate Total Input:
+        //    - Entry Vouchers (Type 1) to this warehouse
+        //    - Transfer Vouchers (Type 3) to this warehouse
         $inputQuery = DB::table('voucher_products')
             ->join('note_vouchers', 'voucher_products.note_voucher_id', '=', 'note_vouchers.id')
             ->join('note_voucher_types', 'note_vouchers.note_voucher_type_id', '=', 'note_voucher_types.id')
             ->where('voucher_products.product_id', $productId)
-            ->where('note_voucher_types.in_out_type', 1) // Input/Receipt vouchers
-            ->where('note_vouchers.to_warehouse_id', $warehouseId);
+            ->where(function($query) use ($warehouseId) {
+                // Type 1 (Entry) to this warehouse
+                $query->where(function($q) use ($warehouseId) {
+                    $q->where('note_voucher_types.in_out_type', 1)
+                      ->where('note_vouchers.to_warehouse_id', $warehouseId);
+                })
+                // OR Type 3 (Transfer) TO this warehouse
+                ->orWhere(function($q) use ($warehouseId) {
+                    $q->where('note_voucher_types.in_out_type', 3)
+                      ->where('note_vouchers.to_warehouse_id', $warehouseId);
+                });
+            });
 
         $totalInput = $inputQuery->sum('voucher_products.quantity');
 
-        // Build base query for getting output quantities
+        // 2. Calculate Total Output:
+        //    - Exit Vouchers (Type 2) from this warehouse
+        //    - Transfer Vouchers (Type 3) from this warehouse
         $outputQuery = DB::table('voucher_products')
             ->join('note_vouchers', 'voucher_products.note_voucher_id', '=', 'note_vouchers.id')
             ->join('note_voucher_types', 'note_vouchers.note_voucher_type_id', '=', 'note_voucher_types.id')
             ->where('voucher_products.product_id', $productId)
-            ->whereIn('note_voucher_types.in_out_type', [2, 3]) // Output and Transfer vouchers
+            ->whereIn('note_voucher_types.in_out_type', [2, 3]) // Exit or Transfer
             ->where('note_vouchers.from_warehouse_id', $warehouseId);
 
         // Exclude the current voucher if provided (useful when editing)

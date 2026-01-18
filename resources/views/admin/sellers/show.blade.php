@@ -83,6 +83,16 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <th>{{ __('messages.Default_Commission_Percentage') }}</th>
+                                    <td>
+                                        @if($seller->commission_percentage)
+                                        <span class="badge badge-primary">{{ $seller->commission_percentage }}%</span>
+                                        @else
+                                        <span class="text-muted">{{ __('messages.Not_Available') }}</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
                                     <th>{{ __('messages.Created_At') }}</th>
                                     <td>{{ $seller->created_at->format('Y-m-d H:i:s') }}</td>
                                 </tr>
@@ -95,6 +105,41 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Seller Events -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ __('messages.Events') ?? 'الفعاليات' }}</h6>
+        </div>
+        <div class="card-body">
+            @if($seller->events && $seller->events->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>{{ __('messages.Event_Name') ?? 'اسم الفعالية' }}</th>
+                            <th>{{ __('messages.Start_Date') ?? 'تاريخ البدء' }}</th>
+                            <th>{{ __('messages.End_Date') ?? 'تاريخ الانتهاء' }}</th>
+                            <th>{{ __('messages.Commission_Percentage') ?? 'نسبة العمولة' }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($seller->events as $event)
+                        <tr>
+                            <td>{{ $event->name }}</td>
+                            <td>{{ \Carbon\Carbon::parse($event->start_date)->format('Y-m-d H:i') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($event->end_date)->format('Y-m-d H:i') }}</td>
+                            <td>{{ $event->commission_percentage }}%</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <p class="text-center text-muted">{{ __('messages.No_Events_Found') ?? 'لا توجد فعاليات مضافة لهذا البائع' }}</p>
+            @endif
         </div>
     </div>
 </div>

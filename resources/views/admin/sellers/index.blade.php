@@ -28,6 +28,7 @@
                             <th>{{ __('messages.Name') }}</th>
                             <th>{{ __('messages.Phone') }}</th>
                             <th>{{ __('messages.Email') }}</th>
+                            <th>{{ __('messages.Commission') }}</th>
                             <th>{{ __('messages.Status') }}</th>
                             <th>{{ __('messages.Actions') }}</th>
                         </tr>
@@ -46,6 +47,13 @@
                             <td>{{ $seller->name }}</td>
                             <td> {{ $seller->phone }}</td>
                             <td>{{ $seller->email }}</td>
+                            <td>
+                                @if($seller->commission_percentage)
+                                <span class="badge badge-info">{{ $seller->commission_percentage }}%</span>
+                                @else
+                                <span class="text-muted">-</span>
+                                @endif
+                            </td>
                             <td>
                                 @if($seller->activate == 1)
                                 <span class="badge badge-success">{{ __('messages.Active') }}</span>

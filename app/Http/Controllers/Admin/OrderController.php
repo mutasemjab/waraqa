@@ -129,16 +129,26 @@ class OrderController extends Controller
             // Calculate totals
             foreach ($request->products as $productData) {
                 $product = Product::find($productData['id']);
-                $quantity = $productData['quantity'];
-                $sellingPrice = $product->selling_price; // السعر مع الضريبة
-                $taxPercentage = $product->tax;
-
-                // حساب السعر بدون ضريبة من السعر مع الضريبة
-                $unitPriceBeforeTax = $sellingPrice / (1 + ($taxPercentage / 100));
-                $totalPriceBeforeTax = $unitPriceBeforeTax * $quantity;
-                $taxValue = ($totalPriceBeforeTax * $taxPercentage) / 100;
-                $totalPriceAfterTax = $totalPriceBeforeTax + $taxValue;
+                $quantity = (int)$productData['quantity'];
                 
+                // Tax Inclusive Pricing Logic
+                // 1. Determine the canonical Total Price After Tax (what the user pays)
+                $sellingPrice = (float)$product->selling_price;
+                $totalPriceAfterTax = round($sellingPrice * $quantity, 2);
+
+                // 2. Back-calculate the Pre-Tax Total
+                $taxPercentage = (float)$product->tax;
+                $taxDivisor = 1 + ($taxPercentage / 100);
+                
+                // We round the pre-tax total to 2 decimals as this is a financial record
+                $totalPriceBeforeTax = round($totalPriceAfterTax / $taxDivisor, 2);
+                
+                // 3. Calculate Tax Value as the difference to ensure sum matches Total
+                $taxValue = round($totalPriceAfterTax - $totalPriceBeforeTax, 2);
+                
+                // 4. Derive Unit Price (Before Tax) for reference
+                $unitPriceBeforeTax = round($totalPriceBeforeTax / $quantity, 2);
+
                 $totalTaxes += $taxValue;
                 $totalPrices += $totalPriceAfterTax;
                 
@@ -153,8 +163,12 @@ class OrderController extends Controller
                 ];
             }
 
-            $paidAmount = $request->paid_amount ?? 0;
-            $remainingAmount = $totalPrices - $paidAmount;
+            // Round the accumulators to ensure precision
+            $totalTaxes = round($totalTaxes, 2);
+            $totalPrices = round($totalPrices, 2);
+
+            $paidAmount = round($request->paid_amount ?? 0, 2);
+            $remainingAmount = round($totalPrices - $paidAmount, 2);
 
             // Create order
             $order = Order::create([
@@ -266,16 +280,19 @@ public function update(Request $request, Order $order)
         // Calculate totals
         foreach ($request->products as $productData) {
             $product = Product::find($productData['id']);
-            $quantity = $productData['quantity'];
-            $sellingPrice = $product->selling_price; // السعر مع الضريبة
-            $taxPercentage = $product->tax;
-
-            // حساب السعر بدون ضريبة من السعر مع الضريبة
-            $unitPriceBeforeTax = $sellingPrice / (1 + ($taxPercentage / 100));
-            $totalPriceBeforeTax = $unitPriceBeforeTax * $quantity;
-            $taxValue = ($totalPriceBeforeTax * $taxPercentage) / 100;
-            $totalPriceAfterTax = $totalPriceBeforeTax + $taxValue;
+            $quantity = (int)$productData['quantity'];
             
+            // Tax Inclusive Pricing Logic
+            $sellingPrice = (float)$product->selling_price;
+            $totalPriceAfterTax = round($sellingPrice * $quantity, 2);
+
+            $taxPercentage = (float)$product->tax;
+            $taxDivisor = 1 + ($taxPercentage / 100);
+            
+            $totalPriceBeforeTax = round($totalPriceAfterTax / $taxDivisor, 2);
+            $taxValue = round($totalPriceAfterTax - $totalPriceBeforeTax, 2);
+            $unitPriceBeforeTax = round($totalPriceBeforeTax / $quantity, 2);
+
             $totalTaxes += $taxValue;
             $totalPrices += $totalPriceAfterTax;
             
@@ -290,8 +307,12 @@ public function update(Request $request, Order $order)
             ];
         }
 
-        $paidAmount = $request->paid_amount ?? 0;
-        $remainingAmount = $totalPrices - $paidAmount;
+        // Round accumulators
+        $totalTaxes = round($totalTaxes, 2);
+        $totalPrices = round($totalPrices, 2);
+
+        $paidAmount = round($request->paid_amount ?? 0, 2);
+        $remainingAmount = round($totalPrices - $paidAmount, 2);
 
         // Update order
         $order->update([
@@ -300,7 +321,7 @@ public function update(Request $request, Order $order)
             'total_prices' => $totalPrices,
             'paid_amount' => $paidAmount,
             'remaining_amount' => $remainingAmount,
-            'payment_status' => $remainingAmount > 0 ? 2 : 1,
+            'payment_status' => $remainingAmount <= 0 ? 1 : 2, // Strict check on rounded value
             'order_date' => $request->order_date,
             'note' => $request->note,
             'user_id' => $request->user_id,
@@ -390,8 +411,8 @@ public function update(Request $request, Order $order)
  * Get seller events with valid dates (API endpoint)
  *
  * @param int $sellerId
- * @return \Illuminate\Http\Response
- */
+     * @return \Illuminate\Http\JsonResponse
+     */
 public function getSellerEvents($sellerId)
 {
     $seller = User::findOrFail($sellerId);

@@ -16,13 +16,15 @@ class SearchController extends Controller
             $limit = (int)$request->get('limit', 5);
             $displayColumn = $request->get('displayColumn', 'name');
             $filter = $request->get('filter', '');
+            $exclude = $request->get('exclude', '');
 
             Log::info('SearchController - Input:', [
                 'term' => $term,
                 'model' => $model,
                 'limit' => $limit,
                 'displayColumn' => $displayColumn,
-                'filter' => $filter
+                'filter' => $filter,
+                'exclude' => $exclude
             ]);
 
             if (!$model || !class_exists($model)) {
@@ -44,6 +46,15 @@ class SearchController extends Controller
                     $rolesString = substr($filter, 11); // Remove 'with_roles:' prefix
                     $roles = array_map('trim', explode(',', $rolesString));
                     $query->role($roles);
+                }
+            }
+
+            // Apply exclude filter
+            if ($exclude) {
+                $excludeIds = is_array($exclude) ? $exclude : explode(',', $exclude);
+                $excludeIds = array_filter(array_map('trim', $excludeIds));
+                if (!empty($excludeIds)) {
+                    $query->whereNotIn('id', $excludeIds);
                 }
             }
 

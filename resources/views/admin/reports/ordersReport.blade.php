@@ -247,6 +247,7 @@
                                         <th>{{ __('messages.total_taxes') }}</th>
                                         <th>{{ __('messages.paid_amount') }}</th>
                                         <th>{{ __('messages.remaining_amount') }}</th>
+                                        <th class="no-print">{{ __('messages.actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -275,6 +276,11 @@
                                         <td>{{ number_format($order->total_taxes ?? 0, 2) }} <x-riyal-icon /></td>
                                         <td>{{ number_format($order->paid_amount ?? 0, 2) }} <x-riyal-icon /></td>
                                         <td>{{ number_format($order->remaining_amount ?? 0, 2) }} <x-riyal-icon /></td>
+                                        <td class="no-print">
+                                            <a href="{{ route('orders.show', $order->id) }}" class="btn btn-sm btn-info" title="{{ __('messages.view_details') }}">
+                                                <i class="fas fa-eye"></i> {{ __('messages.details') }}
+                                            </a>
+                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -285,6 +291,7 @@
                                         <td>{{ number_format($statistics['total_taxes'], 2) }} <x-riyal-icon /></td>
                                         <td>{{ number_format($statistics['total_paid'], 2) }} <x-riyal-icon /></td>
                                         <td>{{ number_format($statistics['total_remaining'], 2) }} <x-riyal-icon /></td>
+                                        <td class="no-print"></td>
                                     </tr>
                                 </tfoot>
                             </table>

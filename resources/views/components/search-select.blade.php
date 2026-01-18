@@ -8,6 +8,7 @@
     'value' => null,
     'displayColumn' => 'name',
     'filter' => null,
+    'excludeField' => null,
 ])
 
 @php
@@ -107,6 +108,7 @@
     const model = '{{ addslashes($model) }}';
     const limit = {{ $limit }};
     const apiUrl = '{{ route("search.items") }}';
+    const excludeField = '{{ $excludeField }}';
 
     const wrapper = document.getElementById('wrapper_' + uniqueId);
     const input = document.getElementById('input_' + uniqueId);
@@ -195,6 +197,14 @@
 
         if (filter) {
             url += `&filter=${encodeURIComponent(filter)}`;
+        }
+
+        // Add exclude parameter if excludeField is provided
+        if (excludeField) {
+            const excludeInput = document.getElementById(excludeField);
+            if (excludeInput && excludeInput.value) {
+                url += `&exclude=${encodeURIComponent(excludeInput.value)}`;
+            }
         }
 
         fetch(url)

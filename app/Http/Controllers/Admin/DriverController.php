@@ -47,18 +47,18 @@ class DriverController extends Controller
             'phone' => 'required|string|unique:drivers',
             'email' => 'nullable|email|unique:drivers',
             'password' => 'required|string|min:6',
-          
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'photo_of_id' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            
+
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'photo_of_id' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+
             // Car details
             'seats' => 'nullable|integer|min:1|max:20',
-            'photo_of_car' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'photo_of_car' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'plate_number' => 'nullable|string|max:255',
-            
+
             // Documents
-            'driving_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'crimical_record_certificate' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'driving_license' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'crimical_record_certificate' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
         ]);
 
         if ($validator->fails()) {

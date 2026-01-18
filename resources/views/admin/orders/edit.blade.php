@@ -153,14 +153,34 @@
                                                 <span><x-riyal-icon /> <span id="grand-total">{{ number_format($order->total_prices, 2) }}</span></span>
                                             </div>
                                             <hr class="my-2">
-                                            <div class="d-flex justify-content-between align-items-center" id="commission-row" style="display:none;">
-                                                <span>{{ __('messages.commission_percentage') ?? 'Commission %' }}:</span>
-                                                <span><span id="commission-percentage">0</span>%</span>
+                                            <div id="event-commission-container" style="display:none;" class="mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>{{ __('messages.event_commission') ?? 'Event Commission' }}:</span>
+                                                    <span><span id="event-commission-percentage">0</span>%</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center text-info">
+                                                    <small>{{ __('messages.commission_value') ?? 'Value' }}:</small>
+                                                    <small><x-riyal-icon /> <span id="event-commission-value">0.00</span></small>
+                                                </div>
                                             </div>
-                                            <div class="d-flex justify-content-between align-items-center text-success" id="commission-value-row" style="display:none;">
-                                                <strong>{{ __('messages.commission_value') ?? 'Commission Value' }}:</strong>
-                                                <strong><x-riyal-icon /> <span id="commission-value">0.00</span></strong>
+
+                                            <div id="seller-commission-container" style="display:none;" class="mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>{{ __('messages.seller_commission') }}:</span>
+                                                    <span><span id="seller-commission-percentage">0</span>%</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center text-info">
+                                                    <small>{{ __('messages.commission_value') ?? 'Value' }}:</small>
+                                                    <small><x-riyal-icon /> <span id="seller-commission-value">0.00</span></small>
+                                                </div>
                                             </div>
+
+                                            <div id="total-commission-container" style="display:none;"
+                                                class="d-flex justify-content-between align-items-center text-success border-top pt-1 mt-1">
+                                                <strong>{{ __('messages.total_commission') ?? 'Total Commission' }}:</strong>
+                                                <strong><x-riyal-icon /> <span id="total-commission-value">0.00</span></strong>
+                                            </div>
+
                                             <hr class="my-2" id="commission-divider" style="display:none;">
                                             <div class="d-flex justify-content-between text-muted align-items-center">
                                                 <span>{{ __('messages.remaining') }}:</span>
@@ -199,6 +219,7 @@ $(document).ready(function() {
     let buyerType = 'seller'; // Default type
     let allEventsData = {};
     let eventCommissionData = {};
+    let currentSellerCommission = {{ $order->user ? ($order->user->commission_percentage ?? 0) : 0 }};
 
     // Detect buyer type based on current user role
     @php
@@ -299,8 +320,12 @@ $(document).ready(function() {
                     const warehouseId = warehouseInput.val() || warehouseInput.data('value');
 
                     let quantityUrl = '{{ route("products.available-quantity", ":productId") }}'.replace(':productId', productId);
-                    if (warehouseId) {
-                        quantityUrl += '?warehouse_id=' + warehouseId;
+                    let params = [];
+                    if (warehouseId) params.push('warehouse_id=' + warehouseId);
+                    if (orderNoteVoucherId) params.push('exclude_voucher_id=' + orderNoteVoucherId);
+                    
+                    if (params.length > 0) {
+                        quantityUrl += '?' + params.join('&');
                     }
 
                     $.ajax({
@@ -437,6 +462,11 @@ $(document).ready(function() {
         attachQuantityListener($(this));
     });
 
+    // Update commission on load if no event but seller commission exists
+    if (!currentEventId && currentSellerCommission > 0) {
+        updateCommissionBox();
+    }
+
     // Paid amount change with validation
     $('#paid_amount').on('input', function() {
         const paidAmount = parseFloat($(this).val()) || 0;
@@ -483,7 +513,7 @@ $(document).ready(function() {
                 if (data.length > 0) {
                     let html = '';
                     data.forEach(function(user) {
-                        html += `<div class="p-2 border-bottom user-item" data-id="${user.id}" data-text="${user.text}" style="cursor: pointer;">
+                        html += `<div class="p-2 border-bottom user-item" data-id="${user.id}" data-text="${user.text}" data-commission="${user.commission_percentage}" style="cursor: pointer;">
                                 ${user.text}
                             </div>`;
                     });
@@ -492,9 +522,15 @@ $(document).ready(function() {
                     $('.user-item').on('click', function() {
                         const id = $(this).data('id');
                         const text = $(this).data('text');
+                        const commission = parseFloat($(this).data('commission')) || 0;
+
                         $('#user_id').val(id);
                         $('#user_search').val(text);
                         dropdown.hide();
+
+                        // Update seller commission
+                        currentSellerCommission = commission;
+                        updateCommissionBox();
 
                         if (buyerType === 'seller') {
                             loadSellerEvents(id);
@@ -527,6 +563,7 @@ $(document).ready(function() {
         $('#user_id').val('');
         $('#user_search').val('');
         $('#users-dropdown').html('').hide();
+        currentSellerCommission = 0;
         clearEvents();
     });
 
@@ -559,34 +596,57 @@ $(document).ready(function() {
 
     // Update commission box with live calculations
     const updateCommissionBox = function() {
-        if (!eventCommissionData.id) return;
+        let eventPercentage = eventCommissionData.percentage || 0;
+        let sellerPercentage = 0;
 
-        const percentage = eventCommissionData.percentage;
+        if (buyerType === 'seller' && currentSellerCommission > 0) {
+            sellerPercentage = currentSellerCommission;
+        }
 
-        // Calculate grand total
         let subtotal = 0;
-        let totalTax = 0;
-
+        
+        // Calculate grand total
         $('.product-row').each(function() {
             const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
-            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
             const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
-
-            const lineSubtotal = priceWithoutTax * quantity;
-            const lineTax = (lineSubtotal * tax) / 100;
-
-            subtotal += lineSubtotal;
-            totalTax += lineTax;
+            subtotal += priceWithoutTax * quantity;
         });
 
-        const grandTotal = subtotal + totalTax;
-        const commissionValue = (grandTotal * percentage) / 100;
+        let totalCommission = 0;
+        let hasCommission = false;
 
-        $('#commission-percentage').text(percentage.toFixed(2));
-        $('#commission-value').text(commissionValue.toFixed(2));
+        // Handle Event Commission
+        if (eventPercentage > 0) {
+            const eventValue = (subtotal * eventPercentage) / 100;
+            $('#event-commission-percentage').text(eventPercentage.toFixed(2));
+            $('#event-commission-value').text(eventValue.toFixed(2));
+            $('#event-commission-container').show();
+            totalCommission += eventValue;
+            hasCommission = true;
+        } else {
+            $('#event-commission-container').hide();
+        }
 
-        // Show commission rows
-        $('#commission-row, #commission-value-row, #commission-divider').show();
+        // Handle Seller Commission
+        if (sellerPercentage > 0) {
+            const sellerValue = (subtotal * sellerPercentage) / 100;
+            $('#seller-commission-percentage').text(sellerPercentage.toFixed(2));
+            $('#seller-commission-value').text(sellerValue.toFixed(2));
+            $('#seller-commission-container').show();
+            totalCommission += sellerValue;
+            hasCommission = true;
+        } else {
+            $('#seller-commission-container').hide();
+        }
+
+        if (hasCommission) {
+            $('#total-commission-value').text(totalCommission.toFixed(2));
+            $('#total-commission-container').show();
+            $('#commission-divider').show();
+        } else {
+            $('#total-commission-container').hide();
+            $('#commission-divider').hide();
+        }
     };
 
     function loadSellerEvents(sellerId, selectedEventId = null) {
@@ -642,6 +702,9 @@ $(document).ready(function() {
                             percentage: parseFloat(eventData.commission_percentage)
                         };
                         updateCommissionBox();
+                    } else {
+                        // If no event is selected (deselected or not found), check if we should fall back to seller commission
+                        updateCommissionBox();
                     }
                 } else {
                     options = '<option value="">{{ __("messages.no_valid_events") }}</option>';
@@ -665,7 +728,12 @@ $(document).ready(function() {
         $('#event-info').html('');
         allEventsData = {};
         eventCommissionData = {};
-        $('#commission-row, #commission-value-row, #commission-divider').hide();
+        allEventsData = {};
+        eventCommissionData = {};
+        // clearEvents might be called when user changes. We should update commission box to hide or show seller commission.
+        // But if user changed, currentSellerCommission should be valid for new user?
+        // Actually clearEvents is used when changing type to Customer.
+        updateCommissionBox();
     }
 
     $(document).on('change', '#user_id', function() {
@@ -683,8 +751,12 @@ $(document).ready(function() {
 
         if (!eventId || !allEventsData[eventId]) {
             eventCommissionData = {};
-            $('#commission-row, #commission-value-row, #commission-divider').hide();
+        if (!eventId || !allEventsData[eventId]) {
+            eventCommissionData = {};
+            // Fallback to seller commission
+            updateCommissionBox();
             return;
+        }
         }
 
         // Get event data from stored events
@@ -700,6 +772,52 @@ $(document).ready(function() {
     if (currentUserId) {
         loadSellerEvents(currentUserId, currentEventId);
     }
+    
+    // Fetch available quantities for existing products
+    function fetchExistingQuantities() {
+        const warehouseInput = $('input[name="from_warehouse_id"]').closest('.form-group').find('input[type="hidden"]');
+        const warehouseId = warehouseInput.val() || warehouseInput.data('value');
+
+        if (!warehouseId) return;
+
+        $('.product-row').each(function() {
+            const row = $(this);
+            const productId = row.find('.product-id').val();
+            
+            if (productId) {
+                 let quantityUrl = '{{ route("products.available-quantity", ":productId") }}'.replace(':productId', productId);
+                let params = [];
+                params.push('warehouse_id=' + warehouseId);
+                if (orderNoteVoucherId) params.push('exclude_voucher_id=' + orderNoteVoucherId);
+                
+                quantityUrl += '?' + params.join('&');
+
+                $.ajax({
+                    url: quantityUrl,
+                    method: 'GET',
+                    success: function(data) {
+                        row.data('available-quantity', data.available_quantity);
+                        // Re-validate current quantity if there's a value
+                         if (row.find('.quantity-input').val()) {
+                             row.find('.quantity-input').trigger('input');
+                         }
+                    },
+                    error: function(xhr) {
+                        console.error('Error fetching available quantity for product ' + productId, xhr);
+                    }
+                });
+            }
+        });
+    }
+
+    // Call it initially
+    fetchExistingQuantities();
+
+    // Listen for warehouse changes
+    $(document).on('change', 'input[name="from_warehouse_id"]', function() {
+        console.log('Warehouse changed, refetching quantities...');
+        fetchExistingQuantities();
+    });
 
     // Initial calculation
     calculateTotals();

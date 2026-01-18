@@ -16,13 +16,13 @@ class Authenticate extends Middleware
     {
         if (!$request->expectsJson()) {
             // Check the route to determine which login page to redirect to
-            if ($request->is('admin') || $request->is('admin/*')) {
+            if ($request->is('*/admin') || $request->is('*/admin/*')) {
                 // Admin routes - redirect to admin login
                 return route('admin.showlogin');
-            } elseif ($request->is('provider') || $request->is('provider/*')) {
+            } elseif ($request->is('*/provider') || $request->is('*/provider/*')) {
                 // Provider routes - redirect to provider login
                 return route('provider.login');
-            } elseif ($request->is('seller') || $request->is('seller/*')) {
+            } elseif ($request->is('*/seller') || $request->is('*/seller/*')) {
                 // Seller routes - redirect to seller login
                 return route('user.login');
             } else {

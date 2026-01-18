@@ -154,4 +154,20 @@ class WarehouseMovementReportController extends Controller
 
         return $stats;
     }
+
+    public function show($id)
+    {
+        $movement = NoteVoucher::with([
+            'voucherProducts.product',
+            'noteVoucherType',
+            'provider',
+            'fromWarehouse',
+            'toWarehouse',
+            'event',
+            'order',
+            'user'
+        ])->findOrFail($id);
+
+        return view('admin.reports.warehouseMovementDetails', compact('movement'));
+    }
 }

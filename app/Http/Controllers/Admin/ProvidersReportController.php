@@ -39,12 +39,9 @@ class ProvidersReportController extends Controller
         return response()->json($providers);
     }
 
-    public function getProviderData(Request $request, $providerId)
+    private function getProviderDataLogic($providerId, $fromDate, $toDate, $productId)
     {
         $provider = Provider::with('user')->findOrFail($providerId);
-        $fromDate = $request->get('from_date');
-        $toDate = $request->get('to_date');
-        $productId = $request->get('product_id');
 
         // Get products purchased from this provider
         $query = Product::where('provider_id', $providerId);
@@ -116,7 +113,7 @@ class ProvidersReportController extends Controller
             }
         }
 
-        return response()->json([
+        return [
             'success' => true,
             'provider' => [
                 'id' => $provider->id,
@@ -133,7 +130,17 @@ class ProvidersReportController extends Controller
             ],
             'from_date' => $fromDate,
             'to_date' => $toDate,
-        ]);
+        ];
+    }
+
+    public function getProviderData(Request $request, $providerId)
+    {
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
+        $productId = $request->get('product_id');
+
+        $data = $this->getProviderDataLogic($providerId, $fromDate, $toDate, $productId);
+        return response()->json($data);
     }
 
     public function getProducts($providerId)
@@ -148,11 +155,8 @@ class ProvidersReportController extends Controller
         ]);
     }
 
-    public function getBookRequestsData(Request $request, $providerId)
+    private function getBookRequestsDataLogic($providerId, $fromDate, $toDate)
     {
-        $fromDate = $request->get('from_date');
-        $toDate = $request->get('to_date');
-
         // Get book requests responses for this provider
         $query = \App\Models\BookRequestResponse::where('provider_id', $providerId)
             ->with('bookRequest.product');
@@ -199,7 +203,7 @@ class ProvidersReportController extends Controller
             ];
         });
 
-        return response()->json([
+        return [
             'success' => true,
             'statistics' => [
                 'total_requests' => $totalRequests,
@@ -212,7 +216,41 @@ class ProvidersReportController extends Controller
                 'total_with_tax' => number_format($totalImportValue + $totalImportTax, 2),
             ],
             'requests' => $requestsData,
-        ]);
+        ];
+    }
+
+    public function getBookRequestsData(Request $request, $providerId)
+    {
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
+
+        $data = $this->getBookRequestsDataLogic($providerId, $fromDate, $toDate);
+        return response()->json($data);
+    }
+
+    public function export(Request $request)
+    {
+        $providerId = $request->get('provider_id');
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
+        $productId = $request->get('product_id');
+
+        if (!$providerId) {
+            return back()->with('error', 'Provider is required');
+        }
+
+        $providerData = $this->getProviderDataLogic($providerId, $fromDate, $toDate, $productId);
+        $bookData = $this->getBookRequestsDataLogic($providerId, $fromDate, $toDate);
+
+        // Merge Data
+        $data = [
+            'provider' => $providerData['provider'],
+            'products' => $providerData['products'],
+            'statistics' => array_merge($providerData['statistics'], $bookData['statistics']),
+            'requests' => $bookData['requests']
+        ];
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ProvidersReportExport($data), 'provider_report.xlsx');
     }
 
     private function getStatusBadge($status)

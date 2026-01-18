@@ -4,6 +4,29 @@
 @endsection
 
 @section('content')
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .printable-section, .printable-section * {
+            visibility: visible;
+        }
+        .printable-section {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .no-print, .main-sidebar, .main-header, .content-header, .card-header, footer {
+            display: none !important;
+        }
+        .card {
+            border: none;
+            box-shadow: none;
+        }
+    }
+</style>
 <div class="card">
     <div class="card-header">
         <h3 class="card-title card_title_center">{{ __('messages.providers_report') }}</h3>
@@ -31,9 +54,15 @@
                                 </div>
                             </div>
                             <div class="col-md-6 d-flex align-items-end">
-                                <div class="form-group" style="width: 100%;">
-                                    <button type="button" class="btn btn-primary btn-block" id="searchBtn">
+                                <div class="btn-group w-100">
+                                    <button type="button" class="btn btn-primary" id="searchBtn">
                                         <i class="fas fa-search"></i> {{ __('messages.Search') }}
+                                    </button>
+                                    <button type="button" class="btn btn-success" id="exportBtn">
+                                        <i class="fas fa-file-excel"></i> Export Excel
+                                    </button>
+                                    <button type="button" class="btn btn-info" onclick="window.print()">
+                                        <i class="fas fa-print"></i> {{ __('messages.print') }}
                                     </button>
                                 </div>
                             </div>
@@ -81,7 +110,7 @@
         </div>
 
         <!-- Provider Info Section -->
-        <div id="providerInfoSection" style="display:none;">
+        <div id="providerInfoSection" style="display:none;" class="printable-section">
             <!-- Provider Header Card -->
             <div class="row mb-4">
                 <div class="col-md-12">
@@ -610,6 +639,32 @@ $(document).ready(function() {
             e.preventDefault();
             searchBtn.click();
         }
+    });
+
+    // Export Button Click
+    $('#exportBtn').on('click', function() {
+        const providerId = providerIdInput.val();
+        if (!providerId) {
+            Swal.fire({
+                icon: 'warning',
+                title: '{{ __("messages.warning") }}',
+                text: 'يرجى اختيار المورد أولاً',
+                confirmButtonText: '{{ __("messages.confirm") }}'
+            });
+            return;
+        }
+
+        const fromDate = $('#from_date').val();
+        const toDate = $('#to_date').val();
+        const productId = productSelect.val();
+
+        let url = '{{ route("admin.reports.providers.export") }}' + 
+                  '?provider_id=' + providerId + 
+                  '&from_date=' + fromDate + 
+                  '&to_date=' + toDate + 
+                  '&product_id=' + productId;
+        
+        window.location.href = url;
     });
 });
 </script>

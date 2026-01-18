@@ -193,7 +193,7 @@ class UserDeptController extends Controller
                 $order->update([
                     'paid_amount' => $order->paid_amount + $request->payment_amount,
                     'remaining_amount' => $order->remaining_amount - $request->payment_amount,
-                    'payment_status' => ($order->remaining_amount - $request->payment_amount) <= 0 ? 1 : 2
+                    'payment_status' => round($order->remaining_amount - $request->payment_amount, 2) <= 0 ? 1 : 2
                 ]);
             }
 

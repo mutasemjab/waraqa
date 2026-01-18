@@ -96,44 +96,39 @@
                     </ul>
                 </li>
 
-                
-                @if (
-                        $user->can('noteVoucherType-table') ||
-                            $user->can('noteVoucherType-add') ||
-                            $user->can('noteVoucherType-edit') ||
-                            $user->can('noteVoucherType-delete'))
-                        <li class="nav-item">
-                            <a href="{{ route('noteVoucherTypes.index') }}" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p> {{ __('messages.noteVoucherTypes') }} </p>
-                            </a>
-                        </li>
-                    @endif
-                    @php
-                        $noteVouchertypes = App\Models\NoteVoucherType::get();
-                    @endphp
-                    @foreach ($noteVouchertypes as $noteVouchertype)
-                        <li class="nav-item">
-                            <a href="{{ route('noteVouchers.create', ['id' => $noteVouchertype->id]) }}"
-                                class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p> {{ $noteVouchertype->name }} </p>
-                            </a>
-                        </li>
-                    @endforeach
 
-                    @if (
-                        $user->can('noteVoucher-table') ||
-                            $user->can('noteVoucher-add') ||
-                            $user->can('noteVoucher-edit') ||
-                            $user->can('noteVoucher-delete'))
+                @canany(['noteVoucher-table', 'noteVoucher-add', 'noteVoucher-edit', 'noteVoucher-delete'])
+                <li class="nav-item {{ request()->is('noteVouchers*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-file-invoice"></i>
+                        <p>
+                            {{ __('messages.noteVouchers') }}
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        @php
+                            $noteVouchertypes = App\Models\NoteVoucherType::get();
+                        @endphp
+                        @foreach ($noteVouchertypes as $noteVouchertype)
+                            <li class="nav-item">
+                                <a href="{{ route('noteVouchers.create', ['id' => $noteVouchertype->id]) }}"
+                                    class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p> {{ $noteVouchertype->name }} </p>
+                                </a>
+                            </li>
+                        @endforeach
+
                         <li class="nav-item">
-                            <a href="{{ route('noteVouchers.index') }}" class="nav-link">
+                            <a href="{{ route('noteVouchers.index') }}" class="nav-link {{ request()->routeIs('noteVouchers.index') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
-                                <p> {{ __('messages.noteVouchers') }} </p>
+                                <p> {{ __('messages.All') }} {{ __('messages.noteVouchers') }} </p>
                             </a>
                         </li>
-                    @endif
+                    </ul>
+                </li>
+                @endcanany
 
 
                 <!-- Notifications -->
