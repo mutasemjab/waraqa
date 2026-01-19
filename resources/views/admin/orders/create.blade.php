@@ -443,7 +443,6 @@
                         if (data.length > 0) {
                             let html = '';
                             data.forEach(function (user) {
-                            data.forEach(function (user) {
                                 html += `<div class="p-2 border-bottom user-item" data-id="${user.id}" data-text="${user.text}" data-commission="${user.commission_percentage}" style="cursor: pointer;">
                                         ${user.text}
                                     </div>`;
@@ -595,9 +594,6 @@
                 $('#event_id').html('<option value="">{{ __("messages.choose_event") }}</option>');
                 $('#event-info').html('');
                 allEventsData = {};
-                $('#event_id').html('<option value="">{{ __("messages.choose_event") }}</option>');
-                $('#event-info').html('');
-                allEventsData = {};
                 eventCommissionData = {};
                 // Do not hide if seller commission applies? 
                 // Wait, clearEvents is often called when switching context. 
@@ -723,7 +719,6 @@
                 updateCommissionBox();
             };
 
-            // Override calculateTotals to use our version
             // Override calculateTotals to use our version
             function calculateTotals() {
                 originalCalculateTotals();
