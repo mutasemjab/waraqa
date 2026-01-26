@@ -174,6 +174,19 @@ class ProviderDashboardController extends Controller
         return view('provider.orders', compact('orders'));
     }
 
+    public function showPurchase($id)
+    {
+        $user = Auth::user();
+        $provider = $user->provider;
+
+        // Get the purchase and verify it belongs to this provider
+        $purchase = \App\Models\Purchase::where('provider_id', $provider->id)
+            ->with(['items.product', 'warehouse', 'bookRequestResponse', 'provider'])
+            ->findOrFail($id);
+
+        return view('provider.purchases.show', compact('purchase'));
+    }
+
     // Helper Methods
 
     private function getTotalOrdersCount($providerId)

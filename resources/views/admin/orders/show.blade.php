@@ -103,7 +103,9 @@
                             </div>
                         </div>
 
-                        <!-- Order Products -->
+                        {{-- Order Products Table (Show View) --}}
+                        {{-- Displays all products in the order with pricing and tax calculations --}}
+                        {{-- Each row shows item details, quantities, prices, and tax information --}}
                         <div class="card mb-4">
                             <div class="card-header">
                                 <h5>{{ __('messages.order_products') }}</h5>
@@ -114,11 +116,17 @@
                                         <thead>
                                             <tr>
                                                 <th>{{ __('messages.product_name') }}</th>
+                                                {{-- Unit price: selling_price (price with tax) from product table --}}
                                                 <th>{{ __('messages.unit_price') }}</th>
+                                                {{-- Quantity ordered from product row --}}
                                                 <th>{{ __('messages.quantity') }}</th>
+                                                {{-- Tax percentage from product table --}}
                                                 <th>{{ __('messages.tax_percentage') }}</th>
+                                                {{-- Tax amount: (total_price_before_tax × tax_percentage) / 100 --}}
                                                 <th>{{ __('messages.tax_value') }}</th>
+                                                {{-- Subtotal before tax: (unit_price ÷ (1 + tax_percentage/100)) × quantity --}}
                                                 <th>{{ __('messages.total_before_tax') }}</th>
+                                                {{-- Total including tax: total_price_before_tax + tax_value --}}
                                                 <th>{{ __('messages.total_after_tax') }}</th>
                                             </tr>
                                         </thead>
@@ -129,24 +137,34 @@
                                                         <strong>{{ $orderProduct->product->name_en }}</strong><br>
                                                         <small class="text-muted">{{ $orderProduct->product->name_ar }}</small>
                                                     </td>
+                                                    {{-- Selling price (with tax) per unit --}}
                                                     <td><x-riyal-icon /> {{ number_format($orderProduct->unit_price, 2) }}</td>
+                                                    {{-- Quantity ordered --}}
                                                     <td>{{ $orderProduct->quantity }}</td>
+                                                    {{-- Tax percentage applied to this product --}}
                                                     <td>{{ $orderProduct->tax_percentage }}%</td>
+                                                    {{-- Calculated tax amount for this line item --}}
                                                     <td><x-riyal-icon /> {{ number_format($orderProduct->tax_value, 2) }}</td>
+                                                    {{-- Total price before tax for this line item --}}
                                                     <td><x-riyal-icon />
                                                         {{ number_format($orderProduct->total_price_before_tax, 2) }}</td>
+                                                    {{-- Total price including tax for this line item --}}
                                                     <td><strong><x-riyal-icon />
                                                             {{ number_format($orderProduct->total_price_after_tax, 2) }}</strong>
                                                     </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
+                                        {{-- Summary row showing total amounts --}}
                                         <tfoot>
                                             <tr class="table-active">
                                                 <th colspan="4">{{ __('messages.totals') }}</th>
+                                                {{-- Sum of all tax amounts: Σ(tax_value) --}}
                                                 <th><x-riyal-icon /> {{ number_format($order->total_taxes, 2) }}</th>
+                                                {{-- Sum of all before-tax amounts: order.total_prices - order.total_taxes --}}
                                                 <th><x-riyal-icon />
                                                     {{ number_format($order->total_prices - $order->total_taxes, 2) }}</th>
+                                                {{-- Grand total with tax: order.total_prices --}}
                                                 <th><strong><x-riyal-icon />
                                                         {{ number_format($order->total_prices, 2) }}</strong></th>
                                             </tr>
@@ -186,7 +204,9 @@
                                 </div>
                             </div>
 
-                            <!-- Event/Seller Commission -->
+                            {{-- Event Commission Display Section (Show View) --}}
+                            {{-- Only displayed if the order is linked to an event --}}
+                            {{-- Shows event details, commission percentage, and calculated values --}}
                             @if($order->event)
                                 <div class="col-md-6">
                                     <div class="card border-primary">
@@ -196,15 +216,22 @@
                                         <div class="card-body">
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
+                                                    {{-- Event Commission Percentage --}}
+                                                    {{-- Comes from: event.commission_percentage --}}
                                                     <strong>{{ __('messages.commission_percentage') ?? 'Commission %' }}:</strong><br>
                                                     <span class="badge badge-info"
                                                         style="font-size: 0.95rem;">{{ number_format($order->event->commission_percentage, 2) }}%</span>
                                                 </div>
                                                 <div class="col-md-6">
+                                                    {{-- Event Commission Value Calculation --}}
+                                                    {{-- Formula: (total_before_tax × event.commission_percentage) / 100 --}}
                                                     <strong>{{ __('messages.commission_value') ?? 'Commission Value' }}:</strong><br>
                                                     @php
+                                                        // Calculate total before tax (order.total_prices - order.total_taxes)
                                                         $totalBeforeTax = $order->total_prices - $order->total_taxes;
+                                                        // Calculate event commission value
                                                         $commissionValue = ($totalBeforeTax * $order->event->commission_percentage) / 100;
+                                                        // Calculate amount due to supplier after commission deduction
                                                         $amountDueToSupplier = $totalBeforeTax - $commissionValue;
                                                     @endphp
                                                     <span class="badge badge-success" style="font-size: 0.95rem;"><x-riyal-icon
@@ -215,17 +242,23 @@
                                             <hr>
                                             <div class="row mb-2">
                                                 <div class="col-md-12">
+                                                    {{-- Amount Due to Supplier After Commission --}}
+                                                    {{-- Formula: total_before_tax - commission_value --}}
+                                                    {{-- This is what the supplier/seller receives after commission deduction --}}
                                                     <strong class="text-primary">{{ __('messages.amount_due_to_supplier') ?? 'المبلغ المستحق للمورد' }} <small>({{ __('messages.without_tax') ?? 'بدون الضريبة' }})</small>:</strong><br>
                                                     <span class="badge badge-warning" style="font-size: 1.1rem; width: 100%;">
                                                         <x-riyal-icon style="width: 14px; height: 14px;" />
                                                         {{ number_format($amountDueToSupplier, 2) }}
                                                     </span>
+                                                    {{-- Show the formula used for transparency --}}
                                                     <small class="d-block mt-1 text-muted">
                                                         {{ __('messages.calculation_formula') ?? 'المعادلة' }}: {{ number_format($totalBeforeTax, 2) }} ({{ __('messages.total_before_tax') ?? 'الإجمالي قبل الضريبة' }}) - {{ number_format($commissionValue, 2) }} ({{ __('messages.commission') ?? 'العمولة' }})
                                                     </small>
                                                 </div>
                                             </div>
-                                            
+
+                                            {{-- Event Name --}}
+                                            {{-- Shows which event the order is linked to --}}
                                             <small class="text-muted">{{ __('messages.event') }}:
                                                 {{ $order->event->name }}</small>
                                         </div>
@@ -233,24 +266,37 @@
                                 </div>
                             @endif
 
+                            {{-- Commission Display Section (Show View) --}}
+                            {{-- Displayed based on user role (seller or customer) --}}
+                            {{-- Shows commission details and calculated amounts --}}
                             @if($order->user && ($order->user->commission_percentage ?? 0) > 0)
                                 <div class="col-md-6">
                                     <div class="card border-primary">
                                         <div class="card-header bg-light">
-                                            <h5>{{ __('messages.seller_commission') }}</h5>
+                                            @if($order->user->hasRole('seller'))
+                                                <h5>{{ __('messages.seller_commission') }}</h5>
+                                            @else
+                                                <h5>{{ __('messages.commission_percentage') }}</h5>
+                                            @endif
                                         </div>
                                         <div class="card-body">
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
+                                                    {{-- Commission Percentage --}}
                                                     <strong>{{ __('messages.commission_percentage') ?? 'Commission %' }}:</strong><br>
                                                     <span class="badge badge-info"
                                                         style="font-size: 0.95rem;">{{ number_format($order->user->commission_percentage, 2) }}%</span>
                                                 </div>
                                                 <div class="col-md-6">
+                                                    {{-- Commission Value Calculation --}}
+                                                    {{-- Formula: (total_before_tax × user.commission_percentage) / 100 --}}
                                                     <strong>{{ __('messages.commission_value') ?? 'Commission Value' }}:</strong><br>
                                                     @php
+                                                        // Calculate total before tax
                                                         $totalBeforeTax = $order->total_prices - $order->total_taxes;
+                                                        // Calculate commission value
                                                         $commissionValue = ($totalBeforeTax * $order->user->commission_percentage) / 100;
+                                                        // Calculate amount due after commission deduction
                                                         $amountDueToSupplier = $totalBeforeTax - $commissionValue;
                                                     @endphp
                                                     <span class="badge badge-success" style="font-size: 0.95rem;"><x-riyal-icon
@@ -261,19 +307,30 @@
                                             <hr>
                                             <div class="row mb-2">
                                                 <div class="col-md-12">
+                                                    {{-- Amount Due After Commission --}}
+                                                    {{-- Formula: total_before_tax - commission_value --}}
                                                     <strong class="text-primary">{{ __('messages.amount_due_to_supplier') ?? 'المبلغ المستحق للمورد' }} <small>({{ __('messages.without_tax') ?? 'بدون الضريبة' }})</small>:</strong><br>
                                                     <span class="badge badge-warning" style="font-size: 1.1rem; width: 100%;">
                                                         <x-riyal-icon style="width: 14px; height: 14px;" />
                                                         {{ number_format($amountDueToSupplier, 2) }}
                                                     </span>
+                                                    {{-- Show the formula used for transparency --}}
                                                     <small class="d-block mt-1 text-muted">
                                                         {{ __('messages.calculation_formula') ?? 'المعادلة' }}: {{ number_format($totalBeforeTax, 2) }} ({{ __('messages.total_before_tax') ?? 'الإجمالي قبل الضريبة' }}) - {{ number_format($commissionValue, 2) }} ({{ __('messages.commission') ?? 'العمولة' }})
                                                     </small>
                                                 </div>
                                             </div>
-                                            
-                                            <small class="text-muted">{{ __('messages.seller') }}:
-                                                {{ $order->user->name }}</small>
+
+                                            {{-- User Name --}}
+                                            {{-- Shows the name of the seller or customer --}}
+                                            <small class="text-muted">
+                                                @if($order->user->hasRole('seller'))
+                                                    {{ __('messages.seller') }}:
+                                                @else
+                                                    {{ __('messages.name') }}:
+                                                @endif
+                                                {{ $order->user->name }}
+                                            </small>
                                         </div>
                                     </div>
                                 </div>

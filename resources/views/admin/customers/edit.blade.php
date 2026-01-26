@@ -79,6 +79,12 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="commission_percentage">{{ __('messages.Default_Commission_Percentage') }}</label>
+                            <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" value="{{ old('commission_percentage', $customer->commission_percentage) }}" min="0" max="100" step="0.01" placeholder="0.00">
+                            <small class="form-text text-muted">{{ __('messages.commission_percentage_hint') }}</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="photo">{{ __('messages.Photo') }}</label>
                             <div class="custom-file">
                                 <input type="file" class="custom-file-input" id="photo" name="photo">

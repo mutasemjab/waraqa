@@ -201,18 +201,31 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Create note voucher for outgoing transfer from selected warehouse
+            // Create note voucher based on user role (seller or customer)
             $nextNoteVoucherNumber = (DB::table('note_vouchers')->max('number') ?? 0) + 1;
+            $user = User::find($request->user_id);
 
-            // Create note voucher for outgoing (out from selected warehouse)
-            $noteVoucher = NoteVoucher::create([
+            // Determine note voucher type and warehouse based on user role
+            $noteVoucherData = [
                 'number' => $nextNoteVoucherNumber,
                 'date_note_voucher' => now()->toDateString(),
                 'note' => __('messages.order_number') . ': ' . $order->number,
                 'from_warehouse_id' => $request->from_warehouse_id,
                 'order_id' => $order->id,
-                'note_voucher_type_id' => 2 // Out Note Voucher type
-            ]);
+                'user_id' => $request->user_id, // Link to the user (seller or customer)
+            ];
+
+            if ($user && $user->hasRole('seller')) {
+                // Seller: Create Transfer type (3) to seller's warehouse
+                $sellerWarehouse = Warehouse::where('user_id', $request->user_id)->first();
+                $noteVoucherData['to_warehouse_id'] = $sellerWarehouse ? $sellerWarehouse->id : null;
+                $noteVoucherData['note_voucher_type_id'] = 3; // Transfer Note Voucher type
+            } else {
+                // Customer: Create Out type (2) without to_warehouse
+                $noteVoucherData['note_voucher_type_id'] = 2; // Out Note Voucher type
+            }
+
+            $noteVoucher = NoteVoucher::create($noteVoucherData);
 
             // Create voucher products for each product in the order
             foreach ($orderProducts as $orderProduct) {
@@ -220,6 +233,7 @@ class OrderController extends Controller
                 VoucherProduct::create([
                     'quantity' => $orderProduct['quantity'],
                     'purchasing_price' => $product ? $product->selling_price : null,
+                    'tax_percentage' => $orderProduct['tax_percentage'],
                     'note' => __('messages.product_outgoing_for_order'),
                     'product_id' => $orderProduct['product_id'],
                     'note_voucher_id' => $noteVoucher->id
@@ -348,9 +362,25 @@ public function update(Request $request, Order $order)
         // Update existing note voucher if exists
         $existingNoteVoucher = NoteVoucher::where('order_id', $order->id)->first();
         if ($existingNoteVoucher) {
-            $existingNoteVoucher->update([
+            $user = User::find($request->user_id);
+
+            $updateData = [
                 'from_warehouse_id' => $request->from_warehouse_id,
-            ]);
+                'user_id' => $request->user_id,
+            ];
+
+            if ($user && $user->hasRole('seller')) {
+                // Seller: Update to seller's warehouse
+                $sellerWarehouse = Warehouse::where('user_id', $request->user_id)->first();
+                $updateData['to_warehouse_id'] = $sellerWarehouse ? $sellerWarehouse->id : null;
+                $updateData['note_voucher_type_id'] = 3; // Transfer
+            } else {
+                // Customer: Remove to_warehouse and set type to Out
+                $updateData['to_warehouse_id'] = null;
+                $updateData['note_voucher_type_id'] = 2; // Out
+            }
+
+            $existingNoteVoucher->update($updateData);
 
             // Update voucher products
             VoucherProduct::where('note_voucher_id', $existingNoteVoucher->id)->delete();
@@ -360,6 +390,8 @@ public function update(Request $request, Order $order)
                 VoucherProduct::create([
                     'quantity' => $orderProduct['quantity'],
                     'purchasing_price' => $product ? $product->selling_price : null,
+                    'tax_percentage' => $orderProduct['tax_percentage'],
+                    'note' => __('messages.product_outgoing_for_order'),
                     'product_id' => $orderProduct['product_id'],
                     'note_voucher_id' => $existingNoteVoucher->id
                 ]);

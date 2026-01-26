@@ -102,6 +102,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         // Orders Management
         Route::get('/orders', [ProviderDashboardController::class, 'orders'])->name('orders');
+        Route::get('/purchases/{id}', [ProviderDashboardController::class, 'showPurchase'])->name('purchases.show');
 
         // Book Requests Management
         Route::get('/bookRequests', [BookRequestController::class, 'index'])->name('bookRequests.index');

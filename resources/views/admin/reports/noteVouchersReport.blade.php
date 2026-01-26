@@ -253,11 +253,12 @@
                                         <th>{{ __('messages.number') }}</th>
                                         <th>{{ __('messages.date_note_voucher') }}</th>
                                         <th>{{ __('messages.noteVoucherTypes') }}</th>
-                                        <th>{{ __('messages.Provider') }}</th>
-                                        <th>{{ __('messages.Warehouse') }}</th>
+                                        <th>{{ __('messages.from') }}</th>
+                                        <th>{{ __('messages.to') }}</th>
                                         <th>{{ __('messages.Quantity') }}</th>
                                         <th>{{ __('messages.Value') }}</th>
                                         <th>{{ __('messages.note') }}</th>
+                                        <th>{{ __('messages.Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -277,18 +278,48 @@
                                         <td>{{ $voucher->number }}</td>
                                         <td>{{ $voucher->date_note_voucher->format('Y-m-d') }}</td>
                                         <td>{{ $voucher->noteVoucherType->name }}</td>
-                                        <td>{{ $voucher->provider->name ?? '-' }}</td>
                                         <td>
-                                            @if($voucher->fromWarehouse)
-                                            <strong>من:</strong> {{ $voucher->fromWarehouse->name }}<br>
+                                            @if($voucher->noteVoucherType->in_out_type == 1)
+                                                @if($voucher->provider)
+                                                    {{ $voucher->provider->name }}
+                                                @elseif($voucher->user)
+                                                    {{ $voucher->user->name }}
+                                                @elseif($voucher->event)
+                                                    {{ $voucher->event->name }}
+                                                @else
+                                                    -
+                                                @endif
+                                            @elseif($voucher->noteVoucherType->in_out_type == 2)
+                                                {{ $voucher->fromWarehouse->name ?? '-' }}
+                                            @else
+                                                {{ $voucher->fromWarehouse->name ?? '-' }}
                                             @endif
-                                            @if($voucher->toWarehouse)
-                                            <strong>إلى:</strong> {{ $voucher->toWarehouse->name }}<br>
+                                        </td>
+                                        <td>
+                                            @if($voucher->noteVoucherType->in_out_type == 1)
+                                                {{ $voucher->toWarehouse->name ?? '-' }}
+                                            @elseif($voucher->noteVoucherType->in_out_type == 2)
+                                                @if($voucher->provider)
+                                                    {{ $voucher->provider->name }}
+                                                @elseif($voucher->user)
+                                                    {{ $voucher->user->name }}
+                                                @elseif($voucher->event)
+                                                    {{ $voucher->event->name }}
+                                                @else
+                                                    -
+                                                @endif
+                                            @else
+                                                {{ $voucher->toWarehouse->name ?? '-' }}
                                             @endif
                                         </td>
                                         <td>{{ number_format($voucher_quantity, 2) }}</td>
                                         <td>{{ number_format($voucher_value, 2) }} <x-riyal-icon /></td>
                                         <td>{{ substr($voucher->note ?? '-', 0, 50) }}</td>
+                                        <td class="text-center">
+                                            <a href="{{ route('noteVouchers.show', $voucher->id) }}" class="btn btn-sm btn-info" title="{{ __('messages.View') }}">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>

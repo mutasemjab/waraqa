@@ -104,13 +104,19 @@ class BookRequestController extends Controller
     public function approve(Request $request, BookRequestResponse $response)
     {
         try {
-            // تحديث السعر والضريبة من الـ request
+            // تحديث السعر والكمية والضريبة من الـ request
             $validated = $request->validate([
+                'quantity' => 'required|numeric|min:1|max:' . $response->available_quantity,
                 'price' => 'required|numeric|min:0',
                 'tax_percentage' => 'nullable|numeric|min:0|max:100',
             ]);
 
-            // تحديث حالة الرد إلى موافق عليه مع السعر والضريبة
+            // استخراج الكمية والسعر والضريبة المعتمدة
+            $approvedQuantity = $validated['quantity'];
+            $approvedPrice = $validated['price'];
+            $approvedTax = $validated['tax_percentage'] ?? 0;
+
+            // تحديث حالة الرد إلى موافق عليه مع السعر والضريبة والكمية المعتمدة
             $response->update(array_merge($validated, ['status' => 'approved']));
 
             // الحصول على المستودع الرئيسي
@@ -140,15 +146,15 @@ class BookRequestController extends Controller
             VoucherProduct::create([
                 'note_voucher_id' => $noteVoucher->id,
                 'product_id' => $response->bookRequest->product_id,
-                'quantity' => $response->available_quantity,
-                'purchasing_price' => $response->price,
-                'tax_percentage' => $response->tax_percentage,
+                'quantity' => $approvedQuantity,
+                'purchasing_price' => $approvedPrice,
+                'tax_percentage' => $approvedTax,
                 'note' => __('messages.approved_book_request') . ' - طلب رقم ' . $response->bookRequest->id,
             ]);
 
             // إنشاء Purchase (مشترية) تلقائياً
-            $totalAmount = $response->price * $response->available_quantity;
-            $totalTax = ($totalAmount * $response->tax_percentage) / 100;
+            $totalAmount = $approvedPrice * $approvedQuantity;
+            $totalTax = ($totalAmount * $approvedTax) / 100;
 
             $purchaseNumber = 'PUR-' . date('Y') . '-' . str_pad(Purchase::max('id') + 1, 5, '0', STR_PAD_LEFT);
 
@@ -166,9 +172,9 @@ class BookRequestController extends Controller
             PurchaseItem::create([
                 'purchase_id' => $purchase->id,
                 'product_id' => $response->bookRequest->product_id,
-                'quantity' => $response->available_quantity,
-                'unit_price' => $response->price,
-                'tax_percentage' => $response->tax_percentage,
+                'quantity' => $approvedQuantity,
+                'unit_price' => $approvedPrice,
+                'tax_percentage' => $approvedTax,
                 'total_price' => $totalAmount,
             ]);
 

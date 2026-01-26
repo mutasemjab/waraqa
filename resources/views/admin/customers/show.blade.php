@@ -90,6 +90,10 @@
                                     <th>{{ __('messages.Updated_At') }}</th>
                                     <td>{{ $customer->updated_at->format('Y-m-d H:i:s') }}</td>
                                 </tr>
+                                <tr>
+                                    <th>{{ __('messages.Default_Commission_Percentage') }}</th>
+                                    <td>{{ $customer->commission_percentage ?? __('messages.Not_Available') }}%</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

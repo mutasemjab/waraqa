@@ -120,21 +120,39 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <p><strong>{{ __('messages.provider_name') }}:</strong></p>
                                     <p id="provider-name">-</p>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <p><strong>{{ __('messages.email') }}:</strong></p>
                                     <p id="provider-email">-</p>
                                 </div>
-                                <div class="col-md-3">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
                                     <p><strong>{{ __('messages.phone') }}:</strong></p>
                                     <p id="provider-phone">-</p>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <p><strong>{{ __('messages.country') }}:</strong></p>
                                     <p id="provider-country">-</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>العنوان:</strong></p>
+                                    <p id="provider-address">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>تاريخ الإنشاء:</strong></p>
+                                    <p id="provider-created-at">-</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>الحالة:</strong></p>
+                                    <p id="provider-status">-</p>
                                 </div>
                             </div>
                         </div>
@@ -175,6 +193,22 @@
                         </div>
                         <div class="card-body">
                             <div id="productsTableContainer">
+                                <p class="text-center text-muted">{{ __('messages.No_data') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchases Section -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{{ __('messages.purchases') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="purchasesTableContainer">
                                 <p class="text-center text-muted">{{ __('messages.No_data') }}</p>
                             </div>
                         </div>
@@ -441,6 +475,7 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     populateProviderInfo(response);
+                    loadPurchasesData(providerId);
                     loadBookRequestsData(providerId);
                     loadingSpinner.hide();
                     providerInfoSection.show();
@@ -469,6 +504,32 @@ $(document).ready(function() {
         });
     }
 
+    // Load purchases data
+    function loadPurchasesData(providerId) {
+        const fromDate = $('#from_date').val();
+        const toDate = $('#to_date').val();
+
+        $.ajax({
+            url: '{{ route("admin.reports.providers.purchases", ":id") }}'.replace(':id', providerId),
+            method: 'GET',
+            data: {
+                from_date: fromDate,
+                to_date: toDate
+            },
+            success: function(response) {
+                if (response.success) {
+                    populatePurchasesInfo(response);
+                } else {
+                    $('#purchasesTableContainer').html('<p class="text-center text-muted">{{ __("messages.no_data_available") }}</p>');
+                }
+            },
+            error: function(xhr) {
+                console.error('Error loading purchases:', xhr);
+                $('#purchasesTableContainer').html('<p class="text-center text-danger">حدث خطأ أثناء تحميل البيانات</p>');
+            }
+        });
+    }
+
     // Load book requests data
     function loadBookRequestsData(providerId) {
         const fromDate = $('#from_date').val();
@@ -493,6 +554,75 @@ $(document).ready(function() {
                 $('#bookRequestsTableContainer').html('<p class="text-center text-danger">حدث خطأ أثناء تحميل البيانات</p>');
             }
         });
+    }
+
+    // Populate purchases information
+    function populatePurchasesInfo(data) {
+        const purchases = data.purchases;
+
+        if (purchases.length > 0) {
+            let purchasesHtml = `
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>رقم الفاتورة</th>
+                                <th>التاريخ</th>
+                                <th>المبلغ الإجمالي</th>
+                                <th>الضريبة</th>
+                                <th>الإجمالي مع الضريبة</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            const riyalIcon = '<svg class="riyal-icon" style="width: 18px; height: 18px; display: inline-block; margin: 0 4px; vertical-align: middle;" viewBox="0 0 1124.14 1256.39" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></svg>';
+
+            purchases.forEach(function(purchase, index) {
+                const totalWithTax = parseFloat(purchase.total_amount) + parseFloat(purchase.total_tax);
+                let statusBadge = '';
+                if (purchase.status == 'confirmed') {
+                    statusBadge = '<span class="badge badge-success">موافق عليه</span>';
+                } else if (purchase.status == 'pending') {
+                    statusBadge = '<span class="badge badge-warning">قيد الانتظار</span>';
+                } else if (purchase.status == 'received') {
+                    statusBadge = '<span class="badge badge-info">تم الاستلام</span>';
+                } else {
+                    statusBadge = '<span class="badge badge-secondary">' + purchase.status + '</span>';
+                }
+
+                const showUrl = '{{ route("purchases.show", ":id") }}'.replace(':id', purchase.id);
+                purchasesHtml += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${purchase.purchase_number}</strong></td>
+                        <td>${new Date(purchase.created_at).toLocaleDateString('ar-SA')}</td>
+                        <td>${parseFloat(purchase.total_amount).toFixed(2)} ${riyalIcon}</td>
+                        <td>${parseFloat(purchase.total_tax).toFixed(2)} ${riyalIcon}</td>
+                        <td><span class="badge badge-success">${totalWithTax.toFixed(2)} ${riyalIcon}</span></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <a href="${showUrl}" class="btn btn-sm btn-info" title="التفاصيل">
+                                <i class="fas fa-eye"></i> التفاصيل
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            purchasesHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            $('#purchasesTableContainer').html(purchasesHtml);
+        } else {
+            $('#purchasesTableContainer').html('<p class="text-center text-muted">لا توجد عمليات شراء لهذا المورد</p>');
+        }
     }
 
     // Populate book requests information
@@ -529,7 +659,7 @@ $(document).ready(function() {
                                 <th>الإجمالي مع الضريبة</th>
                                 <th>الحالة</th>
                                 <th>التاريخ</th>
-                                <th>ملاحظات</th>
+                                <th>الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -539,6 +669,7 @@ $(document).ready(function() {
 
             requests.forEach(function(request, index) {
                 const statusBadge = request.status_badge;
+                const detailsUrl = '{{ route("bookRequests.responses.show", ":id") }}'.replace(':id', request.id);
                 requestsHtml += `
                     <tr>
                         <td>${index + 1}</td>
@@ -550,7 +681,11 @@ $(document).ready(function() {
                         <td><span class="badge badge-success">${request.total_with_tax} ${riyalIcon}</span></td>
                         <td>${statusBadge}</td>
                         <td>${request.created_at}</td>
-                        <td><small>${request.note}</small></td>
+                        <td>
+                            <a href="${detailsUrl}" class="btn btn-sm btn-info" title="التفاصيل">
+                                <i class="fas fa-eye"></i> التفاصيل
+                            </a>
+                        </td>
                     </tr>
                 `;
             });
@@ -578,7 +713,14 @@ $(document).ready(function() {
         $('#provider-name').text(provider.name);
         $('#provider-email').text(provider.email);
         $('#provider-phone').text(provider.phone);
-        $('#provider-country').text(provider.country);
+        $('#provider-country').text(provider.country || '-');
+        $('#provider-address').text(provider.address || '-');
+        $('#provider-created-at').text(provider.created_at ? new Date(provider.created_at).toLocaleDateString('ar-SA') : '-');
+
+        // Status Badge
+        const statusClass = provider.activate == 1 ? 'success' : 'danger';
+        const statusText = provider.activate == 1 ? 'نشط' : 'معطل';
+        $('#provider-status').html(`<span class="badge bg-${statusClass}">${statusText}</span>`);
 
         // Statistics
         $('#stat-total-products').text(stats.total_products);

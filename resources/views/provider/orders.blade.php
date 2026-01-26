@@ -68,9 +68,9 @@
                                 <span class="badge bg-{{ $statusColor }}">{{ ucfirst($order->status) }}</span>
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-info" title="{{ __('messages.view') }}" onclick="viewPurchaseDetails({{ $order->id }})">
+                                <a href="{{ route('provider.purchases.show', $order->id) }}" class="btn btn-sm btn-info" title="{{ __('messages.view') }}">
                                     <i class="fas fa-eye"></i>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         @endforeach
@@ -92,12 +92,3 @@
 </div>
 
 @endsection
-
-@push('scripts')
-<script>
-function viewPurchaseDetails(purchaseId) {
-    // This can be implemented to show purchase details in a modal
-    console.log('Viewing purchase:', purchaseId);
-}
-</script>
-@endpush

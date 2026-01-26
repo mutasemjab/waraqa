@@ -121,6 +121,9 @@ class ProvidersReportController extends Controller
                 'email' => $provider->user->email ?? '-',
                 'phone' => $provider->user->phone ?? '-',
                 'country' => $provider->user?->country?->name ?? '-',
+                'address' => $provider->user?->address ?? '-',
+                'created_at' => $provider->created_at,
+                'activate' => $provider->user?->activate ?? 0,
             ],
             'products' => $productData,
             'statistics' => [
@@ -226,6 +229,36 @@ class ProvidersReportController extends Controller
 
         $data = $this->getBookRequestsDataLogic($providerId, $fromDate, $toDate);
         return response()->json($data);
+    }
+
+    public function getPurchasesData(Request $request, $providerId)
+    {
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
+
+        $query = \App\Models\Purchase::where('provider_id', $providerId);
+
+        if ($fromDate && $toDate) {
+            $query->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
+        }
+
+        $purchases = $query->orderBy('created_at', 'desc')->get();
+
+        $purchasesData = $purchases->map(function ($purchase) {
+            return [
+                'id' => $purchase->id,
+                'purchase_number' => $purchase->purchase_number,
+                'total_amount' => $purchase->total_amount,
+                'total_tax' => $purchase->total_tax,
+                'status' => $purchase->status,
+                'created_at' => $purchase->created_at,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'purchases' => $purchasesData,
+        ]);
     }
 
     public function export(Request $request)

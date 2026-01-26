@@ -80,13 +80,7 @@
                                     <input type="radio" name="recipient_type" value="provider" checked> {{ __('messages.provider') }}
                                 </label>
                                 <label class="btn btn-outline-primary">
-                                    <input type="radio" name="recipient_type" value="seller"> {{ __('messages.seller') }}
-                                </label>
-                                <label class="btn btn-outline-primary">
                                     <input type="radio" name="recipient_type" value="user"> {{ __('messages.customer') }}
-                                </label>
-                                <label class="btn btn-outline-primary">
-                                    <input type="radio" name="recipient_type" value="event"> {{ __('messages.event') }}
                                 </label>
                             </div>
                         </div>
@@ -103,19 +97,6 @@
                         />
                     </div>
 
-                    <div class="col-md-6" id="seller-field" style="display: none;">
-                        <x-search-select
-                            model="App\Models\User"
-                            fieldName="user_id"
-                            label="seller"
-                            placeholder="Search..."
-                            limit="10"
-                            displayColumn="name"
-                            filter="with_role:seller"
-                            required="false"
-                        />
-                    </div>
-
                     <div class="col-md-6" id="user-field" style="display: none;">
                         <x-search-select
                             model="App\Models\User"
@@ -129,16 +110,6 @@
                         />
                     </div>
 
-                    <div class="col-md-6" id="event-field" style="display: none;">
-                        <x-search-select
-                            model="App\Models\Event"
-                            fieldName="event_id"
-                            label="event"
-                            placeholder="Search..."
-                            limit="10"
-                            required="false"
-                        />
-                    </div>
                 @elseif ($note_voucher_type->in_out_type == 3)
                     <!-- For Transfer Type (in_out_type = 3): From Warehouse to Warehouse -->
                     <div class="col-md-6">
@@ -460,19 +431,15 @@ function setRedirect(value) {
         const selectedType = $(this).val();
 
         // Hide all fields and remove required from their inputs
-        $('#provider-field, #seller-field, #user-field, #event-field').hide()
+        $('#provider-field, #user-field').hide()
             .find('input[type="text"]').removeAttr('required');
 
         // Show selected field and add required to its text input
         let selectedField = null;
         if (selectedType === 'provider') {
             selectedField = $('#provider-field');
-        } else if (selectedType === 'seller') {
-            selectedField = $('#seller-field');
         } else if (selectedType === 'user') {
             selectedField = $('#user-field');
-        } else if (selectedType === 'event') {
-            selectedField = $('#event-field');
         }
 
         if (selectedField) {
@@ -481,7 +448,7 @@ function setRedirect(value) {
     });
 
     // Initialize: remove required from hidden fields on page load
-    $('#seller-field, #user-field, #event-field').find('input[type="text"]').removeAttr('required');
+    $('#user-field').find('input[type="text"]').removeAttr('required');
 });
 
 

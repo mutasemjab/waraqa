@@ -59,6 +59,7 @@ class CustomerController extends Controller
             'fcm_token' => 'nullable|string',
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
+            'commission_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -133,6 +134,7 @@ class CustomerController extends Controller
             'fcm_token' => 'nullable|string',
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
+            'commission_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -201,7 +203,8 @@ class CustomerController extends Controller
             ->map(function ($customer) {
                 return [
                     'id' => $customer->id,
-                    'text' => $customer->name
+                    'text' => $customer->name,
+                    'commission_percentage' => $customer->commission_percentage
                 ];
             });
 

@@ -96,7 +96,7 @@
                                            min="0"
                                            required
                                            placeholder="0">
-                                    <span class="input-group-text">{{ __('messages.currency') ?? 'KWD' }}</span>
+                                    <span class="input-group-text"><x-riyal-icon /></span>
                                 </div>
                                 @error('price')
                                     <span class="invalid-feedback d-block">{{ $message }}</span>

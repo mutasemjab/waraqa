@@ -60,11 +60,15 @@
                                    value="{{ $order->order_date ? $order->order_date->format('Y-m-d') : '' }}">
                         </div>
 
-                        <div class="form-group mb-3">
+                        {{-- Event Selection Input (Edit Mode) - Hidden Field --}}
+                        {{-- Populated dynamically after page load with seller's events --}}
+                        {{-- Pre-selects the event from the current order if one exists --}}
+                        <div class="form-group mb-3" style="display: none;">
                             <label for="event_id">{{ __('messages.select_event') }}</label>
                             <select name="event_id" id="event_id" class="form-control">
                                 <option value="">{{ __('messages.choose_event') }}</option>
                             </select>
+                            {{-- Info showing count of total, active, and expired events --}}
                             <small class="form-text text-muted d-block mt-2">
                                 <i class="fas fa-info-circle"></i>
                                 <span id="event-info"></span>
@@ -153,34 +157,51 @@
                                                 <span><x-riyal-icon /> <span id="grand-total">{{ number_format($order->total_prices, 2) }}</span></span>
                                             </div>
                                             <hr class="my-2">
+                                            {{-- Event Commission Display Section (Edit Mode) --}}
+                                            {{-- Shows when an event is selected for the order --}}
+                                            {{-- Calculated as: (subtotal * event.commission_percentage) / 100 --}}
+                                            {{-- Hidden when no event is selected --}}
                                             <div id="event-commission-container" style="display:none;" class="mb-2">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <span>{{ __('messages.event_commission') ?? 'Event Commission' }}:</span>
+                                                    {{-- Event commission percentage from event.commission_percentage --}}
                                                     <span><span id="event-commission-percentage">0</span>%</span>
                                                 </div>
                                                 <div class="d-flex justify-content-between align-items-center text-info">
                                                     <small>{{ __('messages.commission_value') ?? 'Value' }}:</small>
+                                                    {{-- Calculated commission value in currency --}}
                                                     <small><x-riyal-icon /> <span id="event-commission-value">0.00</span></small>
                                                 </div>
                                             </div>
 
+                                            {{-- Seller Commission Display Section (Edit Mode) --}}
+                                            {{-- Shows when seller has commission_percentage set in their user profile --}}
+                                            {{-- Calculated as: (subtotal * user.commission_percentage) / 100 --}}
+                                            {{-- Hidden when seller has no commission or not a seller --}}
                                             <div id="seller-commission-container" style="display:none;" class="mb-2">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <span>{{ __('messages.seller_commission') }}:</span>
+                                                    {{-- Seller commission percentage from user.commission_percentage --}}
                                                     <span><span id="seller-commission-percentage">0</span>%</span>
                                                 </div>
                                                 <div class="d-flex justify-content-between align-items-center text-info">
                                                     <small>{{ __('messages.commission_value') ?? 'Value' }}:</small>
+                                                    {{-- Calculated commission value in currency --}}
                                                     <small><x-riyal-icon /> <span id="seller-commission-value">0.00</span></small>
                                                 </div>
                                             </div>
 
+                                            {{-- Total Commission Display Section (Edit Mode) --}}
+                                            {{-- Shows the sum of event commission + seller commission --}}
+                                            {{-- Hidden when neither event commission nor seller commission applies --}}
                                             <div id="total-commission-container" style="display:none;"
                                                 class="d-flex justify-content-between align-items-center text-success border-top pt-1 mt-1">
                                                 <strong>{{ __('messages.total_commission') ?? 'Total Commission' }}:</strong>
+                                                {{-- Sum of event commission value + seller commission value --}}
                                                 <strong><x-riyal-icon /> <span id="total-commission-value">0.00</span></strong>
                                             </div>
 
+                                            {{-- Visual separator divider displayed only when commissions exist --}}
                                             <hr class="my-2" id="commission-divider" style="display:none;">
                                             <div class="d-flex justify-content-between text-muted align-items-center">
                                                 <span>{{ __('messages.remaining') }}:</span>
@@ -485,7 +506,11 @@ $(document).ready(function() {
         });
         const grandTotal = subtotal + totalTax;
 
-        if (paidAmount > grandTotal) {
+        // Round both values to 2 decimals to handle floating-point precision issues
+        const roundedPaidAmount = parseFloat(paidAmount.toFixed(2));
+        const roundedGrandTotal = parseFloat(grandTotal.toFixed(2));
+
+        if (roundedPaidAmount > roundedGrandTotal) {
             Swal.fire({
                 icon: 'error',
                 title: '{{ __("messages.error") }}',
@@ -615,7 +640,16 @@ $(document).ready(function() {
         let totalCommission = 0;
         let hasCommission = false;
 
+        {{--
+            Commission Display Logic - Handles 4 scenarios:
+            1. No commissions (both event & seller = 0) → Hide all commission sections
+            2. Event commission only → Show Event Commission + Total Commission
+            3. Seller commission only → Show Seller Commission + Total Commission
+            4. Both commissions → Show Event + Seller + Total Commission
+        --}}
+
         // Handle Event Commission
+        {{-- Scenario: User selected an event with commission_percentage > 0 --}}
         if (eventPercentage > 0) {
             const eventValue = (subtotal * eventPercentage) / 100;
             $('#event-commission-percentage').text(eventPercentage.toFixed(2));
@@ -624,10 +658,12 @@ $(document).ready(function() {
             totalCommission += eventValue;
             hasCommission = true;
         } else {
+            {{-- Hide when: no event selected, or event has no commission --}}
             $('#event-commission-container').hide();
         }
 
         // Handle Seller Commission
+        {{-- Scenario: Buyer is a seller AND seller has commission_percentage set > 0 --}}
         if (sellerPercentage > 0) {
             const sellerValue = (subtotal * sellerPercentage) / 100;
             $('#seller-commission-percentage').text(sellerPercentage.toFixed(2));
@@ -636,14 +672,25 @@ $(document).ready(function() {
             totalCommission += sellerValue;
             hasCommission = true;
         } else {
+            {{-- Hide when: buyer is customer, or seller has no commission_percentage --}}
             $('#seller-commission-container').hide();
         }
 
+        {{--
+            Total Commission Display Logic
+            Shows the SUM of Event Commission + Seller Commission (if any exist)
+
+            Scenarios where Total Commission is visible:
+            1. Event only: Shows Event + Total = Event value
+            2. Seller only: Shows Seller + Total = Seller value
+            3. Both: Shows Event + Seller + Total = sum
+        --}}
         if (hasCommission) {
             $('#total-commission-value').text(totalCommission.toFixed(2));
             $('#total-commission-container').show();
             $('#commission-divider').show();
         } else {
+            {{-- Hide all commission sections when no commissions apply --}}
             $('#total-commission-container').hide();
             $('#commission-divider').hide();
         }

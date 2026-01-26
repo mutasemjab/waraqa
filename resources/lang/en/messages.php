@@ -355,7 +355,6 @@ return [
     'active' => 'Active',
     'inactive' => 'Inactive',
     'status' => 'Status',
-    'currency' => 'JOD',
 
     // Countries
     'countries' => 'Countries',
@@ -1676,4 +1675,8 @@ return [
     'total_commission' => 'Total Commission',
     'Created_by' => 'Created By',
     'Notes' => 'Notes',
+    'received_date' => 'Received Date',
+    'product_code' => 'Product Code',
+    'purchase_information' => 'Purchase Information',
+    'purchase_items' => 'Purchase Items',
 ];

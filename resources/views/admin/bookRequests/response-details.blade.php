@@ -26,7 +26,7 @@
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">{{ __('messages.Provider_Response_Details') }}</h4>
-                    <a href="{{ route('bookRequests.show', $response->bookRequest->id) }}" class="btn btn-light btn-sm">
+                    <a href="{{ route('bookRequests.show', $response->bookRequest->id) }}" class="btn btn-sm">
                         <i class="fas fa-arrow-left"></i> {{ __('messages.Back') }}
                     </a>
                 </div>
@@ -99,7 +99,7 @@
                                 <div class="col-md-4">
                                     <p class="mb-3">
                                         <strong>{{ __('messages.Price') }}:</strong><br>
-                                        <span class="fs-6">{{ number_format($response->price, 2) }} {{ __('messages.currency') ?? 'KWD' }}</span>
+                                        <span class="fs-6">{{ number_format($response->price, 2) }} <x-riyal-icon /></span>
                                     </p>
                                 </div>
                                 <div class="col-md-4">
@@ -116,13 +116,13 @@
                                 <div class="col-md-6">
                                     <p class="mb-2">
                                         <strong>{{ __('messages.Total_Amount') }}:</strong>
-                                        <span class="float-end">{{ number_format($response->available_quantity * $response->price, 2) }} {{ __('messages.currency') ?? 'KWD' }}</span>
+                                        <span class="float-end">{{ number_format($response->available_quantity * $response->price, 2) }} <x-riyal-icon /></span>
                                     </p>
                                 </div>
                                 <div class="col-md-6">
                                     <p class="mb-2">
                                         <strong>{{ __('messages.Total_Tax') }}:</strong>
-                                        <span class="float-end">{{ number_format(($response->available_quantity * $response->price * $response->tax_percentage) / 100, 2) }} {{ __('messages.currency') ?? 'KWD' }}</span>
+                                        <span class="float-end">{{ number_format(($response->available_quantity * $response->price * $response->tax_percentage) / 100, 2) }} <x-riyal-icon /></span>
                                     </p>
                                 </div>
                             </div>
@@ -133,7 +133,7 @@
                                         <strong class="fs-6">{{ __('messages.Grand_Total') }}:</strong>
                                         <span class="float-end fs-6">
                                             <strong class="text-primary">
-                                                {{ number_format(($response->available_quantity * $response->price) + (($response->available_quantity * $response->price * $response->tax_percentage) / 100), 2) }} {{ __('messages.currency') ?? 'KWD' }}
+                                                {{ number_format(($response->available_quantity * $response->price) + (($response->available_quantity * $response->price * $response->tax_percentage) / 100), 2) }} <x-riyal-icon />
                                             </strong>
                                         </span>
                                     </p>
@@ -198,10 +198,19 @@
                                     <p class="text-muted">{{ __('messages.Confirm_Approve_Message') }}</p>
 
                                     <div class="form-group mt-3">
+                                        <label for="quantity" class="form-label">{{ __('messages.Quantity') }} <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" step="1" class="form-control" id="quantity" name="quantity" value="{{ $response->available_quantity }}" min="1" required>
+                                            <span class="input-group-text">{{ __('messages.units') }}</span>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">يمكنك تعديل الكمية المراد الموافقة عليها</small>
+                                    </div>
+
+                                    <div class="form-group">
                                         <label for="price" class="form-label">{{ __('messages.Price') }} <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ number_format($response->price, 2) }}" required>
-                                            <span class="input-group-text">{{ __('messages.currency') ?? 'KWD' }}</span>
+                                            <span class="input-group-text"><x-riyal-icon /></span>
                                         </div>
                                         <small class="text-muted d-block mt-2">يمكنك تعديل السعر حسب التفاوض مع المورد</small>
                                     </div>
@@ -214,19 +223,19 @@
                                     <div class="alert alert-light">
                                         <p class="mb-2"><strong>{{ __('messages.Summary') }}:</strong></p>
                                         <p class="mb-1">
-                                            <strong>{{ __('messages.Quantity') }}:</strong> {{ $response->available_quantity }} وحدة
+                                            <strong>{{ __('messages.Quantity') }}:</strong> <span id="modalQuantity">{{ $response->available_quantity }}</span> وحدة
                                         </p>
                                         <p class="mb-1">
-                                            <strong>{{ __('messages.Price') }}:</strong> <span id="modalPrice">{{ number_format($response->price, 2) }}</span> {{ __('messages.currency') ?? 'KWD' }}
+                                            <strong>{{ __('messages.Price') }}:</strong> <span id="modalPrice">{{ number_format($response->price, 2) }}</span> <x-riyal-icon />
                                         </p>
                                         <p class="mb-1">
-                                            <strong>{{ __('messages.Total_Amount') }}:</strong> <span id="totalAmount">0</span> {{ __('messages.currency') ?? 'KWD' }}
+                                            <strong>{{ __('messages.Total_Amount') }}:</strong> <span id="totalAmount">0</span> <x-riyal-icon />
                                         </p>
                                         <p class="mb-1">
                                             <strong>{{ __('messages.Tax_Percentage') }}:</strong> {{ $response->tax_percentage ?? 0 }}% (حسب اللوائح الحكومية)
                                         </p>
                                         <p class="mb-0 border-top pt-2">
-                                            <strong class="text-primary">{{ __('messages.Grand_Total') }}:</strong> <span id="grandTotal" class="text-primary fs-6">0</span> {{ __('messages.currency') ?? 'KWD' }}
+                                            <strong class="text-primary">{{ __('messages.Grand_Total') }}:</strong> <span id="grandTotal" class="text-primary fs-6">0</span> <x-riyal-icon />
                                         </p>
                                     </div>
                                 </div>
@@ -273,11 +282,13 @@
                 </div>
 
                 <script>
+                    document.getElementById('quantity').addEventListener('input', updateTotals);
+                    document.getElementById('quantity').addEventListener('change', updateTotals);
                     document.getElementById('price').addEventListener('input', updateTotals);
                     document.getElementById('price').addEventListener('change', updateTotals);
 
                     function updateTotals() {
-                        const quantity = {{ $response->available_quantity }};
+                        const quantity = parseFloat(document.getElementById('quantity').value) || 0;
                         const price = parseFloat(document.getElementById('price').value) || 0;
                         const tax = {{ $response->tax_percentage ?? 0 }};
 
@@ -285,6 +296,7 @@
                         const taxAmount = (totalAmount * tax) / 100;
                         const grandTotal = totalAmount + taxAmount;
 
+                        document.getElementById('modalQuantity').textContent = quantity;
                         document.getElementById('modalPrice').textContent = price.toFixed(2);
                         document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
                         document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);

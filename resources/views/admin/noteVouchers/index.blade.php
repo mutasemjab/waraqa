@@ -39,14 +39,11 @@
             @if (@isset($data) && !@empty($data) && count($data) > 0)
             <table id="example2" class="table table-bordered table-hover">
                 <thead class="custom_thead">
-
-
                     <th>{{ __('messages.number') }}</th>
                     <th>{{ __('messages.note') }}</th>
                     <th>{{ __('messages.date_note_voucher') }}</th>
                     <th>{{ __('messages.noteVoucherTypes') }}</th>
-
-                    <th></th>
+                    <th>{{ __('messages.Actions') }}</th>
                 </thead>
                 <tbody>
                     @foreach ($data as $info)
@@ -55,23 +52,26 @@
 
                         <td>{{ $info->number }}</td>
                         <td>{{ $info->note ?? null }}</td>
-                        <td>{{ $info->date_note_voucher }}</td>
+                        <td>{{ $info->date_note_voucher->format('Y-m-d') }}</td>
                         <td>{{ $info->noteVoucherType->name }}</td>
-
-
                         <td>
+                            <a href="{{ route('noteVouchers.show', $info->id) }}" class="btn btn-sm btn-info" title="{{ __('messages.View') }}">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             @can('noteVoucher-edit')
-                            <a href="{{ route('noteVouchers.edit', $info->id) }}" class="btn btn-sm  btn-primary">{{
-                                __('messages.Edit') }}</a>
+                            <a href="{{ route('noteVouchers.edit', $info->id) }}" class="btn btn-sm btn-primary" title="{{ __('messages.Edit') }}">
+                                <i class="fas fa-edit"></i>
+                            </a>
                             @endcan
                             @can('noteVoucher-delete')
-                            <form action="{{ route('noteVouchers.destroy', $info->id) }}" method="POST">
+                            <form action="{{ route('noteVouchers.destroy', $info->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">{{ __('messages.Delete') }}</button>
+                                <button type="submit" class="btn btn-sm btn-danger" title="{{ __('messages.Delete') }}" onclick="return confirm('{{ __('messages.are_you_sure') }}');">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </form>
                             @endcan
-
                         </td>
 
 

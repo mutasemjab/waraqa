@@ -153,6 +153,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('reports/providers/{providerId}/data', 'App\Http\Controllers\Admin\ProvidersReportController@getProviderData')->name('admin.providers.report.data');
         Route::get('reports/providers/products/{providerId}', 'App\Http\Controllers\Admin\ProvidersReportController@getProducts')->name('admin.reports.providers.getProducts');
         Route::get('reports/providers/{providerId}/book-requests', 'App\Http\Controllers\Admin\ProvidersReportController@getBookRequestsData')->name('admin.reports.providers.bookRequests');
+        Route::get('reports/providers/{providerId}/purchases', 'App\Http\Controllers\Admin\ProvidersReportController@getPurchasesData')->name('admin.reports.providers.purchases');
     });
 });
 

@@ -47,6 +47,11 @@ class SearchController extends Controller
                     $roles = array_map('trim', explode(',', $rolesString));
                     $query->role($roles);
                 }
+            } elseif ($model === 'App\Models\Warehouse') {
+                if ($filter === 'without_user') {
+                    // Get only admin warehouses (warehouses without user_id)
+                    $query->whereNull('user_id');
+                }
             }
 
             // Apply exclude filter

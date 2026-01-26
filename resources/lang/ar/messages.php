@@ -401,7 +401,6 @@ return [
     'active' => 'نشط',
     'inactive' => 'غير نشط',
     'status' => 'الحالة',
-    'currency' => 'دينار',
 
     // Countries
     'countries' => 'المدن',
@@ -1740,4 +1739,8 @@ return [
     'total_commission' => 'إجمالي العمولة',
     'Created_by' => 'أنشأ بواسطة',
     'Notes' => 'ملاحظات',
+    'received_date' => 'تاريخ الاستلام',
+    'product_code' => 'رمز المنتج',
+    'purchase_information' => 'معلومات المشتراة',
+    'purchase_items' => 'عناصر المشتراة',
 ];
