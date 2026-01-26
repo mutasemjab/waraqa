@@ -87,6 +87,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::resource('orders', OrderController::class);
         Route::resource('providers', ProviderController::class);
         Route::resource('warehouses', WarehouseController::class);
+        Route::get('warehouses/{id}/quantities', [WarehouseController::class, 'quantities'])->name('warehouses.quantities');
         Route::resource('noteVouchers', NoteVoucherController::class);
         Route::resource('user_depts', UserDeptController::class);
         Route::resource('bookRequests', BookRequestController::class);

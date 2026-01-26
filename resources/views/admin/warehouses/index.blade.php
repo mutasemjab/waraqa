@@ -44,6 +44,7 @@
                         <td>
                             @can('warehouse-table')
                             <a href="{{ route('warehouses.show', $info->id) }}" class="btn btn-sm btn-info">{{ __('messages.View') }}</a>
+                            <a href="{{ route('warehouses.quantities', $info->id) }}" class="btn btn-sm btn-warning">{{ __('messages.Quantities_Details') }}</a>
                             @endcan
                             @can('warehouse-edit')
                             <a href="{{ route('warehouses.edit', $info->id) }}" class="btn btn-sm  btn-primary">{{ __('messages.Edit') }}</a>

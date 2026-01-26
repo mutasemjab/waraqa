@@ -973,6 +973,7 @@ return [
     // Warehouse
     'my_warehouse' => 'My Warehouse',
     'warehouse_inventory' => 'Warehouse Inventory',
+    'Quantities_Details' => 'Quantities Details',
     'recent_movements' => 'Recent Movements',
     'movement_type' => 'Movement Type',
     'in_movement' => 'IN',

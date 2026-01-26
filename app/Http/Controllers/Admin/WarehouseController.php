@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Shop;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 
@@ -114,8 +113,58 @@ class WarehouseController extends Controller
     {
         $warehouse = Warehouse::findOrFail($id);
         $movements = $warehouse->movements()->paginate(10);
-        
+
         return view('admin.warehouses.show', compact('warehouse', 'movements'));
+    }
+
+    public function quantities($id)
+    {
+        if (!auth()->user()->can('warehouse-table')) {
+            return redirect()->back()->with('error', "Access Denied");
+        }
+
+        $warehouse = Warehouse::findOrFail($id);
+        $locale = \Illuminate\Support\Facades\App::getLocale();
+        $nameColumn = $locale === 'ar' ? 'name_ar' : 'name_en';
+
+        // Get all products with their quantities in this warehouse
+        $products = \Illuminate\Support\Facades\DB::table('voucher_products')
+            ->join('note_vouchers', 'voucher_products.note_voucher_id', '=', 'note_vouchers.id')
+            ->join('note_voucher_types', 'note_vouchers.note_voucher_type_id', '=', 'note_voucher_types.id')
+            ->join('products', 'voucher_products.product_id', '=', 'products.id')
+            ->select(
+                'voucher_products.product_id',
+                \Illuminate\Support\Facades\DB::raw('products.' . $nameColumn . ' as product_name'),
+                \Illuminate\Support\Facades\DB::raw('SUM(CASE
+                    WHEN (note_voucher_types.in_out_type = 1 AND note_vouchers.to_warehouse_id = ' . $warehouse->id . ')
+                    OR (note_voucher_types.in_out_type = 3 AND note_vouchers.to_warehouse_id = ' . $warehouse->id . ')
+                    THEN voucher_products.quantity
+                    ELSE 0
+                END) as input_quantity'),
+                \Illuminate\Support\Facades\DB::raw('SUM(CASE
+                    WHEN note_voucher_types.in_out_type IN (2, 3) AND note_vouchers.from_warehouse_id = ' . $warehouse->id . '
+                    THEN voucher_products.quantity
+                    ELSE 0
+                END) as output_quantity')
+            )
+            ->where(function($query) use ($warehouse) {
+                $query->where(function($q) use ($warehouse) {
+                    $q->where('note_voucher_types.in_out_type', 1)
+                      ->where('note_vouchers.to_warehouse_id', $warehouse->id);
+                })
+                ->orWhere(function($q) use ($warehouse) {
+                    $q->where('note_voucher_types.in_out_type', 3)
+                      ->where('note_vouchers.to_warehouse_id', $warehouse->id);
+                })
+                ->orWhere(function($q) use ($warehouse) {
+                    $q->whereIn('note_voucher_types.in_out_type', [2, 3])
+                      ->where('note_vouchers.from_warehouse_id', $warehouse->id);
+                });
+            })
+            ->groupBy('voucher_products.product_id')
+            ->get();
+
+        return view('admin.warehouses.quantities', compact('warehouse', 'products'));
     }
 
 }

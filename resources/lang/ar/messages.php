@@ -1030,6 +1030,7 @@ return [
     // Warehouse
     'my_warehouse' => 'مستودعي',
     'warehouse_inventory' => 'مخزون المستودع',
+    'Quantities_Details' => 'تفاصيل الكميات',
     'recent_movements' => 'الحركات الأخيرة',
     'movement_type' => 'نوع الحركة',
     'in_movement' => 'دخول',
