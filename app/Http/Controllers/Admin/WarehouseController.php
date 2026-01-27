@@ -161,7 +161,7 @@ class WarehouseController extends Controller
                       ->where('note_vouchers.from_warehouse_id', $warehouse->id);
                 });
             })
-            ->groupBy('voucher_products.product_id')
+            ->groupBy('voucher_products.product_id', 'products.' . $nameColumn)
             ->get();
 
         return view('admin.warehouses.quantities', compact('warehouse', 'products'));
