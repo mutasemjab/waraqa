@@ -159,7 +159,7 @@
                     <tbody>
                         @php
                             $total_quantity = 0;
-                            $total_price = 0;
+                            $total_price_before_tax = 0;
                             $total_tax = 0;
                         @endphp
                         @foreach ($noteVoucher->voucherProducts as $key => $voucherProduct)
@@ -173,13 +173,13 @@
 
                                 // Back-calculate the pre-tax total
                                 $tax_divisor = 1 + ($tax_percentage / 100);
-                                $total_price_before_tax = round($total_price_after_tax / $tax_divisor, 2);
+                                $item_price_before_tax = round($total_price_after_tax / $tax_divisor, 2);
 
                                 // Calculate tax value as the difference
-                                $tax_amount = round($total_price_after_tax - $total_price_before_tax, 2);
+                                $tax_amount = round($total_price_after_tax - $item_price_before_tax, 2);
 
                                 $total_quantity += $quantity;
-                                $total_price += $total_price_after_tax;
+                                $total_price_before_tax += $item_price_before_tax;
                                 $total_tax += $tax_amount;
                             @endphp
                             <tr>
@@ -197,7 +197,7 @@
                             <td><strong>{{ number_format($total_quantity, 2) }}</strong></td>
                             <td>-</td>
                             <td>-</td>
-                            <td><strong>{{ number_format($total_price, 2) }} <x-riyal-icon /></strong></td>
+                            <td><strong>{{ number_format($total_price_before_tax, 2) }} <x-riyal-icon /></strong></td>
                             <td>-</td>
                         </tr>
                         @if($total_tax > 0)
@@ -207,7 +207,7 @@
                         </tr>
                         <tr class="table-success">
                             <td colspan="5"><strong>{{ __('messages.total_after_tax') }}</strong></td>
-                            <td colspan="2"><strong>{{ number_format($total_price, 2) }} <x-riyal-icon /></strong></td>
+                            <td colspan="2"><strong>{{ number_format($total_price_before_tax + $total_tax, 2) }} <x-riyal-icon /></strong></td>
                         </tr>
                         @endif
                     </tbody>
