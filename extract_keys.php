@@ -53,11 +53,14 @@ function extractKeys($content, $prefixes) {
     return $foundKeys;
 }
 
-// Get all PHP files in views directory
+// Get all PHP files in views and app directories
 $viewsDir = __DIR__ . '/resources/views';
-$files = getPhpFiles($viewsDir);
+$appDir = __DIR__ . '/app';
+$viewsFiles = getPhpFiles($viewsDir);
+$appFiles = getPhpFiles($appDir);
+$files = array_merge($viewsFiles, $appFiles);
 
-echo "Scanning " . count($files) . " PHP files in resources/views/ directory...\n\n";
+echo "Scanning " . count($files) . " PHP files in resources/views/ and app/ directories...\n\n";
 
 // Process each file
 foreach ($files as $file) {

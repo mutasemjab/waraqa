@@ -155,6 +155,12 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('reports/providers/products/{providerId}', 'App\Http\Controllers\Admin\ProvidersReportController@getProducts')->name('admin.reports.providers.getProducts');
         Route::get('reports/providers/{providerId}/book-requests', 'App\Http\Controllers\Admin\ProvidersReportController@getBookRequestsData')->name('admin.reports.providers.bookRequests');
         Route::get('reports/providers/{providerId}/purchases', 'App\Http\Controllers\Admin\ProvidersReportController@getPurchasesData')->name('admin.reports.providers.purchases');
+        Route::get('reports/providers/{providerId}/distribution', 'App\Http\Controllers\Admin\ProvidersReportController@getDistributionData')->name('admin.reports.providers.distribution');
+        Route::get('reports/providers/{providerId}/sales-by-warehouse', 'App\Http\Controllers\Admin\ProvidersReportController@getSalesByWarehouse')->name('admin.reports.providers.salesByWarehouse');
+        Route::get('reports/providers/{providerId}/sales-by-place', 'App\Http\Controllers\Admin\ProvidersReportController@getSalesByPlaceData')->name('admin.reports.providers.salesByPlace');
+        Route::get('reports/providers/{providerId}/refunds', 'App\Http\Controllers\Admin\ProvidersReportController@getRefundsData')->name('admin.reports.providers.refunds');
+        Route::get('reports/providers/{providerId}/sellers-payments', 'App\Http\Controllers\Admin\ProvidersReportController@getSellersPaymentsData')->name('admin.reports.providers.sellersPayments');
+        Route::get('reports/providers/{providerId}/stock-balance', 'App\Http\Controllers\Admin\ProvidersReportController@getStockBalanceData')->name('admin.reports.providers.stockBalance');
     });
 });
 
