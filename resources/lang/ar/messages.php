@@ -553,6 +553,7 @@ return [
     
     // Actions & Messages
     'view_details' => 'عرض التفاصيل',
+    'details' => 'التفاصيل',
     'update_status' => 'تحديث الحالة',
     'enter_reason_for_status_change' => 'أدخل سبب تغيير الحالة',
     
@@ -1840,5 +1841,22 @@ return [
     'no_purchases_for_this_provider' => 'لا توجد عمليات شراء لهذا المورد',
     'number_of_requests' => 'عدد الطلبات',
     'sales' => 'المبيعات',
+    'sale_number' => 'رقم المبيعة',
+    'search_by_sale_number' => 'البحث برقم المبيعة',
     'select_sections_to_display' => 'اختر الأقسام التي تريد عرضها',
+
+    // Warehouse Management
+    'create_warehouse' => 'إنشاء مستودع',
+    'manage_your_warehouse' => 'إدارة مستودعك',
+    'no_warehouse' => 'لا يوجد مستودع',
+    'warehouse_created_successfully' => 'تم إنشاء المستودع بنجاح',
+    'warehouse_details' => 'تفاصيل المستودع',
+    'warehouse_products' => 'منتجات المستودع',
+    'you_already_have_warehouse' => 'أنت بالفعل لديك مستودع',
+    'you_do_not_have_warehouse' => 'ليس لديك مستودع حتى الآن. أنشئ واحداً لإدارة مخزونك.',
+
+    // Missing translations from sales
+    'customer_address' => 'عنوان العميل',
+    'customer_email' => 'بريد العميل الإلكتروني',
+    'total_tax' => 'إجمالي الضريبة',
 ];

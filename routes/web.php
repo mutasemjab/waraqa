@@ -61,9 +61,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/orders', [UserDashboardController::class, 'orders'])->name('orders');
         Route::get('/orders/{id}', [UserDashboardController::class, 'orderShow'])->name('orders.show');
 
-        // Debts Management
-        Route::get('/debts', [UserDashboardController::class, 'debts'])->name('debts');
-
         // Sales Management
         Route::get('/sales', [UserSalesController::class, 'index'])->name('sales.index');
         Route::get('/sales/create', [UserSalesController::class, 'create'])->name('sales.create');
@@ -73,6 +70,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         // Warehouse Management
         Route::get('/warehouse', [UserSalesController::class, 'warehouse'])->name('warehouse');
+        Route::post('/warehouse/create', [UserSalesController::class, 'createWarehouse'])->name('warehouse.create');
 
         // Analytics & Reports
         Route::get('/analytics', [UserDashboardController::class, 'analytics'])->name('analytics');

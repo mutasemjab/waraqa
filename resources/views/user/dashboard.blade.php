@@ -41,15 +41,6 @@
         </div>
     </div>
     
-    <div class="stat-card">
-        <div class="stat-icon danger">
-            <i class="fas fa-credit-card"></i>
-        </div>
-        <div class="stat-content">
-            <h3><x-riyal-icon /> {{ number_format($stats['total_debt'], 2) }}</h3>
-            <p>{{ __('messages.total_debt') }}</p>
-        </div>
-    </div>
 </div>
 
 <!-- Quick Actions -->
@@ -63,19 +54,13 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <a href="{{ route('user.orders') }}" class="btn btn-outline-primary w-100 py-3">
                             <i class="fas fa-list-alt d-block mb-2" style="font-size: 1.5rem;"></i>
                             {{ __('messages.view_orders') }}
                         </a>
                     </div>
-                    <div class="col-md-4">
-                        <a href="{{ route('user.debts') }}" class="btn btn-outline-warning w-100 py-3">
-                            <i class="fas fa-money-bill-wave d-block mb-2" style="font-size: 1.5rem;"></i>
-                            {{ __('messages.manage_debts') }}
-                        </a>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <a href="{{ route('user.profile') }}" class="btn btn-outline-info w-100 py-3">
                             <i class="fas fa-user-edit d-block mb-2" style="font-size: 1.5rem;"></i>
                             {{ __('messages.edit_profile') }}
@@ -189,48 +174,15 @@
             </div>
             <div class="card-body">
                 <div class="row text-center">
-                    <div class="col-6">
-                        <div class="border-end">
-                            <h4 class="text-primary">{{ auth()->user()->orders()->where('payment_status', 1)->count() }}</h4>
-                            <small class="text-muted">{{ __('messages.paid_orders') }}</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <h4 class="text-warning">{{ auth()->user()->userDepts()->where('status', 1)->count() }}</h4>
-                        <small class="text-muted">{{ __('messages.active_debts') }}</small>
+                    <div class="col-12">
+                        <h4 class="text-primary">{{ auth()->user()->orders()->where('payment_status', 1)->count() }}</h4>
+                        <small class="text-muted">{{ __('messages.paid_orders') }}</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Notifications -->
-@if(auth()->user()->userDepts()->where('status', 1)->exists())
-    <div class="card border-warning">
-        <div class="card-header bg-warning text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-exclamation-triangle me-2"></i>{{ __('messages.payment_reminders') }}
-            </h5>
-        </div>
-        <div class="card-body">
-            <p class="mb-3">{{ __('messages.you_have_outstanding_debts') }}</p>
-            <div class="row">
-                @foreach(auth()->user()->userDepts()->where('status', 1)->take(3)->get() as $debt)
-                    <div class="col-md-4 mb-2">
-                        <div class="bg-light p-3 rounded">
-                            <strong>{{ __('messages.order') }} #{{ $debt->order->number }}</strong><br>
-                            <span class="text-danger"><x-riyal-icon /> {{ number_format($debt->remaining_amount, 2) }}</span>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-            <a href="{{ route('user.debts') }}" class="btn btn-warning mt-3">
-                <i class="fas fa-credit-card me-1"></i>{{ __('messages.view_all_debts') }}
-            </a>
-        </div>
-    </div>
-@endif
 @endsection
 
 @push('scripts')

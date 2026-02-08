@@ -495,6 +495,7 @@ return [
     
     // Actions & Messages
     'view_details' => 'View Details',
+    'details' => 'Details',
     'update_status' => 'Update Status',
     'enter_reason_for_status_change' => 'Enter reason for status change',
  'orders_management' => 'Orders Management',
@@ -1776,5 +1777,22 @@ return [
     'no_purchases_for_this_provider' => 'No purchases for this provider',
     'number_of_requests' => 'Number of Requests',
     'sales' => 'Sales',
+    'sale_number' => 'Sale Number',
+    'search_by_sale_number' => 'Search by Sale Number',
     'select_sections_to_display' => 'Select sections to display',
+
+    // Warehouse Management
+    'create_warehouse' => 'Create Warehouse',
+    'manage_your_warehouse' => 'Manage Your Warehouse',
+    'no_warehouse' => 'No Warehouse',
+    'warehouse_created_successfully' => 'Warehouse created successfully',
+    'warehouse_details' => 'Warehouse Details',
+    'warehouse_products' => 'Warehouse Products',
+    'you_already_have_warehouse' => 'You already have a warehouse',
+    'you_do_not_have_warehouse' => 'You do not have a warehouse yet. Create one to manage your inventory.',
+
+    // Missing translations from sales
+    'customer_address' => 'Customer Address',
+    'customer_email' => 'Customer Email',
+    'total_tax' => 'Total Tax',
 ];

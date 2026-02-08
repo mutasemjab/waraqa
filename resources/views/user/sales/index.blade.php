@@ -70,7 +70,7 @@
                     
                     <div class="col-md-4">
                         <label class="form-label">{{ __('messages.search') }}</label>
-                        <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search_by_voucher_number') }}" value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search_by_sale_number') }}" value="{{ request('search') }}">
                     </div>
                     
                     <div class="col-md-2">
@@ -102,7 +102,7 @@
 <div class="card">
     <div class="card-header">
         <h5 class="mb-0">
-            <i class="fas fa-list me-2"></i>{{ __('messages.sales_history') }}
+            <i class="fas fa-list me-2"></i>{{ __('messages.sales') }}
             <span class="badge bg-primary ms-2">{{ $sales->total() }}</span>
         </h5>
     </div>
@@ -112,76 +112,45 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>{{ __('messages.voucher_number') }}</th>
+                            <th>{{ __('messages.sale_number') }}</th>
                             <th>{{ __('messages.date') }}</th>
-                            <th>{{ __('messages.customer_info') }}</th>
+                            <th>{{ __('messages.customer_name') }}</th>
+                            <th>{{ __('messages.customer_phone') }}</th>
                             <th>{{ __('messages.products_count') }}</th>
                             <th>{{ __('messages.total_quantity') }}</th>
-                            <th>{{ __('messages.notes') }}</th>
+                            <th>{{ __('messages.total_amount') }}</th>
+                            <th>{{ __('messages.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($sales as $sale)
                             <tr>
                                 <td>
-                                    <strong>#{{ $sale->number }}</strong>
+                                    <strong>{{ $sale->sale_number }}</strong>
                                 </td>
-                                <td>{{ Carbon\Carbon::parse($sale->date_note_voucher)->format('Y-m-d') }}</td>
+                                <td>{{ Carbon\Carbon::parse($sale->sale_date)->format('Y-m-d') }}</td>
+                                <td>{{ $sale->customer_name }}</td>
                                 <td>
-                                    @php
-                                        $customerInfo = '';
-                                        if (strpos($sale->note, 'Customer:') !== false) {
-                                            $parts = explode('|', $sale->note);
-                                            foreach ($parts as $part) {
-                                                if (strpos($part, 'Customer:') !== false) {
-                                                    $customerInfo = trim(str_replace('Customer:', '', $part));
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    @endphp
-                                    @if($customerInfo)
-                                        <strong>{{ $customerInfo }}</strong>
-                                        @if(strpos($sale->note, 'Phone:') !== false)
-                                            @php
-                                                $phone = '';
-                                                foreach (explode('|', $sale->note) as $part) {
-                                                    if (strpos($part, 'Phone:') !== false) {
-                                                        $phone = trim(str_replace('Phone:', '', $part));
-                                                        break;
-                                                    }
-                                                }
-                                            @endphp
-                                            <br><small class="text-muted">{{ $phone }}</small>
-                                        @endif
-                                    @else
-                                        <span class="text-muted">{{ __('messages.customer_not_specified') }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ $sale->voucherProducts->count() }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-success">{{ $sale->voucherProducts->sum('quantity') }}</span>
-                                </td>
-                                <td>
-                                    @if($sale->note)
-                                        @php
-                                            $cleanNote = $sale->note;
-                                            $cleanNote = preg_replace('/Customer:.*?\|/', '', $cleanNote);
-                                            $cleanNote = preg_replace('/Phone:.*?\|/', '', $cleanNote);
-                                            $cleanNote = trim($cleanNote, '| ');
-                                        @endphp
-                                        @if($cleanNote)
-                                            <small class="text-muted">{{ Str::limit($cleanNote, 30) }}</small>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
+                                    @if($sale->customer_phone)
+                                        <small class="text-muted">{{ $sale->customer_phone }}</small>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
-                               
+                                <td>
+                                    <span class="badge bg-info">{{ $sale->items->count() }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ $sale->items->sum('quantity') }}</span>
+                                </td>
+                                <td>
+                                    <strong><x-riyal-icon style="width: 12px; height: 12px;" /> {{ number_format($sale->total_amount, 2) }}</strong>
+                                </td>
+                                <td>
+                                    <a href="{{ route('user.sales.show', $sale->id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye me-1"></i>{{ __('messages.details') ?? 'التفاصيل' }}
+                                    </a>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -211,7 +180,7 @@
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body text-center">
-                    <h4>{{ $sales->sum(function($sale) { return $sale->voucherProducts->count(); }) }}</h4>
+                    <h4>{{ $sales->sum(function($sale) { return $sale->items->count(); }) }}</h4>
                     <p class="mb-0">{{ __('messages.total_product_types') }}</p>
                 </div>
             </div>
@@ -219,7 +188,7 @@
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body text-center">
-                    <h4>{{ $sales->sum(function($sale) { return $sale->voucherProducts->sum('quantity'); }) }}</h4>
+                    <h4>{{ $sales->sum(function($sale) { return $sale->items->sum('quantity'); }) }}</h4>
                     <p class="mb-0">{{ __('messages.total_items_in_period') }}</p>
                 </div>
             </div>
@@ -235,7 +204,7 @@
         <div class="col-md-3">
             <div class="card bg-warning text-white">
                 <div class="card-body text-center">
-                    <h4>{{ number_format($sales->sum(function($sale) { return $sale->voucherProducts->sum(function($vp) { return $vp->quantity * $vp->purchasing_price; }); }), 2) }}</h4>
+                    <h4><x-riyal-icon style="width: 14px; height: 14px;" /> {{ number_format($sales->sum('total_amount'), 2) }}</h4>
                     <p class="mb-0">{{ __('messages.total_sales_value') }}</p>
                 </div>
             </div>
@@ -243,42 +212,10 @@
     </div>
 @endif
 
-<!-- Quick View Modal -->
-<div class="modal fade" id="quickViewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{ __('messages.sale_details') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="quickViewContent">
-                <div class="text-center">
-                    <i class="fas fa-spinner fa-spin"></i> {{ __('messages.loading') }}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
 <script>
-function showSaleDetails(saleId) {
-    const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
-    modal.show();
-    
-    // Simulate loading sale details (you would make an AJAX call here)
-    setTimeout(() => {
-        document.getElementById('quickViewContent').innerHTML = `
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                {{ __('messages.sale_details_would_load_here') }}
-            </div>
-            <p>{{ __('messages.click_view_details_for_full_info') }}</p>
-        `;
-    }, 1000);
-}
-
 // Auto-hide alerts
 setTimeout(function() {
     const alerts = document.querySelectorAll('.alert-dismissible');

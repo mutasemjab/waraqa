@@ -121,11 +121,6 @@
                                         <a href="{{ route('user.orders.show', $order->id) }}" class="btn btn-sm btn-outline-primary" title="{{ __('messages.view_details') }}">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        @if($order->remaining_amount > 0)
-                                            <button class="btn btn-sm btn-outline-success" title="{{ __('messages.make_payment') }}" onclick="showPaymentModal({{ $order->id }}, '{{ $order->number }}', {{ $order->remaining_amount }})">
-                                                <i class="fas fa-credit-card"></i>
-                                            </button>
-                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -189,78 +184,10 @@
     </div>
 @endif
 
-<!-- Payment Modal -->
-<div class="modal fade" id="paymentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{ __('messages.payment_request') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    {{ __('messages.payment_request_note') }}
-                </div>
-                <form id="paymentRequestForm">
-                    <input type="hidden" id="order_id" name="order_id">
-                    <div class="mb-3">
-                        <label class="form-label">{{ __('messages.order_number') }}</label>
-                        <input type="text" id="order_number" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">{{ __('messages.remaining_amount') }}</label>
-                        <input type="text" id="remaining_amount" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">{{ __('messages.payment_method') }}</label>
-                        <select name="payment_method" class="form-select" required>
-                            <option value="">{{ __('messages.select_payment_method') }}</option>
-                            <option value="cash">{{ __('messages.cash') }}</option>
-                            <option value="bank_transfer">{{ __('messages.bank_transfer') }}</option>
-                            <option value="credit_card">{{ __('messages.credit_card') }}</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">{{ __('messages.notes') }}</label>
-                        <textarea name="notes" class="form-control" rows="3" placeholder="{{ __('messages.payment_notes_placeholder') }}"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('messages.cancel') }}</button>
-                <button type="button" class="btn btn-success" onclick="submitPaymentRequest()">
-                    <i class="fas fa-paper-plane me-1"></i>{{ __('messages.send_request') }}
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
 <script>
-function showPaymentModal(orderId, orderNumber, remainingAmount) {
-    document.getElementById('order_id').value = orderId;
-    document.getElementById('order_number').value = orderNumber;
-    document.getElementById('remaining_amount').value = remainingAmount.toFixed(2);
-
-    const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
-    modal.show();
-}
-
-function submitPaymentRequest() {
-    // Here you would normally send an AJAX request to submit the payment request
-    // For now, we'll just show a success message
-    alert('{{ __("messages.payment_request_sent") }}');
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
-    modal.hide();
-    
-    // Reset form
-    document.getElementById('paymentRequestForm').reset();
-}
-
 // Auto-hide alerts
 setTimeout(function() {
     const alerts = document.querySelectorAll('.alert-dismissible');

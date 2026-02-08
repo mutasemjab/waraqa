@@ -14,6 +14,7 @@ use App\Models\Warehouse;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BookRequestController extends Controller
 {
@@ -112,9 +113,14 @@ class BookRequestController extends Controller
             ]);
 
             // استخراج الكمية والسعر والضريبة المعتمدة
-            $approvedQuantity = $validated['quantity'];
-            $approvedPrice = $validated['price'];
-            $approvedTax = $validated['tax_percentage'] ?? 0;
+            $approvedQuantity = (int)$validated['quantity'];
+            $approvedPrice = (float)$validated['price'];
+            $approvedTax = (float)($validated['tax_percentage'] ?? 0);
+
+            // حساب السعر الشامل الضريبة بدقة
+            $priceWithTax = $approvedPrice + ($approvedPrice * $approvedTax / 100);
+            // تقريب لأقرب فلس (منزلتين عشريتين)
+            $priceWithTax = round($priceWithTax, 2);
 
             // تحديث حالة الرد إلى موافق عليه مع السعر والضريبة والكمية المعتمدة
             $response->update(array_merge($validated, ['status' => 'approved']));
@@ -142,21 +148,49 @@ class BookRequestController extends Controller
                 'provider_id' => $response->provider_id,
             ]);
 
-            // إضافة المنتج إلى السند
+            // إضافة المنتج إلى السند بالسعر الشامل الضريبة
             VoucherProduct::create([
                 'note_voucher_id' => $noteVoucher->id,
                 'product_id' => $response->bookRequest->product_id,
                 'quantity' => $approvedQuantity,
-                'purchasing_price' => $approvedPrice,
+                'purchasing_price' => $priceWithTax,  // السعر الشامل الضريبة
                 'tax_percentage' => $approvedTax,
                 'note' => __('messages.approved_book_request') . ' - طلب رقم ' . $response->bookRequest->id,
             ]);
 
             // إنشاء Purchase (مشترية) تلقائياً
-            $totalAmount = $approvedPrice * $approvedQuantity;
-            $totalTax = ($totalAmount * $approvedTax) / 100;
+            $totalAmountBeforeTax = $approvedPrice * $approvedQuantity;
+            $totalTax = round(($totalAmountBeforeTax * $approvedTax) / 100, 2);
+            $totalAmount = round($totalAmountBeforeTax + $totalTax, 2);
 
-            $purchaseNumber = 'PUR-' . date('Y') . '-' . str_pad(Purchase::max('id') + 1, 5, '0', STR_PAD_LEFT);
+            // Generate unique purchase number with PO prefix
+            // Using database locking to prevent duplicate numbers in concurrent requests
+            $purchaseNumber = DB::transaction(function () {
+                // Lock the settings row to prevent concurrent modifications
+                $setting = DB::table('settings')
+                    ->where('key', 'last_purchase_number')
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($setting) {
+                    // Increment the existing purchase number
+                    $newNumber = $setting->value + 1;
+                    DB::table('settings')
+                        ->where('key', 'last_purchase_number')
+                        ->update(['value' => $newNumber]);
+                } else {
+                    // Initialize with 1001 if setting doesn't exist
+                    $newNumber = 1001;
+                    DB::table('settings')->insert([
+                        'key' => 'last_purchase_number',
+                        'value' => $newNumber,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+
+                return 'PO-' . $newNumber;
+            });
 
             $purchase = Purchase::create([
                 'purchase_number' => $purchaseNumber,

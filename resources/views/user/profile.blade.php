@@ -251,15 +251,11 @@
                     <a href="{{ route('user.orders') }}" class="btn btn-outline-primary">
                         <i class="fas fa-shopping-cart me-2"></i>{{ __('messages.view_my_orders') }}
                     </a>
-                    
-                    <a href="{{ route('user.debts') }}" class="btn btn-outline-warning">
-                        <i class="fas fa-credit-card me-2"></i>{{ __('messages.manage_my_debts') }}
-                    </a>
-                    
+
                     <a href="{{ route('user.analytics') }}" class="btn btn-outline-info">
                         <i class="fas fa-chart-line me-2"></i>{{ __('messages.view_analytics') }}
                     </a>
-                 
+
                 </div>
             </div>
         </div>

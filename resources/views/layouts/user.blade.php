@@ -432,18 +432,25 @@
                     <span>{{ __('messages.my_orders') }}</span>
                 </a>
             </div>
-            
-            <div class="nav-item">
-                <a href="{{ route('user.debts') }}" class="nav-link {{ request()->routeIs('user.debts*') ? 'active' : '' }}">
-                    <i class="fas fa-credit-card"></i>
-                    <span>{{ __('messages.my_debts') }}</span>
-                </a>
-            </div>
-            
+
             <div class="nav-item">
                 <a href="{{ route('user.profile') }}" class="nav-link {{ request()->routeIs('user.profile*') ? 'active' : '' }}">
                     <i class="fas fa-user-cog"></i>
                     <span>{{ __('messages.profile') }}</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="{{ route('user.warehouse') }}" class="nav-link {{ request()->routeIs('user.warehouse') ? 'active' : '' }}">
+                    <i class="fas fa-warehouse"></i>
+                    <span>{{ __('messages.warehouse') }}</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="{{ route('user.sales.index') }}" class="nav-link {{ request()->routeIs('user.sales*') ? 'active' : '' }}">
+                    <i class="fas fa-receipt"></i>
+                    <span>{{ __('messages.my_sales') }}</span>
                 </a>
             </div>
         </nav>
