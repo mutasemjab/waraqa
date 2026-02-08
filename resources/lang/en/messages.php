@@ -930,6 +930,7 @@ return [
     'track_your_sales_and_inventory' => 'Track your sales and inventory movements',
     'total_items_sold' => 'Total Items Sold',
     'this_month_sales' => 'This Month Sales',
+    'this_month_sales_value' => 'This Month Sales Value',
     'current_inventory' => 'Current Inventory',
     'search_by_voucher_number' => 'Search by voucher number',
     'sales_history' => 'Sales History',
@@ -1795,4 +1796,16 @@ return [
     'customer_address' => 'Customer Address',
     'customer_email' => 'Customer Email',
     'total_tax' => 'Total Tax',
+
+    // Distribution Point Sales Report
+    'distribution_point_sales_report' => 'Distribution Point Sales Report',
+    'no_sales_found' => 'No Sales Found',
+    'please_select_warehouse' => 'Please Select Warehouse',
+    'sales_list' => 'Sales List',
+    'search_by_product' => 'Search by Product',
+    'search_filters' => 'Search Filters',
+    'select_distribution_point_to_view_sales' => 'Select Distribution Point to View Sales',
+    'select_warehouse' => 'Select Warehouse',
+    'view_sales_by_distribution_point' => 'View Sales by Distribution Point',
+    'please_select_seller' => 'Please Select Seller',
 ];

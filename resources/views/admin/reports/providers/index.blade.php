@@ -270,7 +270,6 @@
 
             /* Ensure tables are visible */
             #productsTableContainer table,
-            #purchasesTableContainer table,
             #bookRequestsTableContainer table,
             #distributionTableContainer table,
             #salesTableContainer table,
@@ -505,7 +504,6 @@
             .sellers-payments-section,
             .sales-by-place-section,
             .book-requests-section,
-            .purchases-section,
             .products-section {
                 margin-bottom: 3px !important;
                 margin-top: 3px !important;
@@ -519,7 +517,6 @@
             .sellers-payments-section .card,
             .sales-by-place-section .card,
             .book-requests-section .card,
-            .purchases-section .card,
             .products-section .card {
                 border: 1px solid #ddd;
                 page-break-inside: avoid;
@@ -532,7 +529,6 @@
             .sellers-payments-section .card-header,
             .sales-by-place-section .card-header,
             .book-requests-section .card-header,
-            .purchases-section .card-header,
             .products-section .card-header {
                 background-color: #4472C4 !important;
                 color: white !important;
@@ -548,7 +544,6 @@
             .sellers-payments-section .card-title,
             .sales-by-place-section .card-title,
             .book-requests-section .card-title,
-            .purchases-section .card-title,
             .products-section .card-title {
                 color: white !important;
                 font-weight: bold !important;
@@ -577,7 +572,6 @@
             .sellers-payments-section .card-body,
             .sales-by-place-section .card-body,
             .book-requests-section .card-body,
-            .purchases-section .card-body,
             .products-section .card-body {
                 padding: 5px;
                 background: white;
@@ -654,18 +648,6 @@
                                 </div>
                             </div>
 
-                            <!-- Product Filter -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="product_id">{{ __('messages.product') }}</label>
-                                        <select id="product_id" class="form-control">
-                                            <option value="">{{ __('messages.select_product') }}</option>
-                                            <option value="all">{{ __('messages.all_products') }}</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -763,22 +745,6 @@
                             </div>
                             <div class="card-body">
                                 <div id="productsTableContainer">
-                                    <p class="text-center text-muted">{{ __('messages.No_data') }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Purchases Section -->
-                <div class="row mb-4 purchases-section">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">{{ __('messages.purchases') }}</h3>
-                            </div>
-                            <div class="card-body">
-                                <div id="purchasesTableContainer">
                                     <p class="text-center text-muted">{{ __('messages.No_data') }}</p>
                                 </div>
                             </div>
@@ -1054,52 +1020,6 @@
                 </div>
             </div>
 
-            <!-- Sales by Place Section -->
-            <div class="row mb-4 sales-by-place-section printable-section" style="display:block;">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h3 class="card-title"><i class="fas fa-store"></i> {{ __('messages.sales_by_place') }}</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-4">
-                                    <div class="info-box">
-                                        <span class="info-box-icon bg-success"><i class="fas fa-store"></i></span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">{{ __('messages.total_places') }}</span>
-                                            <span class="info-box-number" id="sales-place-total-places">0</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="info-box">
-                                        <span class="info-box-icon bg-info"><i class="fas fa-cube"></i></span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">{{ __('messages.total_quantity') }}</span>
-                                            <span class="info-box-number" id="sales-place-total-quantity">0</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="info-box">
-                                        <span class="info-box-icon bg-warning"><i class="fas fa-money-bill"></i></span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">{{ __('messages.total_revenue') }}</span>
-                                            <span class="info-box-number"><span id="sales-place-total-revenue">0.00</span>
-                                                <x-riyal-icon /></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="salesByPlaceTableContainer">
-                                <p class="text-center text-muted">{{ __('messages.no_data_available') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Stock Balance Section -->
             <div class="row mb-4 stock-balance-section printable-section" style="display:block;">
                 <div class="col-md-12">
@@ -1185,7 +1105,7 @@
                         </div>
                     </div>
 
-                    <!-- Products & Purchases Section -->
+                    <!-- Products Section -->
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card mb-3">
@@ -1201,20 +1121,6 @@
                             </div>
                         </div>
 
-                        <!-- Purchases Section -->
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header bg-light">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input display-section-toggle"
-                                            id="display_purchases" data-section="purchases" checked>
-                                        <label class="custom-control-label font-weight-bold" for="display_purchases">
-                                            <i class="fas fa-shopping-cart"></i> {{ __('messages.purchases') }}
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Distribution & Sales Section -->
@@ -1467,23 +1373,6 @@
                             </div>
                         </div>
 
-                        <!-- Purchases Section -->
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header bg-light">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input section-toggle"
-                                            id="export_purchases" checked data-section="purchases">
-                                        <label class="custom-control-label font-weight-bold" for="export_purchases">
-                                            <i class="fas fa-shopping-cart"></i> {{ __('messages.purchases_table') }}
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="card-body" id="purchases_options">
-                                    <small class="text-muted">{{ __('messages.purchases_table_description') }}</small>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="row">
@@ -1666,15 +1555,13 @@
                 unitPrice: "{{ __('messages.unit_price') }}",
                 totalQuantity: "{{ __('messages.total_quantity') }}",
                 total: "{{ __('messages.total') }}",
-                purchaseNumber: "{{ __('messages.purchase_number') ?? 'Invoice Number' }}",
                 date: "{{ __('messages.date') ?? 'Date' }}",
-                totalAmount: "{{ __('messages.total_amount') ?? 'Total Amount' }}",
-                tax: "{{ __('messages.tax') ?? 'Tax' }}",
-                totalWithTax: "{{ __('messages.total_with_tax') ?? 'Total with Tax' }}",
                 status: "{{ __('messages.status') ?? 'Status' }}",
                 requestedQuantity: "{{ __('messages.requested_quantity') ?? 'Requested Quantity' }}",
                 availableQuantity: "{{ __('messages.available_quantity') ?? 'Available Quantity' }}",
                 price: "{{ __('messages.price') ?? 'Price' }}",
+                tax: "{{ __('messages.tax') ?? 'Tax' }}",
+                totalWithTax: "{{ __('messages.total_with_tax') ?? 'Total with Tax' }}",
                 notes: "{{ __('messages.notes') ?? 'Notes' }}",
                 noData: "{{ __('messages.no_data_available') ?? 'No data available' }}",
                 warehouse: "{{ __('messages.warehouse') ?? 'Distribution Point' }}",
@@ -1691,7 +1578,6 @@
             const providerInfoSection = $('#providerInfoSection');
             const noDataMessage = $('#noDataMessage');
             const loadingSpinner = $('#loadingSpinner');
-            const productSelect = $('#product_id');
 
             // Perform provider search
             function performProviderSearch(term) {
@@ -1730,7 +1616,6 @@
                                 providerIdInput.val(id);
                                 searchInput.val(text);
                                 dropdown.hide();
-                                loadProductsForProvider(id);
                             });
                         } else {
                             dropdown.html(
@@ -1746,33 +1631,6 @@
                 });
             }
 
-            // Load products for selected provider
-            function loadProductsForProvider(providerId) {
-                $.ajax({
-                    url: '{{ route('admin.reports.providers.getProducts', ':id') }}'.replace(':id',
-                        providerId),
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success && response.products.length > 0) {
-                            let options =
-                                '<option value="">{{ __('messages.select_product') }}</option>';
-                            options +=
-                                '<option value="all">{{ __('messages.all_products') }}</option>';
-
-                            response.products.forEach(function(product) {
-                                options += '<option value="' + product.id + '">' + product
-                                    .name + '</option>';
-                            });
-
-                            productSelect.html(options);
-                        }
-                    },
-                    error: function() {
-                        console.error('Error loading products');
-                    }
-                });
-            }
 
             // Show all providers when focused
             searchInput.on('focus', function() {
@@ -1826,20 +1684,17 @@
 
                 const fromDate = $('#from_date').val();
                 const toDate = $('#to_date').val();
-                const productId = productSelect.val();
 
                 $.ajax({
                     url: '{{ route('admin.providers.report.data', ':id') }}'.replace(':id', providerId),
                     method: 'GET',
                     data: {
                         from_date: fromDate,
-                        to_date: toDate,
-                        product_id: productId
+                        to_date: toDate
                     },
                     success: function(response) {
                         if (response.success) {
                             populateProviderInfo(response);
-                            loadPurchasesData(providerId);
                             loadBookRequestsData(providerId);
                             loadingSpinner.hide();
                             providerInfoSection.show();
@@ -1865,37 +1720,6 @@
                         });
                         loadingSpinner.hide();
                         noDataMessage.show();
-                    }
-                });
-            }
-
-            // Load purchases data
-            function loadPurchasesData(providerId) {
-                const fromDate = $('#from_date').val();
-                const toDate = $('#to_date').val();
-
-                $.ajax({
-                    url: '{{ route('admin.reports.providers.purchases', ':id') }}'.replace(':id',
-                        providerId),
-                    method: 'GET',
-                    data: {
-                        from_date: fromDate,
-                        to_date: toDate
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            populatePurchasesInfo(response);
-                        } else {
-                            $('#purchasesTableContainer').html(
-                                '<p class="text-center text-muted">{{ __('messages.no_data_available') }}</p>'
-                            );
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Error loading purchases:', xhr);
-                        $('#purchasesTableContainer').html(
-                            '<p class="text-center text-danger">{{ __('messages.error_loading_data') }}</p>'
-                        );
                     }
                 });
             }
@@ -1929,82 +1753,6 @@
                         );
                     }
                 });
-            }
-
-            // Populate purchases information
-            function populatePurchasesInfo(data) {
-                const purchases = data.purchases;
-
-                if (purchases.length > 0) {
-                    let purchasesHtml = `
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>${trans.purchaseNumber}</th>
-                                <th>${trans.date}</th>
-                                <th>${trans.totalAmount}</th>
-                                <th>${trans.tax}</th>
-                                <th>${trans.totalWithTax}</th>
-                                <th>${trans.status}</th>
-                                <th>{{ __('messages.actions') ?? 'Actions' }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-                    const riyalIcon =
-                        '<svg class="riyal-icon" style="width: 18px; height: 18px; display: inline-block; margin: 0 4px; vertical-align: middle;" viewBox="0 0 1124.14 1256.39" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></svg>';
-
-                    purchases.forEach(function(purchase, index) {
-                        const totalWithTax = parseFloat(purchase.total_amount) + parseFloat(purchase
-                            .total_tax);
-                        let statusBadge = '';
-                        if (purchase.status == 'confirmed') {
-                            statusBadge = '<span class="badge badge-success">{{ __('messages.approved') }}</span>';
-                        } else if (purchase.status == 'pending') {
-                            statusBadge = '<span class="badge badge-warning">{{ __('messages.pending') }}</span>';
-                        } else if (purchase.status == 'received') {
-                            statusBadge =
-                                '<span class="badge badge-info">{{ __('messages.received') }}</span>';
-                        } else {
-                            statusBadge = '<span class="badge badge-secondary">' + purchase.status +
-                                '</span>';
-                        }
-
-                        const showUrl = '{{ route('purchases.show', ':id') }}'.replace(':id', purchase
-                            .id);
-                        purchasesHtml += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td><strong>${purchase.purchase_number}</strong></td>
-                        <td>${purchase.created_at}</td>
-                        <td>${parseFloat(purchase.total_amount).toFixed(2)} ${riyalIcon}</td>
-                        <td>${parseFloat(purchase.total_tax).toFixed(2)} ${riyalIcon}</td>
-                        <td><span class="badge badge-success">${totalWithTax.toFixed(2)} ${riyalIcon}</span></td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <a href="${showUrl}" class="btn btn-sm btn-info" title="{{ __('messages.details') }}">
-                                <i class="fas fa-eye"></i> {{ __('messages.details') }}
-                            </a>
-                        </td>
-                    </tr>
-                `;
-                    });
-
-                    purchasesHtml += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-
-                    $('#purchasesTableContainer').html(purchasesHtml);
-                } else {
-                    $('#purchasesTableContainer').html(
-                        '<p class="text-center text-muted">{{ __('messages.no_purchases_for_this_provider') }}</p>'
-                        );
-                }
             }
 
             // Populate book requests information
@@ -2227,7 +1975,6 @@
                     total_quantity: $('#export_total_quantity').is(':checked'),
                     total_revenue: $('#export_total_revenue').is(':checked'),
                     products: $('#export_products').is(':checked'),
-                    purchases: $('#export_purchases').is(':checked'),
                     distribution: $('#export_distribution').is(':checked'),
                     sales: $('#export_sales').is(':checked'),
                     refunds: $('#export_refunds').is(':checked'),
@@ -2255,7 +2002,6 @@
                     '?provider_id=' + providerId +
                     '&from_date=' + fromDate +
                     '&to_date=' + toDate +
-                    '&product_id=' + productId +
                     '&export_options=' + encodeURIComponent(JSON.stringify(exportOptions));
 
                 // Close modal and download
@@ -2279,7 +2025,6 @@
                     provider_info: $('#display_provider_info').is(':checked'),
                     statistics: $('#display_statistics').is(':checked'),
                     products: $('#display_products').is(':checked'),
-                    purchases: $('#display_purchases').is(':checked'),
                     distribution: $('#display_distribution').is(':checked'),
                     sales: $('#display_sales').is(':checked'),
                     refunds: $('#display_refunds').is(':checked'),
@@ -2312,7 +2057,6 @@
                 $('.provider-info-section').toggle(options.provider_info);
                 $('.statistics-section').toggle(options.statistics);
                 $('.products-section').toggle(options.products);
-                $('.purchases-section').toggle(options.purchases);
                 $('.distribution-section').toggle(options.distribution);
                 $('.sales-section').toggle(options.sales);
                 $('.refunds-section').toggle(options.refunds);
@@ -2328,7 +2072,6 @@
                     provider_info: $('#display_provider_info').is(':checked'),
                     statistics: $('#display_statistics').is(':checked'),
                     products: $('#display_products').is(':checked'),
-                    purchases: $('#display_purchases').is(':checked'),
                     distribution: $('#display_distribution').is(':checked'),
                     sales: $('#display_sales').is(':checked'),
                     refunds: $('#display_refunds').is(':checked'),
@@ -2640,9 +2383,9 @@
                 <tr>
                     <td>${index + 1}</td>
                     <td><strong>${item.seller_name}</strong></td>
-                    <td>${parseFloat(item.total_orders_amount).toFixed(2)} ${riyalIcon}</td>
-                    <td><span class="badge badge-success">${parseFloat(item.paid_amount).toFixed(2)} ${riyalIcon}</span></td>
-                    <td><span class="badge badge-danger">${parseFloat(item.remaining_amount).toFixed(2)} ${riyalIcon}</span></td>
+                    <td>${parseFloat(item.total_orders_amount).toFixed(2)}</td>
+                    <td><span class="badge badge-success">${parseFloat(item.paid_amount).toFixed(2)}</span></td>
+                    <td><span class="badge badge-danger">${parseFloat(item.remaining_amount).toFixed(2)}</span></td>
                     <td>${statusBadge}</td>
                     <td>${item.last_order_date}</td>
                 </tr>
@@ -2731,114 +2474,6 @@
                 $('#stockBalanceTableContainer').html(html);
             }
 
-            // Load Sales by Place Data
-            function loadSalesByPlaceData(providerId) {
-                const fromDate = $('#from_date').val();
-                const toDate = $('#to_date').val();
-
-                $.ajax({
-                    url: '{{ route('admin.reports.providers.salesByPlace', ':id') }}'.replace(':id',
-                        providerId),
-                    method: 'GET',
-                    data: {
-                        from_date: fromDate,
-                        to_date: toDate
-                    },
-                    success: function(response) {
-                        if (response.success && response.sales_by_place) {
-                            $('#sales-place-total-places').text(response.summary.total_places || 0);
-                            $('#sales-place-total-quantity').text(response.summary.total_quantity || 0);
-                            $('#sales-place-total-revenue').text(parseFloat(response.summary
-                                .total_revenue || 0).toFixed(2));
-                            populateSalesByPlaceTable(response.sales_by_place);
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Error loading sales by place data:', xhr);
-                        $('#salesByPlaceTableContainer').html(
-                            '<p class="text-center text-danger">{{ __('messages.error_loading_data') }}</p>'
-                        );
-                    }
-                });
-            }
-
-            // Populate Sales by Place Table
-            function populateSalesByPlaceTable(data) {
-                if (data.length === 0) {
-                    $('#salesByPlaceTableContainer').html(
-                        '<p class="text-center text-muted">{{ __('messages.no_data_available') }}</p>');
-                    return;
-                }
-
-                const riyalIcon =
-                    '<svg class="riyal-icon" style="width: 14px; height: 14px; display: inline-block; margin: 0 2px; vertical-align: middle;" viewBox="0 0 1124.14 1256.39" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></svg>';
-
-                let html = `
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover table-sm">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>{{ __('messages.place_name') }}</th>
-                            <th>{{ __('messages.from_date') }}</th>
-                            <th>{{ __('messages.to_date') }}</th>
-                            <th>{{ __('messages.quantity') }}</th>
-                            <th>{{ __('messages.stock_returned') }}</th>
-                            <th>{{ __('messages.sold') }}</th>
-                            <th>{{ __('messages.total') }}</th>
-                            <th>{{ __('messages.total_without_vat') }}</th>
-                            <th>{{ __('messages.vat_15') }}</th>
-                            <th>{{ __('messages.distributor_cut_20') }}</th>
-                            <th>{{ __('messages.vendor_commission_30') }}</th>
-                            <th>{{ __('messages.vendor_commission_35') }}</th>
-                            <th>{{ __('messages.vendor_commission_40') }}</th>
-                            <th>{{ __('messages.other_fees') }}</th>
-                            <th>{{ __('messages.total_fees') }}</th>
-                            <th>{{ __('messages.authors_cut') }}</th>
-                            <th>{{ __('messages.discounted_items') }}</th>
-                            <th>{{ __('messages.discount_30_amount') }}</th>
-                            <th>{{ __('messages.notes') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-                data.forEach(function(item, index) {
-                    html += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td><strong>${item.place_name}</strong></td>
-                    <td>${item.from_date}</td>
-                    <td>${item.to_date}</td>
-                    <td><span class="badge badge-info">${item.quantity}</span></td>
-                    <td><span class="badge badge-secondary">${item.stock_returned}</span></td>
-                    <td><span class="badge badge-success">${item.sold}</span></td>
-                    <td><strong>${parseFloat(item.total).toFixed(2)} ${riyalIcon}</strong></td>
-                    <td>${parseFloat(item.total_without_vat).toFixed(2)} ${riyalIcon}</td>
-                    <td>${parseFloat(item.vat_15).toFixed(2)} ${riyalIcon}</td>
-                    <td>${parseFloat(item.distributor_cut_20).toFixed(2)} ${riyalIcon}</td>
-                    <td>${parseFloat(item.vendor_commission_30).toFixed(2)} ${riyalIcon}</td>
-                    <td>${parseFloat(item.vendor_commission_35).toFixed(2)} ${riyalIcon}</td>
-                    <td>${parseFloat(item.vendor_commission_40).toFixed(2)} ${riyalIcon}</td>
-                    <td>${parseFloat(item.other_fees).toFixed(2)} ${riyalIcon}</td>
-                    <td><strong>${parseFloat(item.total_fees).toFixed(2)} ${riyalIcon}</strong></td>
-                    <td><strong class="text-success">${parseFloat(item.authors_cut).toFixed(2)} ${riyalIcon}</strong></td>
-                    <td>${item.discounted_items}</td>
-                    <td>${parseFloat(item.discount_30_amount).toFixed(2)} ${riyalIcon}</td>
-                    <td><small>${item.notes}</small></td>
-                </tr>
-            `;
-                });
-
-                html += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-
-                $('#salesByPlaceTableContainer').html(html);
-            }
-
             // Update loadProviderData to load all sections
             const originalLoadProviderData = loadProviderData;
 
@@ -2846,7 +2481,6 @@
                 originalLoadProviderData(providerId);
                 loadDistributionData(providerId);
                 loadSalesByWarehouse(providerId);
-                loadSalesByPlaceData(providerId);
                 loadRefundsData(providerId);
                 loadSellersPaymentsData(providerId);
                 loadStockBalanceData(providerId);

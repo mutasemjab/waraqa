@@ -987,6 +987,7 @@ return [
     'track_your_sales_and_inventory' => 'تتبع مبيعاتك وحركات المخزون',
     'total_items_sold' => 'إجمالي العناصر المباعة',
     'this_month_sales' => 'مبيعات هذا الشهر',
+    'this_month_sales_value' => 'قيمة المبيعات هذا الشهر',
     'current_inventory' => 'المخزون الحالي',
     'search_by_voucher_number' => 'البحث برقم السند',
     'sales_history' => 'تاريخ المبيعات',
@@ -1859,4 +1860,16 @@ return [
     'customer_address' => 'عنوان العميل',
     'customer_email' => 'بريد العميل الإلكتروني',
     'total_tax' => 'إجمالي الضريبة',
+
+    // Distribution Point Sales Report
+    'distribution_point_sales_report' => 'تقرير مبيعات نقاط التوزيع',
+    'no_sales_found' => 'لم يتم العثور على مبيعات',
+    'please_select_warehouse' => 'يرجى تحديد المستودع',
+    'sales_list' => 'قائمة المبيعات',
+    'search_by_product' => 'البحث حسب المنتج',
+    'search_filters' => 'مرشحات البحث',
+    'select_distribution_point_to_view_sales' => 'اختر نقطة التوزيع لعرض المبيعات',
+    'select_warehouse' => 'تحديد المستودع',
+    'view_sales_by_distribution_point' => 'عرض المبيعات حسب نقطة التوزيع',
+    'please_select_seller' => 'يرجى تحديد البائع',
 ];

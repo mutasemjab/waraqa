@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('seller_sales', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->string('sale_number')->unique(); // رقم البيع مثل PO-1001
             $table->dateTime('sale_date'); // تاريخ البيع
             $table->string('customer_name'); // اسم العميل

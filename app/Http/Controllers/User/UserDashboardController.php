@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\OrderProduct;
 use App\Models\Country;
+use App\Models\SellerSale;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ class UserDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // Get user statistics
         $stats = [
             'total_orders' => $user->orders()->count(),
@@ -31,7 +32,19 @@ class UserDashboardController extends Controller
             'unpaid_orders' => $user->orders()->where('payment_status', 2)->count(),
         ];
 
-        return view('user.dashboard', compact('stats'));
+        // Get sales statistics
+        $salesStats = [
+            'total_sales' => SellerSale::count(),
+            'total_sales_amount' => SellerSale::sum('total_amount'),
+            'this_month_sales' => SellerSale::whereMonth('sale_date', Carbon::now()->month)
+                ->whereYear('sale_date', Carbon::now()->year)
+                ->count(),
+            'this_month_amount' => SellerSale::whereMonth('sale_date', Carbon::now()->month)
+                ->whereYear('sale_date', Carbon::now()->year)
+                ->sum('total_amount'),
+        ];
+
+        return view('user.dashboard', compact('stats', 'salesStats'));
     }
 
     public function orders(Request $request)

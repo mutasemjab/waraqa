@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\CustomerReportController;
 use App\Http\Controllers\Admin\EventReportController;
 use App\Http\Controllers\Admin\WarehouseMovementReportController;
 use App\Http\Controllers\Admin\SalesReturnController;
+use App\Http\Controllers\Admin\DistributionPointSalesReportController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Spatie\Permission\Models\Permission;
 /*
@@ -152,15 +153,21 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('reports/providers', 'App\Http\Controllers\Admin\ProvidersReportController@index')->name('admin.reports.providers.index');
         Route::get('reports/providers/search', 'App\Http\Controllers\Admin\ProvidersReportController@search')->name('admin.providers.search');
         Route::get('reports/providers/{providerId}/data', 'App\Http\Controllers\Admin\ProvidersReportController@getProviderData')->name('admin.providers.report.data');
-        Route::get('reports/providers/products/{providerId}', 'App\Http\Controllers\Admin\ProvidersReportController@getProducts')->name('admin.reports.providers.getProducts');
         Route::get('reports/providers/{providerId}/book-requests', 'App\Http\Controllers\Admin\ProvidersReportController@getBookRequestsData')->name('admin.reports.providers.bookRequests');
         Route::get('reports/providers/{providerId}/purchases', 'App\Http\Controllers\Admin\ProvidersReportController@getPurchasesData')->name('admin.reports.providers.purchases');
         Route::get('reports/providers/{providerId}/distribution', 'App\Http\Controllers\Admin\ProvidersReportController@getDistributionData')->name('admin.reports.providers.distribution');
         Route::get('reports/providers/{providerId}/sales-by-warehouse', 'App\Http\Controllers\Admin\ProvidersReportController@getSalesByWarehouse')->name('admin.reports.providers.salesByWarehouse');
-        Route::get('reports/providers/{providerId}/sales-by-place', 'App\Http\Controllers\Admin\ProvidersReportController@getSalesByPlaceData')->name('admin.reports.providers.salesByPlace');
         Route::get('reports/providers/{providerId}/refunds', 'App\Http\Controllers\Admin\ProvidersReportController@getRefundsData')->name('admin.reports.providers.refunds');
         Route::get('reports/providers/{providerId}/sellers-payments', 'App\Http\Controllers\Admin\ProvidersReportController@getSellersPaymentsData')->name('admin.reports.providers.sellersPayments');
         Route::get('reports/providers/{providerId}/stock-balance', 'App\Http\Controllers\Admin\ProvidersReportController@getStockBalanceData')->name('admin.reports.providers.stockBalance');
+
+        // Distribution Point Sales Report
+        Route::get('reports/distribution-point-sales', [DistributionPointSalesReportController::class, 'index'])->name('admin.reports.distributionPointSales.index');
+        Route::get('reports/distribution-point-sales/search', [DistributionPointSalesReportController::class, 'search'])->name('admin.reports.distributionPointSales.search');
+        Route::get('reports/distribution-point-sales/data', [DistributionPointSalesReportController::class, 'getData'])->name('admin.reports.distributionPointSales.data');
+
+        // Sales Details
+        Route::get('sales/{id}/details', [DistributionPointSalesReportController::class, 'showSaleDetails'])->name('admin.sales.details');
     });
 });
 

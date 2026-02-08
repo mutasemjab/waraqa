@@ -188,7 +188,7 @@
                 </li>
 
                 <!-- Analytics Group -->
-                <li class="nav-item {{ request()->is('admin/reports/warehouse-movement*') || request()->is('admin/reports/providers*') || request()->is('admin/reports/orders*') || request()->is('admin/reports/sales-returns*') || request()->is('admin/reports/purchase-returns*') || request()->is('admin/reports/purchases*') || request()->is('admin/reports/customers*') || request()->is('admin/reports/events*') ? 'menu-open' : '' }}">
+                <li class="nav-item {{ request()->is('admin/reports/warehouse-movement*') || request()->is('admin/reports/providers*') || request()->is('admin/reports/orders*') || request()->is('admin/reports/sales-returns*') || request()->is('admin/reports/purchase-returns*') || request()->is('admin/reports/purchases*') || request()->is('admin/reports/customers*') || request()->is('admin/reports/events*') || request()->is('admin/reports/distribution-point-sales*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-chart-bar"></i>
                         <p>
@@ -243,6 +243,12 @@
                             <a href="{{ route('admin.reports.providers.index') }}" class="nav-link {{ request()->routeIs('admin.reports.providers.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.providers_report') }}</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.reports.distributionPointSales.index') }}" class="nav-link {{ request()->routeIs('admin.reports.distributionPointSales.*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{{ __('messages.distribution_point_sales_report') }}</p>
                             </a>
                         </li>
                     </ul>

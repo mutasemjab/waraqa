@@ -134,6 +134,9 @@ class PermissionSeeder extends Seeder
             'purchase-return-add',
             'purchase-return-edit',
             'purchase-return-delete',
+
+            // Distribution Point Sales Report
+            'view_distribution_point_sales_report',
         ];
 
         $data = array_map(function ($permission) {

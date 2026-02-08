@@ -266,35 +266,11 @@ class PurchaseController extends Controller
 
             DB::beginTransaction();
 
-            // تحديث حالة عملية الشراء
+            // تحديث حالة عملية الشراء فقط (السند يتم إنشاؤه من BookRequest approval)
             $purchase->update(array_merge($validated, ['status' => 'received']));
 
-            // إنشاء سند إدخال
-            $lastVoucher = NoteVoucher::max('number') ?? 0;
-            $voucherNumber = $lastVoucher + 1;
-
-            $noteVoucher = NoteVoucher::create([
-                'number' => $voucherNumber,
-                'date_note_voucher' => $validated['received_date'],
-                'note_voucher_type_id' => 1, // 1 = سند إدخال
-                'to_warehouse_id' => $purchase->warehouse_id,
-                'provider_id' => $purchase->provider_id,
-                'note' => 'سند إدخال من عملية الشراء رقم: ' . $purchase->purchase_number,
-            ]);
-
-            // إضافة منتجات السند من عناصر عملية الشراء
-            foreach ($purchase->items as $item) {
-                VoucherProduct::create([
-                    'note_voucher_id' => $noteVoucher->id,
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'purchasing_price' => $item->unit_price,
-                    'tax_percentage' => $item->tax_percentage,
-                ]);
-            }
-
             DB::commit();
-            return back()->with('success', 'تم تحديث حالة عملية الشراء إلى مستلمة وإنشاء سند إدخال بنجاح');
+            return back()->with('success', 'تم تحديث حالة عملية الشراء إلى مستلمة بنجاح');
         } catch (\Exception $e) {
             DB::rollback();
             return back()->with('error', 'حدث خطأ: ' . $e->getMessage());

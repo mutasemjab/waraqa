@@ -9,7 +9,7 @@
     <p class="page-subtitle">{{ __('messages.user_dashboard_subtitle') }}</p>
 </div>
 
-<!-- Stats Grid -->
+<!-- Stats Grid - Orders -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon primary">
@@ -20,7 +20,7 @@
             <p>{{ __('messages.total_orders') }}</p>
         </div>
     </div>
-    
+
     <div class="stat-card">
         <div class="stat-icon warning">
             <i class="fas fa-clock"></i>
@@ -30,7 +30,7 @@
             <p>{{ __('messages.pending_orders') }}</p>
         </div>
     </div>
-    
+
     <div class="stat-card">
         <div class="stat-icon success">
             <i class="fas fa-check-circle"></i>
@@ -40,7 +40,49 @@
             <p>{{ __('messages.completed_orders') }}</p>
         </div>
     </div>
-    
+</div>
+
+<!-- Stats Grid - Sales -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon info">
+            <i class="fas fa-cash-register"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ $salesStats['total_sales'] }}</h3>
+            <p>{{ __('messages.total_sales') }}</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div class="stat-content">
+            <h3><x-riyal-icon style="width: 16px; height: 16px;" /> {{ number_format($salesStats['total_sales_amount'], 2) }}</h3>
+            <p>{{ __('messages.total_sales_value') }}</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ $salesStats['this_month_sales'] }}</h3>
+            <p>{{ __('messages.this_month_sales') }}</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="stat-content">
+            <h3><x-riyal-icon style="width: 16px; height: 16px;" /> {{ number_format($salesStats['this_month_amount'], 2) }}</h3>
+            <p>{{ __('messages.this_month_sales_value') ?? 'قيمة المبيعات هذا الشهر' }}</p>
+        </div>
+    </div>
 </div>
 
 <!-- Quick Actions -->
@@ -103,7 +145,7 @@
                                             {!! \App\Enums\OrderStatus::tryFrom($order->status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                                         </td>
                                         <td>
-                                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ route('user.orders.show', $order->id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                         </td>

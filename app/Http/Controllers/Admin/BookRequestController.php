@@ -125,40 +125,7 @@ class BookRequestController extends Controller
             // تحديث حالة الرد إلى موافق عليه مع السعر والضريبة والكمية المعتمدة
             $response->update(array_merge($validated, ['status' => 'approved']));
 
-            // الحصول على المستودع الرئيسي
-            $mainWarehouse = Warehouse::first() ?? Warehouse::create(['name' => __('messages.main_warehouse')]);
-
-            // الحصول على نوع سند الإدخال (شراء من المورد)
-            $inVoucherType = NoteVoucherType::where('in_out_type', 1)->first();
-            if (!$inVoucherType) {
-                return back()->with('error', 'نوع سند الإدخال غير موجود');
-            }
-
-            // إنشاء سند إدخال (شراء) من المورد إلى المستودع الرئيسي
-            // الحصول على آخر رقم سند
-            $lastNumber = NoteVoucher::max('number') ?? 0;
-            $newNumber = $lastNumber + 1;
-
-            $noteVoucher = NoteVoucher::create([
-                'number' => $newNumber,
-                'note_voucher_type_id' => $inVoucherType->id,
-                'from_warehouse_id' => null, // من المورد
-                'to_warehouse_id' => $mainWarehouse->id, // إلى المستودع الرئيسي
-                'date_note_voucher' => now(),
-                'provider_id' => $response->provider_id,
-            ]);
-
-            // إضافة المنتج إلى السند بالسعر الشامل الضريبة
-            VoucherProduct::create([
-                'note_voucher_id' => $noteVoucher->id,
-                'product_id' => $response->bookRequest->product_id,
-                'quantity' => $approvedQuantity,
-                'purchasing_price' => $priceWithTax,  // السعر الشامل الضريبة
-                'tax_percentage' => $approvedTax,
-                'note' => __('messages.approved_book_request') . ' - طلب رقم ' . $response->bookRequest->id,
-            ]);
-
-            // إنشاء Purchase (مشترية) تلقائياً
+            // حساب الإجمالي
             $totalAmountBeforeTax = $approvedPrice * $approvedQuantity;
             $totalTax = round(($totalAmountBeforeTax * $approvedTax) / 100, 2);
             $totalAmount = round($totalAmountBeforeTax + $totalTax, 2);
@@ -192,6 +159,7 @@ class BookRequestController extends Controller
                 return 'PO-' . $newNumber;
             });
 
+            // إنشاء Purchase (مشترية) تلقائياً
             $purchase = Purchase::create([
                 'purchase_number' => $purchaseNumber,
                 'provider_id' => $response->provider_id,
@@ -210,6 +178,40 @@ class BookRequestController extends Controller
                 'unit_price' => $approvedPrice,
                 'tax_percentage' => $approvedTax,
                 'total_price' => $totalAmount,
+            ]);
+
+            // الحصول على المستودع الرئيسي
+            $mainWarehouse = Warehouse::first() ?? Warehouse::create(['name' => __('messages.main_warehouse')]);
+
+            // الحصول على نوع سند الإدخال (شراء من المورد)
+            $inVoucherType = NoteVoucherType::where('in_out_type', 1)->first();
+            if (!$inVoucherType) {
+                return back()->with('error', 'نوع سند الإدخال غير موجود');
+            }
+
+            // إنشاء سند إدخال (شراء) من المورد إلى المستودع الرئيسي
+            // الحصول على آخر رقم سند
+            $lastNumber = NoteVoucher::max('number') ?? 0;
+            $newNumber = $lastNumber + 1;
+
+            $noteVoucher = NoteVoucher::create([
+                'number' => $newNumber,
+                'note_voucher_type_id' => $inVoucherType->id,
+                'from_warehouse_id' => null, // من المورد
+                'to_warehouse_id' => $mainWarehouse->id, // إلى المستودع الرئيسي
+                'date_note_voucher' => now(),
+                'provider_id' => $response->provider_id,
+                'note' => 'سند إدخال من عملية الشراء رقم: ' . $purchase->purchase_number,
+            ]);
+
+            // إضافة المنتج إلى السند بالسعر الشامل الضريبة
+            VoucherProduct::create([
+                'note_voucher_id' => $noteVoucher->id,
+                'product_id' => $response->bookRequest->product_id,
+                'quantity' => $approvedQuantity,
+                'purchasing_price' => $priceWithTax,  // السعر الشامل الضريبة
+                'tax_percentage' => $approvedTax,
+                'note' => __('messages.approved_book_request') . ' - طلب رقم ' . $response->bookRequest->id,
             ]);
 
             return back()->with('success', 'تمت الموافقة على الطلب وتم إنشاء سند الإدخال والمشترية');

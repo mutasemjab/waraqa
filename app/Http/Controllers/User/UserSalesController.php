@@ -149,6 +149,7 @@ class UserSalesController extends Controller
 
             // Create seller sale
             $sellerSale = SellerSale::create([
+                'user_id' => $user->id,
                 'sale_number' => $saleNumber,
                 'sale_date' => $request->sale_date,
                 'customer_name' => $request->customer_name,
@@ -211,7 +212,7 @@ class UserSalesController extends Controller
                 'date_note_voucher' => $request->sale_date,
                 'from_warehouse_id' => $userWarehouse->id,
                 'note_voucher_type_id' => 2, // OUT type
-                'note' => 'بيع من نقطة التوزيع - ' . $request->customer_name . ' | Sale from Distribution Point - ' . $request->customer_name
+                'note' => 'الموزع: ' . $userWarehouse->name . ' | اسم العميل: ' . $request->customer_name . ' | رقم المبيعة: ' . $saleNumber
             ]);
 
             // Create voucher products for inventory deduction

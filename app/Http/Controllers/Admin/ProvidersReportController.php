@@ -39,79 +39,57 @@ class ProvidersReportController extends Controller
         return response()->json($providers);
     }
 
-    private function getProviderDataLogic($providerId, $fromDate, $toDate, $productId)
+    private function getProviderDataLogic($providerId, $fromDate, $toDate)
     {
         $provider = Provider::with('user')->findOrFail($providerId);
 
-        // Get products purchased from this provider
-        $query = Product::where('provider_id', $providerId);
+        // Get approved book requests from this provider
+        $bookResponsesQuery = \App\Models\BookRequestResponse::where('provider_id', $providerId)
+            ->where('status', 'approved')
+            ->with('bookRequest.product');
 
-        if ($productId && $productId != 'all') {
-            $query->where('id', $productId);
+        if ($fromDate && $toDate) {
+            $bookResponsesQuery->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
         }
 
-        $products = $query->get();
+        $bookResponses = $bookResponsesQuery->get();
 
-        // Build report data
+        // Build report data from approved book requests
         $productData = [];
         $totalRevenue = 0;
         $totalQuantity = 0;
+        $uniqueProducts = [];
 
-        foreach ($products as $product) {
-            $quantity = 0;
-            $revenue = 0;
+        foreach ($bookResponses as $response) {
+            $productId = $response->bookRequest->product_id;
+            $product = $response->bookRequest->product;
+            $quantity = $response->available_quantity;
+            $revenue = $quantity * ($response->price ?? 0);
 
-            // Get order products (regular orders from this provider)
-            $orderProductsQuery = $product->orderProducts();
+            $totalQuantity += $quantity;
+            $totalRevenue += $revenue;
 
-            if ($fromDate && $toDate) {
-                $orderProductsQuery->whereHas('order', function ($q) use ($fromDate, $toDate) {
-                    $q->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
-                });
-            }
-
-            $orderProducts = $orderProductsQuery->with('order')->get();
-
-            if ($orderProducts->isNotEmpty()) {
-                $quantity += $orderProducts->sum('quantity');
-                $revenue += $orderProducts->sum(function ($op) {
-                    return $op->quantity * $op->price;
-                });
-            }
-
-            // Get book request responses (approved requests from this provider)
-            $bookResponsesQuery = \App\Models\BookRequestResponse::whereHas('bookRequest', function ($q) use ($product) {
-                $q->where('product_id', $product->id);
-            })->where('provider_id', $providerId)->where('status', 'approved');
-
-            if ($fromDate && $toDate) {
-                $bookResponsesQuery->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
-            }
-
-            $bookResponses = $bookResponsesQuery->get();
-
-            if ($bookResponses->isNotEmpty()) {
-                $quantity += $bookResponses->sum('available_quantity');
-                $revenue += $bookResponses->sum(function ($br) {
-                    return $br->available_quantity * ($br->price ?? 0);
-                });
-            }
-
-            // Only add to report if there's data
-            if ($quantity > 0) {
-                $productData[] = [
+            // Track unique products
+            if (!isset($uniqueProducts[$productId])) {
+                $uniqueProducts[$productId] = [
                     'id' => $product->id,
-                    'name' => $product->name,
+                    'name' => $product->name_en ?? $product->name_ar ?? 'Unknown',
                     'sku' => $product->sku ?? '-',
-                    'unit_price' => number_format($product->selling_price, 2),
-                    'quantity' => $quantity,
-                    'revenue' => number_format($revenue, 2),
+                    'unit_price' => number_format($product->selling_price ?? 0, 2),
+                    'quantity' => 0,
+                    'revenue' => 0,
                 ];
-
-                $totalQuantity += $quantity;
-                $totalRevenue += $revenue;
             }
+
+            $uniqueProducts[$productId]['quantity'] += $quantity;
+            $uniqueProducts[$productId]['revenue'] += $revenue;
         }
+
+        // Format product data
+        $productData = array_map(function ($product) {
+            $product['revenue'] = number_format($product['revenue'], 2);
+            return $product;
+        }, $uniqueProducts);
 
         return [
             'success' => true,
@@ -125,9 +103,9 @@ class ProvidersReportController extends Controller
                 'created_at' => $provider->created_at?->format('Y-m-d') ?? '-',
                 'activate' => $provider->user?->activate ?? 0,
             ],
-            'products' => $productData,
+            'products' => array_values($productData),
             'statistics' => [
-                'total_products' => count($productData),
+                'total_products' => count($uniqueProducts),
                 'total_quantity' => $totalQuantity,
                 'total_revenue' => number_format($totalRevenue, 2),
             ],
@@ -140,23 +118,11 @@ class ProvidersReportController extends Controller
     {
         $fromDate = $request->get('from_date');
         $toDate = $request->get('to_date');
-        $productId = $request->get('product_id');
 
-        $data = $this->getProviderDataLogic($providerId, $fromDate, $toDate, $productId);
+        $data = $this->getProviderDataLogic($providerId, $fromDate, $toDate);
         return response()->json($data);
     }
 
-    public function getProducts($providerId)
-    {
-        $products = Product::where('provider_id', $providerId)
-            ->select('id', 'name_en', 'name_ar', 'sku', 'selling_price', 'tax')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'products' => $products,
-        ]);
-    }
 
     private function getBookRequestsDataLogic($providerId, $fromDate, $toDate)
     {
@@ -266,7 +232,6 @@ class ProvidersReportController extends Controller
         $providerId = $request->get('provider_id');
         $fromDate = $request->get('from_date');
         $toDate = $request->get('to_date');
-        $productId = $request->get('product_id');
         $exportOptionsJson = $request->get('export_options', '{}');
 
         if (!$providerId) {
@@ -302,7 +267,7 @@ class ProvidersReportController extends Controller
 
         $exportOptions = array_merge($defaultOptions, $exportOptions);
 
-        $providerData = $this->getProviderDataLogic($providerId, $fromDate, $toDate, $productId);
+        $providerData = $this->getProviderDataLogic($providerId, $fromDate, $toDate);
         $bookData = $this->getBookRequestsDataLogic($providerId, $fromDate, $toDate);
 
         // Get purchases data if needed
@@ -378,43 +343,63 @@ class ProvidersReportController extends Controller
     }
 
     /**
-     * Get Distribution Data - NoteVouchers Type 3 (Transfer/Distribution)
+     * Get Distribution Data - BookRequestResponse linked to NoteVoucher (Transfer to Sellers)
      */
     public function getDistributionData(Request $request, $providerId)
     {
         $fromDate = $request->get('from_date');
         $toDate = $request->get('to_date');
 
-        // Get products from this provider
-        $products = Product::where('provider_id', $providerId)->pluck('id');
-
-        // Get distribution via NoteVoucher Type 3 (transfers)
-        $query = \App\Models\NoteVoucher::where('note_voucher_type_id', 3) // Type 3 = Transfer
-            ->with(['fromWarehouse.user', 'toWarehouse.user', 'voucherProducts.product']);
+        // Get approved book requests from this provider
+        $query = \App\Models\BookRequestResponse::where('provider_id', $providerId)
+            ->where('status', 'approved')
+            ->with('bookRequest.product');
 
         if ($fromDate && $toDate) {
-            $query->whereBetween('date_note_voucher', [$fromDate, $toDate]);
+            $query->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
         }
 
-        $vouchers = $query->get();
+        $bookResponses = $query->get();
+        $productIds = $bookResponses->pluck('bookRequest.product_id')->unique();
 
-        // Filter by provider products
+        // Get NoteVouchers Type 3 (transfers to sellers) for these products
+        $vouchersQuery = \App\Models\NoteVoucher::where('note_voucher_type_id', 3)
+            ->with(['toWarehouse.user', 'voucherProducts.product']);
+
+        if ($fromDate && $toDate) {
+            $vouchersQuery->whereBetween('date_note_voucher', [$fromDate, $toDate]);
+        }
+
+        $vouchers = $vouchersQuery->get();
+
+        // Build distribution data by linking book requests with vouchers
         $distributions = [];
         $warehouseIds = [];
         $totalQuantity = 0;
 
-        foreach ($vouchers as $voucher) {
-            foreach ($voucher->voucherProducts as $vp) {
-                if ($products->contains($vp->product_id)) {
-                    $distributions[] = [
-                        'warehouse_name' => $voucher->toWarehouse?->user?->name ?? $voucher->toWarehouse?->name ?? 'Unknown',
-                        'product_name' => $vp->product->name,
-                        'quantity' => $vp->quantity,
-                        'date' => $voucher->date_note_voucher instanceof \DateTime ? $voucher->date_note_voucher->format('Y-m-d') : $voucher->date_note_voucher,
-                        'note_voucher_number' => $voucher->number,
-                    ];
-                    $warehouseIds[] = $voucher->to_warehouse_id;
-                    $totalQuantity += $vp->quantity;
+        foreach ($bookResponses as $response) {
+            $productId = $response->bookRequest->product_id;
+            $productName = $response->bookRequest->product?->name ?? 'Unknown';
+
+            // Find matching vouchers for this product
+            foreach ($vouchers as $voucher) {
+                $toUser = $voucher->toWarehouse?->user;
+                if (!$toUser || !$toUser->hasRole('seller')) {
+                    continue;
+                }
+
+                foreach ($voucher->voucherProducts as $vp) {
+                    if ($vp->product_id == $productId) {
+                        $distributions[] = [
+                            'warehouse_name' => $toUser->name ?? 'Unknown',
+                            'product_name' => $productName,
+                            'quantity' => $vp->quantity,
+                            'date' => $voucher->date_note_voucher instanceof \DateTime ? $voucher->date_note_voucher->format('Y-m-d') : $voucher->date_note_voucher,
+                            'note_voucher_number' => $voucher->number,
+                        ];
+                        $warehouseIds[] = $voucher->to_warehouse_id;
+                        $totalQuantity += $vp->quantity;
+                    }
                 }
             }
         }
@@ -430,47 +415,65 @@ class ProvidersReportController extends Controller
     }
 
     /**
-     * Get Sales by Warehouse Data
+     * Get Sales by Warehouse Data - From SellerSales (Seller to Customer)
+     * Uses BookRequestResponse to identify provider products
      */
     public function getSalesByWarehouse(Request $request, $providerId)
     {
         $fromDate = $request->get('from_date');
         $toDate = $request->get('to_date');
 
-        // Get products from this provider
-        $productIds = Product::where('provider_id', $providerId)->pluck('id');
+        // Get products from this provider via BookRequestResponse
+        $bookRequests = \App\Models\BookRequestResponse::where('provider_id', $providerId)
+            ->where('status', 'approved')
+            ->with('bookRequest.product')
+            ->get();
 
-        // Get orders (both for customers and sellers)
-        $query = \App\Models\Order::whereHas('orderProducts', function ($q) use ($productIds) {
-            $q->whereIn('product_id', $productIds->toArray());
-        })
-        ->where('status', 1) // Status 1 = Done
-        ->with(['user', 'orderProducts.product']);
+        $productIds = $bookRequests->pluck('bookRequest.product_id')->unique()->toArray();
 
-        if ($fromDate && $toDate) {
-            $query->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
+        // If no products, return empty
+        if (empty($productIds)) {
+            return response()->json([
+                'success' => true,
+                'sales' => [],
+                'summary' => [
+                    'total_sold' => 0,
+                    'total_revenue' => '0.00',
+                ],
+            ]);
         }
 
-        $orders = $query->get();
+        // Get seller sales that contain this provider's products
+        $query = \App\Models\SellerSale::whereHas('items', function ($q) use ($productIds) {
+            $q->whereIn('product_id', $productIds);
+        })
+        ->with(['user', 'items' => function ($q) use ($productIds) {
+            $q->whereIn('product_id', $productIds)->with('product');
+        }]);
+
+        if ($fromDate && $toDate) {
+            $query->whereBetween('sale_date', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
+        }
+
+        $sellerSales = $query->get();
 
         $sales = [];
         $totalSold = 0;
         $totalRevenue = 0;
 
-        foreach ($orders as $order) {
-            foreach ($order->orderProducts as $op) {
-                if ($productIds->contains($op->product_id)) {
-                    $sales[] = [
-                        'warehouse_name' => $order->user?->name ?? 'Unknown',
-                        'product_name' => $op->product->name,
-                        'quantity_sold' => $op->quantity,
-                        'revenue' => $op->quantity * $op->unit_price,
-                        'date' => $order->created_at?->format('Y-m-d') ?? '-',
-                        'order_number' => $order->number,
-                    ];
-                    $totalSold += $op->quantity;
-                    $totalRevenue += ($op->quantity * $op->unit_price);
-                }
+        foreach ($sellerSales as $sellerSale) {
+            foreach ($sellerSale->items as $item) {
+                $revenue = $item->quantity * ($item->unit_price ?? 0);
+                $sales[] = [
+                    'warehouse_name' => $sellerSale->user?->name ?? 'Unknown',
+                    'product_name' => $item->product?->name ?? 'Unknown',
+                    'quantity_sold' => $item->quantity,
+                    'revenue' => $revenue,
+                    'date' => $sellerSale->sale_date instanceof \DateTime ? $sellerSale->sale_date->format('Y-m-d') : substr($sellerSale->sale_date, 0, 10),
+                    'order_number' => $sellerSale->sale_number,
+                ];
+                $totalSold += $item->quantity;
+                $totalRevenue += $revenue;
             }
         }
 
@@ -486,24 +489,41 @@ class ProvidersReportController extends Controller
 
     /**
      * Get Refunds Data - Orders with status 6 or order_type 2
+     * Uses BookRequestResponse to identify provider products
      */
     public function getRefundsData(Request $request, $providerId)
     {
         $fromDate = $request->get('from_date');
         $toDate = $request->get('to_date');
 
-        // Get products from this provider
-        $productIds = Product::where('provider_id', $providerId)->pluck('id');
+        // Get products from this provider via BookRequestResponse
+        $bookRequests = \App\Models\BookRequestResponse::where('provider_id', $providerId)
+            ->where('status', 'approved')
+            ->with('bookRequest.product')
+            ->get();
 
-        // Get refund orders
+        $productIds = $bookRequests->pluck('bookRequest.product_id')->unique()->toArray();
+
+        // If no products, return empty
+        if (empty($productIds)) {
+            return response()->json([
+                'success' => true,
+                'refunds' => [],
+                'summary' => [
+                    'total_returned' => 0,
+                    'total_amount' => '0.00',
+                ],
+            ]);
+        }
+
+        // Get refund orders for these products
         $query = \App\Models\Order::whereHas('orderProducts', function ($q) use ($productIds) {
-            $q->whereIn('product_id', $productIds->toArray());
+            $q->whereIn('product_id', $productIds);
         })
-        ->where(function ($q) {
-            $q->where('status', 6) // Status 6 = Refund
-              ->orWhere('order_type', 2); // order_type 2 = Refund order
-        })
-        ->with(['user', 'orderProducts.product']);
+        ->where('status', \App\Enums\OrderStatus::REFUNDED->value)
+        ->with(['user', 'orderProducts' => function ($q) use ($productIds) {
+            $q->whereIn('product_id', $productIds)->with('product');
+        }]);
 
         if ($fromDate && $toDate) {
             $query->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
@@ -517,19 +537,17 @@ class ProvidersReportController extends Controller
 
         foreach ($refunds as $order) {
             foreach ($order->orderProducts as $op) {
-                if ($productIds->contains($op->product_id)) {
-                    $amount = $op->quantity * $op->unit_price;
-                    $refundsList[] = [
-                        'warehouse_name' => $order->user?->name ?? 'Unknown',
-                        'product_name' => $op->product->name,
-                        'quantity_returned' => $op->quantity,
-                        'amount' => number_format($amount, 2),
-                        'date' => $order->created_at?->format('Y-m-d') ?? '-',
-                        'order_number' => $order->number,
-                    ];
-                    $totalReturned += $op->quantity;
-                    $totalAmount += $amount;
-                }
+                $amount = $op->quantity * $op->unit_price;
+                $refundsList[] = [
+                    'warehouse_name' => $order->user?->name ?? 'Unknown',
+                    'product_name' => $op->product->name,
+                    'quantity_returned' => $op->quantity,
+                    'amount' => number_format($amount, 2),
+                    'date' => $order->created_at?->format('Y-m-d') ?? '-',
+                    'order_number' => $order->number,
+                ];
+                $totalReturned += $op->quantity;
+                $totalAmount += $amount;
             }
         }
 
@@ -548,73 +566,128 @@ class ProvidersReportController extends Controller
      */
     public function getSellersPaymentsData(Request $request, $providerId)
     {
-        // Get products from this provider
-        $productIds = Product::where('provider_id', $providerId)->pluck('id');
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
 
-        // Get all orders with products from this provider
-        $orders = \App\Models\Order::whereHas('orderProducts', function ($q) use ($productIds) {
-            $q->whereIn('product_id', $productIds->toArray());
-        })
-        ->where('status', 1) // Only completed orders
-        ->with(['user', 'orderProducts.product'])
-        ->get();
+        // Get products from this provider via BookRequestResponse
+        $bookRequests = \App\Models\BookRequestResponse::where('provider_id', $providerId)
+            ->where('status', 'approved')
+            ->with('bookRequest.product')
+            ->get();
 
-        // Group by customer and sum amounts
-        $sellerPayments = [];
-        $groupedData = [];
+        $productIds = $bookRequests->pluck('bookRequest.product_id')->unique()->toArray();
 
-        foreach ($orders as $order) {
-            $customerId = $order->user_id;
-            $customer = $order->user;
+        // If no products, return empty
+        if (empty($productIds)) {
+            return response()->json([
+                'success' => true,
+                'payments' => [],
+                'summary' => [
+                    'total_distributed' => 0,
+                    'total_sold' => 0,
+                    'total_remaining' => 0,
+                ],
+            ]);
+        }
 
-            if (!isset($groupedData[$customerId])) {
-                $groupedData[$customerId] = [
-                    'seller_name' => $customer?->name ?? 'Unknown',
-                    'total_amount' => 0,
-                    'paid_amount' => 0,
-                    'remaining_amount' => 0,
-                    'last_order_date' => null,
+        // Get all NoteVouchers Type 3 (transfers to sellers) for these products
+        $vouchersQuery = \App\Models\NoteVoucher::where('note_voucher_type_id', 3)
+            ->with(['toWarehouse.user', 'voucherProducts']);
+
+        if ($fromDate && $toDate) {
+            $vouchersQuery->whereBetween('date_note_voucher', [$fromDate, $toDate]);
+        }
+
+        $vouchers = $vouchersQuery->get();
+
+        // Group data by seller
+        $sellerData = [];
+
+        // First, collect distributed quantities for each seller
+        foreach ($vouchers as $voucher) {
+            $seller = $voucher->toWarehouse?->user;
+            if (!$seller || !$seller->hasRole('seller')) {
+                continue;
+            }
+
+            $sellerId = $seller->id;
+            if (!isset($sellerData[$sellerId])) {
+                $sellerData[$sellerId] = [
+                    'seller_name' => $seller->name,
+                    'distributed_qty' => 0,
+                    'sold_qty' => 0,
+                    'remaining_qty' => 0,
                 ];
             }
 
-            // Sum provider products in this order
-            $orderTotal = 0;
-            foreach ($order->orderProducts as $op) {
-                if ($productIds->contains($op->product_id)) {
-                    $orderTotal += $op->total_price_after_tax;
+            // Sum quantities for this seller's products
+            foreach ($voucher->voucherProducts as $vp) {
+                if (in_array($vp->product_id, $productIds)) {
+                    $sellerData[$sellerId]['distributed_qty'] += $vp->quantity;
                 }
             }
-
-            $groupedData[$customerId]['total_amount'] += $orderTotal;
-            $groupedData[$customerId]['last_order_date'] = $order->created_at;
         }
 
-        // Format for response - show 60% paid, 40% remaining (simulated payment status)
-        foreach ($groupedData as $customerId => $data) {
-            $totalAmount = $data['total_amount'];
-            $paidAmount = $totalAmount * 0.6;
-            $remainingAmount = $totalAmount * 0.4;
+        // Then, get sales data for each seller
+        $sellerSalesQuery = \App\Models\SellerSale::whereHas('items', function ($q) use ($productIds) {
+            $q->whereIn('product_id', $productIds);
+        })
+        ->with(['user', 'items' => function ($q) use ($productIds) {
+            $q->whereIn('product_id', $productIds);
+        }]);
 
-            $sellerPayments[] = [
+        if ($fromDate && $toDate) {
+            $sellerSalesQuery->whereBetween('sale_date', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
+        }
+
+        $sellerSales = $sellerSalesQuery->get();
+
+        foreach ($sellerSales as $sale) {
+            $sellerId = $sale->user_id;
+            if (!isset($sellerData[$sellerId])) {
+                $sellerData[$sellerId] = [
+                    'seller_name' => $sale->user?->name ?? 'Unknown',
+                    'distributed_qty' => 0,
+                    'sold_qty' => 0,
+                    'remaining_qty' => 0,
+                ];
+            }
+
+            foreach ($sale->items as $item) {
+                $sellerData[$sellerId]['sold_qty'] += $item->quantity;
+            }
+        }
+
+        // Calculate remaining for each seller
+        $payments = [];
+        $totalOrdersAmount = 0;
+        $totalPaid = 0;
+        $totalRemaining = 0;
+
+        foreach ($sellerData as $data) {
+            $remaining = $data['distributed_qty'] - $data['sold_qty'];
+            $totalAmount = $data['distributed_qty']; // Total distributed = total orders amount
+            $paidAmount = $data['sold_qty']; // Sold = paid amount
+            $remainingAmount = max(0, $remaining);
+
+            $payments[] = [
                 'seller_name' => $data['seller_name'],
                 'total_orders_amount' => number_format($totalAmount, 2),
                 'paid_amount' => number_format($paidAmount, 2),
                 'remaining_amount' => number_format($remainingAmount, 2),
-                'payment_status' => $remainingAmount > 0 ? 'مدين' : 'مسدد',
-                'last_order_date' => ($data['last_order_date'] ?? now())?->format('Y-m-d') ?? '-',
+                'payment_status' => $remainingAmount > 0 ? 'in_debt' : 'paid',
+                'last_order_date' => '-',
             ];
+            $totalOrdersAmount += $totalAmount;
+            $totalPaid += $paidAmount;
+            $totalRemaining += $remainingAmount;
         }
-
-        // Calculate totals
-        $totalAmount = array_sum(array_map(fn($p) => (float)str_replace(',', '', $p['total_orders_amount']), $sellerPayments));
-        $totalPaid = array_sum(array_map(fn($p) => (float)str_replace(',', '', $p['paid_amount']), $sellerPayments));
-        $totalRemaining = array_sum(array_map(fn($p) => (float)str_replace(',', '', $p['remaining_amount']), $sellerPayments));
 
         return response()->json([
             'success' => true,
-            'payments' => $sellerPayments,
+            'payments' => $payments,
             'summary' => [
-                'total_orders_amount' => number_format($totalAmount, 2),
+                'total_orders_amount' => number_format($totalOrdersAmount, 2),
                 'total_paid' => number_format($totalPaid, 2),
                 'total_remaining' => number_format($totalRemaining, 2),
             ],
@@ -623,52 +696,83 @@ class ProvidersReportController extends Controller
 
     /**
      * Get Stock Balance Data - Remaining quantities
+     * Uses BookRequestResponse to identify provider products
      */
     public function getStockBalanceData(Request $request, $providerId)
     {
-        // Get products from this provider
-        $products = Product::where('provider_id', $providerId)->get();
+        // Get products from this provider via BookRequestResponse
+        $bookRequests = \App\Models\BookRequestResponse::where('provider_id', $providerId)
+            ->where('status', 'approved')
+            ->with('bookRequest.product')
+            ->get();
+
+        $productIds = $bookRequests->pluck('bookRequest.product_id')->unique()->toArray();
+
+        // If no products, return empty
+        if (empty($productIds)) {
+            return response()->json([
+                'success' => true,
+                'stock' => [],
+                'summary' => [
+                    'total_remaining' => 0,
+                ],
+            ]);
+        }
 
         $stockBalance = [];
         $totalRemaining = 0;
 
+        // Get unique products from book requests
+        $products = \App\Models\Product::whereIn('id', $productIds)->get();
+
         foreach ($products as $product) {
-            // Get distribution quantity
-            $distributed = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) {
-                $q->where('note_voucher_type_id', 1) // Type 1 = Incoming
-                  ->orWhere('note_voucher_type_id', 3); // Type 3 = Transfer
+            // Get purchased quantity (NoteVoucher Type 1 - incoming purchases)
+            $purchased = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) {
+                $q->where('note_voucher_type_id', 1); // Type 1 = Incoming/Purchased
             })
             ->where('product_id', $product->id)
             ->sum('quantity');
 
-            // Get sales quantity
-            $sold = \App\Models\OrderProduct::whereHas('order', function ($q) {
-                $q->where('status', 1); // Done
+            // Get transferred quantity (NoteVoucher Type 3 only - transfers to sellers)
+            $transferred = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) {
+                $q->where('note_voucher_type_id', 3); // Type 3 = Transfer only
             })
             ->where('product_id', $product->id)
             ->sum('quantity');
 
-            // Get refund quantity
+            // Get sales quantity from Orders (to customers)
+            $soldViaOrder = \App\Models\OrderProduct::whereHas('order', function ($q) {
+                $q->where('status', \App\Enums\OrderStatus::DONE->value);
+            })
+            ->where('product_id', $product->id)
+            ->sum('quantity');
+
+            // Get sales quantity from SellerSales (from sellers themselves)
+            $soldViaSellerSales = \App\Models\SellerSaleItem::where('product_id', $product->id)
+                ->sum('quantity');
+
+            // Total sold = Order sales + SellerSales
+            $totalSold = $soldViaOrder + $soldViaSellerSales;
+
+            // Get refund quantity (Status = Refunded)
             $returned = \App\Models\OrderProduct::whereHas('order', function ($q) {
-                $q->where(function ($subQ) {
-                    $subQ->where('status', 6) // Refund
-                         ->orWhere('order_type', 2); // Refund order
-                });
+                $q->where('status', \App\Enums\OrderStatus::REFUNDED->value);
             })
             ->where('product_id', $product->id)
             ->sum('quantity');
 
-            $remaining = $distributed - $sold - $returned;
+            // Total remaining = Purchased - Sold - Returned
+            $remaining = $purchased - $totalSold - $returned;
 
             // Get warehouse data
             $warehouse = \App\Models\Warehouse::first(); // Main warehouse
 
-            if ($distributed > 0 || $sold > 0 || $returned > 0) {
+            if ($transferred > 0 || $totalSold > 0 || $returned > 0) {
                 $stockBalance[] = [
                     'warehouse_name' => $warehouse?->name ?? 'المستودع الرئيسي',
                     'product_name' => $product->name,
-                    'quantity_distributed' => $distributed,
-                    'quantity_sold' => $sold,
+                    'quantity_distributed' => $transferred,
+                    'quantity_sold' => $totalSold,
                     'quantity_returned' => $returned,
                     'quantity_remaining' => max(0, $remaining),
                 ];
@@ -685,126 +789,7 @@ class ProvidersReportController extends Controller
         ]);
     }
 
-    public function getSalesByPlaceData(Request $request, $providerId)
-    {
-        $fromDate = $request->get('from_date');
-        $toDate = $request->get('to_date');
-
-        return response()->json($this->getSalesByPlaceDataLogic($providerId, $fromDate, $toDate));
-    }
-
-    private function getSalesByPlaceDataLogic($providerId, $fromDate, $toDate)
-    {
-        // Get products from this provider
-        $productIds = Product::where('provider_id', $providerId)->pluck('id');
-
-        // Get all orders grouped by event/place for this provider's products
-        $query = \App\Models\Order::whereHas('orderProducts', function ($q) use ($productIds) {
-            $q->whereIn('product_id', $productIds->toArray());
-        })
-        ->where('status', 1) // Status 1 = Done
-        ->with(['event', 'user', 'orderProducts.product']);
-
-        if ($fromDate && $toDate) {
-            $query->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
-        }
-
-        $orders = $query->get();
-
-        // Group by event/place
-        $placesSalesData = [];
-        $groupedByPlace = [];
-
-        foreach ($orders as $order) {
-            $placeId = $order->event_id ?? 0;
-            $placeName = $order->event?->name ?? $order->user?->name ?? 'Unknown';
-            $placeStartDate = $order->event?->start_date;
-            $placeEndDate = $order->event?->end_date;
-
-            if (!isset($groupedByPlace[$placeId])) {
-                $groupedByPlace[$placeId] = [
-                    'place_name' => $placeName,
-                    'from_date' => $placeStartDate,
-                    'to_date' => $placeEndDate,
-                    'quantity' => 0,
-                    'stock_returned' => 0,
-                    'sold' => 0,
-                    'total_before_tax' => 0,
-                    'total_tax' => 0,
-                    'total_after_tax' => 0,
-                ];
-            }
-
-            foreach ($order->orderProducts as $op) {
-                if ($productIds->contains($op->product_id)) {
-                    $groupedByPlace[$placeId]['quantity'] += $op->quantity;
-                    $groupedByPlace[$placeId]['sold'] += $op->quantity;
-                    $groupedByPlace[$placeId]['total_before_tax'] += $op->total_price_before_tax;
-                    $groupedByPlace[$placeId]['total_tax'] += $op->tax_value;
-                    $groupedByPlace[$placeId]['total_after_tax'] += $op->total_price_after_tax;
-                }
-            }
-        }
-
-        // Calculate commission rates and format data
-        $distributorRate = 0.20;
-        $vendorRate30 = 0.30;
-
-        foreach ($groupedByPlace as $placeId => $data) {
-            $baseAmount = $data['total_before_tax'];
-            $vatAmount = $data['total_tax'];
-
-            $distributorCut = $baseAmount * $distributorRate;
-            $vendorCut30 = $baseAmount * $vendorRate30;
-
-            $totalFees = $distributorCut + $vendorCut30;
-            $authorsCut = $baseAmount - $totalFees;
-
-            $placesSalesData[] = [
-                'place_name' => $data['place_name'],
-                'from_date' => $data['from_date'] ? $data['from_date']->format('Y-m-d') : '-',
-                'to_date' => $data['to_date'] ? $data['to_date']->format('Y-m-d') : '-',
-                'quantity' => $data['quantity'],
-                'stock_returned' => $data['stock_returned'],
-                'sold' => $data['sold'],
-                'total' => number_format($data['total_after_tax'], 2),
-                'total_without_vat' => number_format($baseAmount, 2),
-                'vat_15' => number_format($vatAmount, 2),
-                'distributor_cut_20' => number_format($distributorCut, 2),
-                'vendor_commission_30' => number_format($vendorCut30, 2),
-                'vendor_commission_35' => '0.00',
-                'vendor_commission_40' => '0.00',
-                'other_fees' => '0.00',
-                'total_fees' => number_format($totalFees, 2),
-                'authors_cut' => number_format($authorsCut, 2),
-                'discounted_items' => 0,
-                'discount_30_amount' => '0.00',
-                'notes' => '-',
-            ];
-        }
-
-        usort($placesSalesData, function ($a, $b) {
-            return strcmp($a['place_name'], $b['place_name']);
-        });
-
-        return [
-            'success' => true,
-            'sales_by_place' => $placesSalesData,
-            'summary' => [
-                'total_places' => count($placesSalesData),
-                'total_quantity' => array_sum(array_column($placesSalesData, 'quantity')),
-                'total_sold' => array_sum(array_column($placesSalesData, 'sold')),
-                'total_revenue' => number_format(
-                    array_sum(array_map(function ($item) {
-                        return (float)str_replace(',', '', $item['total']);
-                    }, $placesSalesData)),
-                    2
-                ),
-            ],
-        ];
-    }
-
-    private function getStatusBadge($status)
+private function getStatusBadge($status)
     {
         $badges = [
             'approved' => '<span class="badge badge-success">موافق عليه</span>',
