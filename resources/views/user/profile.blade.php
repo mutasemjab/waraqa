@@ -217,7 +217,7 @@
             <div class="card-body">
                 <div class="info-item mb-3">
                     <strong>{{ __('messages.member_since') }}:</strong>
-                    <span class="text-muted">{{ $user->created_at->format('M d, Y') }}</span>
+                    <span class="text-muted">{{ $user->created_at->format('Y-m-d') }}</span>
                 </div>
                 
                 <div class="info-item mb-3">

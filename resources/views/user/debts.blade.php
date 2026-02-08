@@ -106,7 +106,7 @@
                                     </a>
                                     <br>
                                     <small class="text-muted">
-                                        {{ Carbon\Carbon::parse($debt->order->date)->format('M d, Y') }}
+                                        {{ Carbon\Carbon::parse($debt->order->date)->format('Y-m-d') }}
                                     </small>
                                 </td>
                                 <td class="fw-bold"><x-riyal-icon /> {{ number_format($debt->total_amount, 2) }}</td>
@@ -125,7 +125,7 @@
                                         <span class="badge bg-success">{{ __('messages.paid') }}</span>
                                     @endif
                                 </td>
-                                <td>{{ $debt->created_at->format('M d, Y') }}</td>
+                                <td>{{ $debt->created_at->format('Y-m-d') }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('user.orders.show', $debt->order->id) }}" 

@@ -268,7 +268,7 @@ const monthlyChart = new Chart(monthlyCtx, {
     data: {
         labels: [
             @foreach($monthlySpending->reverse() as $spending)
-                '{{ Carbon\Carbon::create($spending->year, $spending->month)->format("M Y") }}',
+                '{{ Carbon\Carbon::create($spending->year, $spending->month)->format("Y-m") }}',
             @endforeach
         ],
         datasets: [{
@@ -361,7 +361,7 @@ function exportToCSV() {
     csvContent += "{{ __('messages.monthly_spending') }}\n";
     csvContent += "{{ __('messages.month') }},{{ __('messages.amount') }}\n";
     @foreach($monthlySpending as $spending)
-        csvContent += "{{ Carbon\Carbon::create($spending->year, $spending->month)->format('M Y') }},{{ $spending->total }}\n";
+        csvContent += "{{ Carbon\Carbon::create($spending->year, $spending->month)->format('Y-m') }},{{ $spending->total }}\n";
     @endforeach
     
     csvContent += "\n{{ __('messages.top_products') }}\n";

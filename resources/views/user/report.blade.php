@@ -46,7 +46,7 @@
                     </tr>
                     <tr>
                         <td><strong>{{ __('messages.report_generated') }}:</strong></td>
-                        <td>{{ now()->format('Y-m-d H:i') }}</td>
+                        <td>{{ now()->format('Y-m-d') }}</td>
                     </tr>
                 </table>
             </div>
@@ -227,7 +227,7 @@
                         <div class="timeline-content">
                             <h6 class="mb-1">{{ __('messages.order') }} {{ $order->number }}</h6>
                             <p class="text-muted mb-1"><x-riyal-icon /> {{ number_format($order->total_prices, 2) }} • {{ $order->orderProducts->count() }} {{ __('messages.items') }}</p>
-                            <small class="text-muted">{{ Carbon\Carbon::parse($order->date)->format('M d, Y H:i') }}</small>
+                            <small class="text-muted">{{ Carbon\Carbon::parse($order->date)->format('Y-m-d') }}</small>
                             
                             @if($order->orderProducts->count() > 0)
                                 <div class="mt-2">

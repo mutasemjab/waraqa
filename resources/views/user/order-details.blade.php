@@ -31,7 +31,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <p><strong>{{ __('messages.order_number') }}:</strong> {{ $order->number }}</p>
-                        <p><strong>{{ __('messages.order_date') }}:</strong> {{ Carbon\Carbon::parse($order->date)->format('Y-m-d H:i') }}</p>
+                        <p><strong>{{ __('messages.order_date') }}:</strong> {{ Carbon\Carbon::parse($order->date)->format('Y-m-d') }}</p>
                         <p><strong>{{ __('messages.total_items') }}:</strong> {{ $order->orderProducts->sum('quantity') }}</p>
                         @if($order->note)
                             <p><strong>{{ __('messages.order_note') }}:</strong> {{ $order->note }}</p>
@@ -44,8 +44,8 @@
                         <p><strong>{{ __('messages.payment_status') }}:</strong>
                             {!! \App\Enums\PaymentStatus::tryFrom($order->payment_status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                         </p>
-                        <p><strong>{{ __('messages.created_at') }}:</strong> {{ $order->created_at->format('Y-m-d H:i') }}</p>
-                        <p><strong>{{ __('messages.updated_at') }}:</strong> {{ $order->updated_at->format('Y-m-d H:i') }}</p>
+                        <p><strong>{{ __('messages.created_at') }}:</strong> {{ $order->created_at->format('Y-m-d') }}</p>
+                        <p><strong>{{ __('messages.updated_at') }}:</strong> {{ $order->updated_at->format('Y-m-d') }}</p>
                     </div>
                 </div>
             </div>
@@ -114,9 +114,10 @@
                         <th>{{ __('messages.product') }}</th>
                         <th>{{ __('messages.unit_price') }}</th>
                         <th>{{ __('messages.quantity') }}</th>
-                        <th>{{ __('messages.subtotal') }}</th>
-                        <th>{{ __('messages.tax') }}</th>
-                        <th>{{ __('messages.total') }}</th>
+                        <th>{{ __('messages.subtotal') }} ({{ __('messages.before_tax') }})</th>
+                        <th>{{ __('messages.tax') }} %</th>
+                        <th>{{ __('messages.tax_value') }}</th>
+                        <th>{{ __('messages.total') }} ({{ __('messages.after_tax') }})</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -125,9 +126,9 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     @if($orderProduct->product && $orderProduct->product->photo)
-                                        <img src="{{ asset('assets/admin/uploads/' . $orderProduct->product->photo) }}" 
-                                             alt="{{ $orderProduct->product->name_en }}" 
-                                             class="me-3 rounded" 
+                                        <img src="{{ asset('assets/admin/uploads/' . $orderProduct->product->photo) }}"
+                                             alt="{{ $orderProduct->product->name_en }}"
+                                             class="me-3 rounded"
                                              style="width: 50px; height: 50px; object-fit: cover;">
                                     @else
                                         <div class="me-3 rounded bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
@@ -147,7 +148,8 @@
                                 <span class="badge bg-info">{{ $orderProduct->quantity }}</span>
                             </td>
                             <td><x-riyal-icon /> {{ number_format($orderProduct->total_price_before_tax, 2) }}</td>
-                            <td><x-riyal-icon /> {{ number_format($orderProduct->tax_percentage, 2) }}</td>
+                            <td>{{ number_format($orderProduct->tax_percentage, 2) }}%</td>
+                            <td><x-riyal-icon /> {{ number_format($orderProduct->total_price_after_tax - $orderProduct->total_price_before_tax, 2) }}</td>
                             <td class="fw-bold"><x-riyal-icon /> {{ number_format($orderProduct->total_price_after_tax, 2) }}</td>
                         </tr>
                     @endforeach
@@ -155,8 +157,9 @@
                 <tfoot>
                     <tr class="table-active">
                         <th colspan="3">{{ __('messages.total') }}</th>
-                        <th><x-riyal-icon /> {{ number_format($order->orderProducts->sum('total_price'), 2) }}</th>
-                        <th><x-riyal-icon /> {{ number_format($order->orderProducts->sum(function($item) { return $item->total_price_after_tax - $item->total_price; }), 2) }}</th>
+                        <th><x-riyal-icon /> {{ number_format($order->orderProducts->sum('total_price_before_tax'), 2) }}</th>
+                        <th>-</th>
+                        <th><x-riyal-icon /> {{ number_format($order->orderProducts->sum(function($item) { return $item->total_price_after_tax - $item->total_price_before_tax; }), 2) }}</th>
                         <th class="text-primary"><x-riyal-icon /> {{ number_format($order->orderProducts->sum('total_price_after_tax'), 2) }}</th>
                     </tr>
                 </tfoot>
@@ -196,7 +199,7 @@
                                         <span class="badge bg-success">{{ __('messages.paid') }}</span>
                                     @endif
                                 </td>
-                                <td>{{ $debt->created_at->format('Y-m-d H:i') }}</td>
+                                <td>{{ $debt->created_at->format('Y-m-d') }}</td>
                             </tr>
                         @endforeach
                     </tbody>

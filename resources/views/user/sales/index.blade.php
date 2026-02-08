@@ -126,7 +126,7 @@
                                 <td>
                                     <strong>#{{ $sale->number }}</strong>
                                 </td>
-                                <td>{{ Carbon\Carbon::parse($sale->date_note_voucher)->format('M d, Y') }}</td>
+                                <td>{{ Carbon\Carbon::parse($sale->date_note_voucher)->format('Y-m-d') }}</td>
                                 <td>
                                     @php
                                         $customerInfo = '';

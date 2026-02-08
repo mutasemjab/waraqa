@@ -122,7 +122,7 @@ class ProvidersReportController extends Controller
                 'phone' => $provider->user->phone ?? '-',
                 'country' => $provider->user?->country?->name ?? '-',
                 'address' => $provider->user?->address ?? '-',
-                'created_at' => $provider->created_at,
+                'created_at' => $provider->created_at?->format('Y-m-d') ?? '-',
                 'activate' => $provider->user?->activate ?? 0,
             ],
             'products' => $productData,
@@ -251,7 +251,7 @@ class ProvidersReportController extends Controller
                 'total_amount' => $purchase->total_amount,
                 'total_tax' => $purchase->total_tax,
                 'status' => $purchase->status,
-                'created_at' => $purchase->created_at,
+                'created_at' => $purchase->created_at?->format('Y-m-d') ?? '-',
             ];
         });
 
@@ -410,7 +410,7 @@ class ProvidersReportController extends Controller
                         'warehouse_name' => $voucher->toWarehouse?->user?->name ?? $voucher->toWarehouse?->name ?? 'Unknown',
                         'product_name' => $vp->product->name,
                         'quantity' => $vp->quantity,
-                        'date' => $voucher->date_note_voucher,
+                        'date' => $voucher->date_note_voucher instanceof \DateTime ? $voucher->date_note_voucher->format('Y-m-d') : $voucher->date_note_voucher,
                         'note_voucher_number' => $voucher->number,
                     ];
                     $warehouseIds[] = $voucher->to_warehouse_id;
@@ -465,7 +465,7 @@ class ProvidersReportController extends Controller
                         'product_name' => $op->product->name,
                         'quantity_sold' => $op->quantity,
                         'revenue' => $op->quantity * $op->unit_price,
-                        'date' => $order->created_at,
+                        'date' => $order->created_at?->format('Y-m-d') ?? '-',
                         'order_number' => $order->number,
                     ];
                     $totalSold += $op->quantity;
@@ -524,7 +524,7 @@ class ProvidersReportController extends Controller
                         'product_name' => $op->product->name,
                         'quantity_returned' => $op->quantity,
                         'amount' => number_format($amount, 2),
-                        'date' => $order->created_at,
+                        'date' => $order->created_at?->format('Y-m-d') ?? '-',
                         'order_number' => $order->number,
                     ];
                     $totalReturned += $op->quantity;
@@ -601,7 +601,7 @@ class ProvidersReportController extends Controller
                 'paid_amount' => number_format($paidAmount, 2),
                 'remaining_amount' => number_format($remainingAmount, 2),
                 'payment_status' => $remainingAmount > 0 ? 'مدين' : 'مسدد',
-                'last_order_date' => $data['last_order_date'] ?? now(),
+                'last_order_date' => ($data['last_order_date'] ?? now())?->format('Y-m-d') ?? '-',
             ];
         }
 
@@ -762,8 +762,8 @@ class ProvidersReportController extends Controller
 
             $placesSalesData[] = [
                 'place_name' => $data['place_name'],
-                'from_date' => $data['from_date'] ? $data['from_date']->format('M d, Y') : '-',
-                'to_date' => $data['to_date'] ? $data['to_date']->format('M d, Y') : '-',
+                'from_date' => $data['from_date'] ? $data['from_date']->format('Y-m-d') : '-',
+                'to_date' => $data['to_date'] ? $data['to_date']->format('Y-m-d') : '-',
                 'quantity' => $data['quantity'],
                 'stock_returned' => $data['stock_returned'],
                 'sold' => $data['sold'],

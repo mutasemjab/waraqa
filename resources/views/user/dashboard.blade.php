@@ -112,7 +112,7 @@
                                 @foreach(auth()->user()->orders()->latest()->take(5)->get() as $order)
                                     <tr>
                                         <td>{{ $order->number }}</td>
-                                        <td>{{ $order->date }}</td>
+                                        <td>{{ Carbon\Carbon::parse($order->date)->format('Y-m-d') }}</td>
                                         <td><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</td>
                                         <td>
                                             {!! \App\Enums\OrderStatus::tryFrom($order->status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
@@ -171,7 +171,7 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span>{{ __('messages.member_since') }}</span>
-                    <span class="text-muted">{{ auth()->user()->created_at->format('M Y') }}</span>
+                    <span class="text-muted">{{ auth()->user()->created_at->format('Y-m-d') }}</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                     <span>{{ __('messages.total_spent') }}</span>

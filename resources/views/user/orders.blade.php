@@ -97,7 +97,7 @@
                                         <br><small class="text-muted">{{ Str::limit($order->note, 30) }}</small>
                                     @endif
                                 </td>
-                                <td>{{ Carbon\Carbon::parse($order->date)->format('Y-m-d H:i') }}</td>
+                                <td>{{ Carbon\Carbon::parse($order->date)->format('Y-m-d') }}</td>
                                 <td>
                                     <span class="badge bg-info">{{ $order->orderProducts->count() }} {{ __('messages.items') }}</span>
                                 </td>
