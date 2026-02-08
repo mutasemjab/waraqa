@@ -1786,4 +1786,6 @@ return [
     'statistic' => 'الإحصائية',
     'total_import_tax' => 'إجمالي ضريبة الاستيراد',
     'total_import_value' => 'إجمالي قيمة الاستيراد',
+    'excluding_tax' => 'غير شامل الضريبة',
+    'tax_inclusive' => 'شامل الضريبة',
 ];

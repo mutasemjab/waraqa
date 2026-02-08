@@ -41,23 +41,13 @@
                                             <tr>
                                                 <td><strong>{{ __('messages.status') }}:</strong></td>
                                                 <td>
-                                                    @if($order->status == 1)
-                                                        <span class="badge bg-success">{{ __('messages.done') }}</span>
-                                                    @elseif($order->status == 2)
-                                                        <span class="badge bg-danger">{{ __('messages.canceled') }}</span>
-                                                    @else
-                                                        <span class="badge bg-info">{{ __('messages.refund') }}</span>
-                                                    @endif
+                                                    {!! \App\Enums\OrderStatus::tryFrom($order->status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>{{ __('messages.payment_status') }}:</strong></td>
                                                 <td>
-                                                    @if($order->payment_status == 1)
-                                                        <span class="badge bg-success">{{ __('messages.paid') }}</span>
-                                                    @else
-                                                        <span class="badge bg-warning">{{ __('messages.unpaid') }}</span>
-                                                    @endif
+                                                    {!! \App\Enums\PaymentStatus::tryFrom($order->payment_status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                                                 </td>
                                             </tr>
                                             @if($order->note)

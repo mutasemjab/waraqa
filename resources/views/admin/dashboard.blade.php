@@ -142,11 +142,11 @@
 
         <!-- Pending Orders -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card border-left-{{ \App\Enums\OrderStatus::PENDING->getColor() }} shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-{{ \App\Enums\OrderStatus::PENDING->getColor() }} text-uppercase mb-1">
                                 {{ __('messages.pending_orders') }}
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($stats['pending_orders']) }}</div>
@@ -157,7 +157,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['status' => 'not_done']) }}" class="btn btn-sm btn-warning text-white">
+                    <a href="{{ route('orders.index', ['status' => \App\Enums\OrderStatus::PENDING->value]) }}" class="btn btn-sm btn-{{ \App\Enums\OrderStatus::PENDING->getColor() }} text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -166,11 +166,11 @@
 
         <!-- Completed Orders -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
+            <div class="card border-left-{{ \App\Enums\OrderStatus::DONE->getColor() }} shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-{{ \App\Enums\OrderStatus::DONE->getColor() }} text-uppercase mb-1">
                                 {{ __('messages.completed_orders') }}
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($stats['completed_orders']) }}</div>
@@ -181,7 +181,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-sm btn-success text-white">
+                    <a href="{{ route('orders.index', ['status' => \App\Enums\OrderStatus::DONE->value]) }}" class="btn btn-sm btn-{{ \App\Enums\OrderStatus::DONE->getColor() }} text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -238,11 +238,11 @@
 
         <!-- Cancelled Orders -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card border-left-{{ \App\Enums\OrderStatus::CANCELLED->getColor() }} shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-{{ \App\Enums\OrderStatus::CANCELLED->getColor() }} text-uppercase mb-1">
                                 {{ __('messages.cancelled_orders') }}
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($stats['cancelled_orders']) }}</div>
@@ -253,7 +253,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['status' => 2]) }}" class="btn btn-sm btn-danger text-white">
+                    <a href="{{ route('orders.index', ['status' => \App\Enums\OrderStatus::CANCELLED->value]) }}" class="btn btn-sm btn-{{ \App\Enums\OrderStatus::CANCELLED->getColor() }} text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -277,7 +277,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['month' => now()->format('Y-m'), 'status' => 1]) }}" class="btn btn-sm btn-secondary text-white">
+                    <a href="{{ route('orders.index', ['month' => now()->format('Y-m'), 'status' => \App\Enums\OrderStatus::DONE->value]) }}" class="btn btn-sm btn-secondary text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -286,11 +286,11 @@
 
         <!-- Order Success Rate -->
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
+            <div class="card border-left-{{ \App\Enums\OrderStatus::DONE->getColor() }} shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-{{ \App\Enums\OrderStatus::DONE->getColor() }} text-uppercase mb-1">
                                 {{ __('messages.success_rate') }}
                             </div>
                             @php
@@ -305,7 +305,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-light py-2 text-center">
-                    <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-sm btn-success text-white">
+                    <a href="{{ route('orders.index', ['status' => \App\Enums\OrderStatus::DONE->value]) }}" class="btn btn-sm btn-{{ \App\Enums\OrderStatus::DONE->getColor() }} text-white">
                         <i class="fas fa-eye"></i> {{ __('messages.view_all') }}
                     </a>
                 </div>
@@ -326,18 +326,11 @@
                         <canvas id="ordersStatusChart"></canvas>
                     </div>
                     <div class="mt-4 text-center small">
+                        @foreach(\App\Enums\OrderStatus::cases() as $status)
                         <span class="mr-2">
-                            <i class="fas fa-circle text-success"></i> {{ __('messages.completed') }}
+                            <i class="fas fa-circle text-{{ $status->getColor() }}"></i> {{ $status->getLabelLocalized() }}
                         </span>
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-danger"></i> {{ __('messages.cancelled') }}
-                        </span>
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-secondary"></i> {{ __('messages.refund') }}
-                        </span>
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-warning"></i> {{ __('messages.pending') }}
-                        </span>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -373,23 +366,10 @@
                                     <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
                                     <td>
                                         @php
-                                            // Determine status based on order status only
-                                            if ($order->status == 1) {
-                                                $badge = 'success';
-                                                $label = __('messages.completed');
-                                            } elseif ($order->status == 2) {
-                                                $badge = 'danger';
-                                                $label = __('messages.cancelled');
-                                            } elseif ($order->status == 6) {
-                                                $badge = 'secondary';
-                                                $label = __('messages.refund');
-                                            } else {
-                                                $badge = 'warning';
-                                                $label = __('messages.pending');
-                                            }
+                                            $statusEnum = \App\Enums\OrderStatus::tryFrom($order->status);
                                         @endphp
-                                        <span class="badge badge-{{ $badge }} badge-sm">
-                                            {{ $label }}
+                                        <span class="badge badge-{{ $statusEnum?->getColor() ?? 'secondary' }} badge-sm">
+                                            {{ $statusEnum?->getLabelLocalized() ?? 'N/A' }}
                                         </span>
                                     </td>
                                 </tr>
@@ -416,7 +396,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('orders.index', ['status' => 'not_done']) }}" class="btn btn-warning btn-block">
+                            <a href="{{ route('orders.index', ['status' => \App\Enums\OrderStatus::PENDING->value]) }}" class="btn btn-{{ \App\Enums\OrderStatus::PENDING->getColor() }} btn-block">
                                 <i class="fas fa-clock"></i> {{ __('messages.pending_orders') }}
                                 <span class="badge badge-light ml-2">{{ $stats['pending_orders'] }}</span>
                             </a>
@@ -428,13 +408,13 @@
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('orders.index', ['status' => 1]) }}" class="btn btn-success btn-block">
+                            <a href="{{ route('orders.index', ['status' => \App\Enums\OrderStatus::DONE->value]) }}" class="btn btn-{{ \App\Enums\OrderStatus::DONE->getColor() }} btn-block">
                                 <i class="fas fa-check-circle"></i> {{ __('messages.completed_orders') }}
                                 <span class="badge badge-light ml-2">{{ $stats['completed_orders'] }}</span>
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('orders.index', ['status' => 2]) }}" class="btn btn-danger btn-block">
+                            <a href="{{ route('orders.index', ['status' => \App\Enums\OrderStatus::CANCELLED->value]) }}" class="btn btn-{{ \App\Enums\OrderStatus::CANCELLED->getColor() }} btn-block">
                                 <i class="fas fa-times-circle"></i> {{ __('messages.cancelled_orders') }}
                                 <span class="badge badge-light ml-2">{{ $stats['cancelled_orders'] }}</span>
                             </a>
@@ -457,17 +437,17 @@ $(document).ready(function() {
     var ordersData = @json($ordersByStatus);
 
     var statusLabels = {
-        'completed': '{{ __("messages.completed") }}',
-        'cancelled': '{{ __("messages.cancelled") }}',
-        'refund': '{{ __("messages.refund") }}',
-        'pending': '{{ __("messages.pending") }}'
+        'pending': '{{ \App\Enums\OrderStatus::PENDING->getLabelLocalized() }}',
+        'completed': '{{ \App\Enums\OrderStatus::DONE->getLabelLocalized() }}',
+        'cancelled': '{{ \App\Enums\OrderStatus::CANCELLED->getLabelLocalized() }}',
+        'refund': '{{ \App\Enums\OrderStatus::REFUNDED->getLabelLocalized() }}'
     };
 
     var statusColors = {
-        'completed': '#1cc88a', // success (green) - Completed
+        'pending': '#36b9cc',  // info (blue) - Pending
+        'completed': '#1cc88a', // success (green) - Done
         'cancelled': '#e74a3b', // danger (red) - Cancelled
-        'refund': '#6c757d', // secondary (gray) - Refund
-        'pending': '#f6c23e'  // warning (yellow) - Pending
+        'refund': '#f6c23e'    // warning (yellow) - Refunded
     };
 
     var labels = [];

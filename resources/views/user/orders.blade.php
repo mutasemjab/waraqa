@@ -17,18 +17,19 @@
                 <label class="form-label">{{ __('messages.order_status') }}</label>
                 <select name="status" class="form-select">
                     <option value="">{{ __('messages.all_statuses') }}</option>
-                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>{{ __('messages.completed') }}</option>
-                    <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>{{ __('messages.cancelled') }}</option>
-                    <option value="6" {{ request('status') == '6' ? 'selected' : '' }}>{{ __('messages.refund') }}</option>
+                    @foreach(\App\Enums\OrderStatus::cases() as $status)
+                        <option value="{{ $status->value }}" {{ request('status') == $status->value ? 'selected' : '' }}>{{ $status->getLabelLocalized() }}</option>
+                    @endforeach
                 </select>
             </div>
-            
+
             <div class="col-md-3">
                 <label class="form-label">{{ __('messages.payment_status') }}</label>
                 <select name="payment_status" class="form-select">
                     <option value="">{{ __('messages.all_payments') }}</option>
-                    <option value="1" {{ request('payment_status') == '1' ? 'selected' : '' }}>{{ __('messages.paid') }}</option>
-                    <option value="2" {{ request('payment_status') == '2' ? 'selected' : '' }}>{{ __('messages.unpaid') }}</option>
+                    @foreach(\App\Enums\PaymentStatus::cases() as $paymentStatus)
+                        <option value="{{ $paymentStatus->value }}" {{ request('payment_status') == $paymentStatus->value ? 'selected' : '' }}>{{ $paymentStatus->getLabelLocalized() }}</option>
+                    @endforeach
                 </select>
             </div>
             
@@ -110,20 +111,10 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($order->status == 1)
-                                        <span class="badge bg-success">{{ __('messages.completed') }}</span>
-                                    @elseif($order->status == 2)
-                                        <span class="badge bg-warning">{{ __('messages.cancelled') }}</span>
-                                    @elseif($order->status == 6)
-                                        <span class="badge bg-info">{{ __('messages.refund') }}</span>
-                                    @endif
+                                    {!! \App\Enums\OrderStatus::tryFrom($order->status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                                 </td>
                                 <td>
-                                    @if($order->payment_status == 1)
-                                        <span class="badge bg-success">{{ __('messages.paid') }}</span>
-                                    @else
-                                        <span class="badge bg-warning">{{ __('messages.unpaid') }}</span>
-                                    @endif
+                                    {!! \App\Enums\PaymentStatus::tryFrom($order->payment_status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">

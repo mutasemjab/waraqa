@@ -1665,6 +1665,7 @@ return [
     'amount_due_to_supplier' => 'Amount Due to Supplier',
     'calculation_formula' => 'Calculation Formula',
     'without_tax' => 'Without Tax',
+    'tax_inclusive' => 'Tax Inclusive',
     'Total_Quantity' => 'Total Quantity',
     'details' => 'Details',
     'from' => 'From',
@@ -1722,4 +1723,5 @@ return [
     'statistic' => 'Statistic',
     'total_import_tax' => 'Total Import Tax',
     'total_import_value' => 'Total Import Value',
+    'excluding_tax' => 'Excluding Tax',
 ];

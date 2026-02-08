@@ -98,7 +98,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <p class="mb-3">
-                                        <strong>{{ __('messages.Price') }}:</strong><br>
+                                        <strong>{{ __('messages.Price') }} <span class="text-muted">({{ __('messages.excluding_tax') }})</span>:</strong><br>
                                         <span class="fs-6">{{ number_format($response->price, 2) }} <x-riyal-icon /></span>
                                     </p>
                                 </div>
@@ -207,7 +207,7 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="price" class="form-label">{{ __('messages.Price') }} <span class="text-danger">*</span></label>
+                                        <label for="price" class="form-label">{{ __('messages.Price') }} <span class="text-muted">({{ __('messages.excluding_tax') }})</span> <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ number_format($response->price, 2) }}" required>
                                             <span class="input-group-text"><x-riyal-icon /></span>
@@ -226,7 +226,7 @@
                                             <strong>{{ __('messages.Quantity') }}:</strong> <span id="modalQuantity">{{ $response->available_quantity }}</span> وحدة
                                         </p>
                                         <p class="mb-1">
-                                            <strong>{{ __('messages.Price') }}:</strong> <span id="modalPrice">{{ number_format($response->price, 2) }}</span> <x-riyal-icon />
+                                            <strong>{{ __('messages.Price') }} ({{ __('messages.excluding_tax') }}):</strong> <span id="modalPrice">{{ number_format($response->price, 2) }}</span> <x-riyal-icon />
                                         </p>
                                         <p class="mb-1">
                                             <strong>{{ __('messages.Total_Amount') }}:</strong> <span id="totalAmount">0</span> <x-riyal-icon />

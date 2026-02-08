@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Enums\OrderStatus;
 
 class OrderController extends Controller
 {
@@ -37,15 +38,7 @@ class OrderController extends Controller
 
         // Filter by status
         if ($request->filled('status')) {
-            if ($request->status === 'pending') {
-                // Pending = not completed, cancelled, or refunded
-                $query->whereNotIn('status', [1, 2, 6]);
-            } elseif ($request->status === 'not_done') {
-                // Not done = any status except 1 (done)
-                $query->where('status', '!=', 1);
-            } else {
-                $query->where('status', $request->status);
-            }
+            $query->where('status', $request->status);
         }
 
         // Filter by payment status
@@ -112,7 +105,7 @@ class OrderController extends Controller
             'from_warehouse_id' => 'required|exists:warehouses,id',
             'event_id' => 'nullable|exists:events,id',
             'order_date' => 'required|date',
-            'status' => 'required|in:1,2,6',
+            'status' => 'required|in:' . implode(',', array_column(OrderStatus::cases(), 'value')),
             'products' => 'required|array',
             'products.*.id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|integer|min:1',
@@ -120,72 +113,101 @@ class OrderController extends Controller
             'note' => 'nullable|string'
         ]);
 
-        DB::beginTransaction();
-        try {
-            $totalTaxes = 0;
-            $totalPrices = 0;
-            $orderProducts = [];
+         DB::beginTransaction();
+         try {
+             // Generate unique order number with PO prefix
+             // Using database locking to prevent duplicate numbers in concurrent requests
+             $orderNumber = DB::transaction(function () {
+                 // Lock the settings row to prevent concurrent modifications
+                 $setting = DB::table('settings')
+                     ->where('key', 'last_order_number')
+                     ->lockForUpdate()
+                     ->first();
 
-            // Calculate totals
-            foreach ($request->products as $productData) {
-                $product = Product::find($productData['id']);
-                $quantity = (int)$productData['quantity'];
-                
-                // Tax Inclusive Pricing Logic
-                // 1. Determine the canonical Total Price After Tax (what the user pays)
-                $sellingPrice = (float)$product->selling_price;
-                $totalPriceAfterTax = round($sellingPrice * $quantity, 2);
+                 if ($setting) {
+                     // Increment the existing order number
+                     $newNumber = $setting->value + 1;
+                     DB::table('settings')
+                         ->where('key', 'last_order_number')
+                         ->update(['value' => $newNumber]);
+                 } else {
+                     // Initialize with 1001 if setting doesn't exist
+                     $newNumber = 1001;
+                     DB::table('settings')->insert([
+                         'key' => 'last_order_number',
+                         'value' => $newNumber,
+                         'created_at' => now(),
+                         'updated_at' => now()
+                     ]);
+                 }
 
-                // 2. Back-calculate the Pre-Tax Total
-                $taxPercentage = (float)$product->tax;
-                $taxDivisor = 1 + ($taxPercentage / 100);
-                
-                // We round the pre-tax total to 2 decimals as this is a financial record
-                $totalPriceBeforeTax = round($totalPriceAfterTax / $taxDivisor, 2);
-                
-                // 3. Calculate Tax Value as the difference to ensure sum matches Total
-                $taxValue = round($totalPriceAfterTax - $totalPriceBeforeTax, 2);
-                
-                // 4. Derive Unit Price (Before Tax) for reference
-                $unitPriceBeforeTax = round($totalPriceBeforeTax / $quantity, 2);
+                 return 'PO-' . $newNumber;
+             });
 
-                $totalTaxes += $taxValue;
-                $totalPrices += $totalPriceAfterTax;
-                
-                $orderProducts[] = [
-                    'product_id' => $product->id,
-                    'quantity' => $quantity,
-                    'unit_price' => $unitPriceBeforeTax,
-                    'total_price_after_tax' => $totalPriceAfterTax,
-                    'tax_percentage' => $taxPercentage,
-                    'tax_value' => $taxValue,
-                    'total_price_before_tax' => $totalPriceBeforeTax
-                ];
-            }
+             $totalTaxes = 0;
+             $totalPrices = 0;
+             $orderProducts = [];
 
-            // Round the accumulators to ensure precision
-            $totalTaxes = round($totalTaxes, 2);
-            $totalPrices = round($totalPrices, 2);
+             // Calculate totals
+             foreach ($request->products as $productData) {
+                 $product = Product::find($productData['id']);
+                 $quantity = (int)$productData['quantity'];
+                 
+                 // Tax Inclusive Pricing Logic
+                 // 1. Determine the canonical Total Price After Tax (what the user pays)
+                 $sellingPrice = (float)$product->selling_price;
+                 $totalPriceAfterTax = round($sellingPrice * $quantity, 2);
 
-            $paidAmount = round($request->paid_amount ?? 0, 2);
-            $remainingAmount = round($totalPrices - $paidAmount, 2);
+                 // 2. Back-calculate the Pre-Tax Total
+                 $taxPercentage = (float)$product->tax;
+                 $taxDivisor = 1 + ($taxPercentage / 100);
+                 
+                 // We round the pre-tax total to 2 decimals as this is a financial record
+                 $totalPriceBeforeTax = round($totalPriceAfterTax / $taxDivisor, 2);
+                 
+                 // 3. Calculate Tax Value as the difference to ensure sum matches Total
+                 $taxValue = round($totalPriceAfterTax - $totalPriceBeforeTax, 2);
+                 
+                 // 4. Derive Unit Price (Before Tax) for reference
+                 $unitPriceBeforeTax = round($totalPriceBeforeTax / $quantity, 2);
 
-            // Create order
-            $order = Order::create([
-                'number' => 'ORD-' . time(),
-                'status' => $request->status,
-                'total_taxes' => $totalTaxes,
-                'total_prices' => $totalPrices,
-                'paid_amount' => $paidAmount,
-                'remaining_amount' => $remainingAmount,
-                'payment_status' => $remainingAmount > 0 ? 2 : 1,
-                'order_type' => 1,
-                'date' => now(),
-                'order_date' => $request->order_date,
-                'note' => $request->note,
-                'user_id' => $request->user_id,
-                'event_id' => $request->event_id
-            ]);
+                 $totalTaxes += $taxValue;
+                 $totalPrices += $totalPriceAfterTax;
+                 
+                 $orderProducts[] = [
+                     'product_id' => $product->id,
+                     'quantity' => $quantity,
+                     'unit_price' => $unitPriceBeforeTax,
+                     'total_price_after_tax' => $totalPriceAfterTax,
+                     'tax_percentage' => $taxPercentage,
+                     'tax_value' => $taxValue,
+                     'total_price_before_tax' => $totalPriceBeforeTax
+                 ];
+             }
+
+             // Round the accumulators to ensure precision
+             $totalTaxes = round($totalTaxes, 2);
+             $totalPrices = round($totalPrices, 2);
+
+             $paidAmount = round($request->paid_amount ?? 0, 2);
+             $remainingAmount = round($totalPrices - $paidAmount, 2);
+
+             // Create order
+             $order = Order::create([
+                 'number' => $orderNumber,
+                 'status' => $request->status,
+                 'total_taxes' => $totalTaxes,
+                 'total_prices' => $totalPrices,
+                 'paid_amount' => $paidAmount,
+                 'remaining_amount' => $remainingAmount,
+                 'payment_status' => $remainingAmount > 0 ? 2 : 1,
+                 'order_type' => 1,
+                 'date' => now(),
+                 'order_date' => $request->order_date,
+                 'note' => $request->note,
+                 'user_id' => $request->user_id,
+                 'event_id' => $request->event_id
+             ]);
 
             // Create order products
             foreach ($orderProducts as $orderProduct) {
@@ -282,7 +304,7 @@ public function update(Request $request, Order $order)
         'products.*.quantity' => 'required|integer|min:1',
         'paid_amount' => 'nullable|numeric|min:0',
         'note' => 'nullable|string',
-        'status' => 'required|in:1,2,6'
+        'status' => 'required|in:' . implode(',', array_column(OrderStatus::cases(), 'value'))
     ]);
 
     DB::beginTransaction();

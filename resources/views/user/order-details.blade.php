@@ -38,21 +38,11 @@
                         @endif
                     </div>
                     <div class="col-md-6">
-                        <p><strong>{{ __('messages.order_status') }}:</strong> 
-                            @if($order->status == 1)
-                                <span class="badge bg-success">{{ __('messages.completed') }}</span>
-                            @elseif($order->status == 2)
-                                <span class="badge bg-warning">{{ __('messages.cancelled') }}</span>
-                            @elseif($order->status == 6)
-                                <span class="badge bg-info">{{ __('messages.refund') }}</span>
-                            @endif
+                        <p><strong>{{ __('messages.order_status') }}:</strong>
+                            {!! \App\Enums\OrderStatus::tryFrom($order->status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                         </p>
-                        <p><strong>{{ __('messages.payment_status') }}:</strong> 
-                            @if($order->payment_status == 1)
-                                <span class="badge bg-success">{{ __('messages.paid') }}</span>
-                            @else
-                                <span class="badge bg-warning">{{ __('messages.unpaid') }}</span>
-                            @endif
+                        <p><strong>{{ __('messages.payment_status') }}:</strong>
+                            {!! \App\Enums\PaymentStatus::tryFrom($order->payment_status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                         </p>
                         <p><strong>{{ __('messages.created_at') }}:</strong> {{ $order->created_at->format('Y-m-d H:i') }}</p>
                         <p><strong>{{ __('messages.updated_at') }}:</strong> {{ $order->updated_at->format('Y-m-d H:i') }}</p>

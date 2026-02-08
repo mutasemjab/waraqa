@@ -68,7 +68,7 @@
                                 <label>{{ __('messages.products') }}</label>
                                 <div id="products-container">
                                     <div class="product-row mb-3 p-3 border rounded">
-                                        <div class="row">
+                                        <div class="row align-items-center">
                                             <div class="col-md-4">
                                                 <input type="hidden" class="form-control product-id" name="products[0][id]"
                                                     required />
@@ -80,14 +80,22 @@
                                                     name="products[0][name]"
                                                     placeholder="{{ __('messages.search_product') }}" />
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <input type="number" name="products[0][quantity]"
                                                     class="form-control quantity-input"
                                                     placeholder="{{ __('messages.quantity') }}" min="1" required>
                                             </div>
-                                            <div class="col-md-3">
-                                                <span><x-riyal-icon style="width: 14px; height: 14px;" /> <span
-                                                        class="line-total">0.00</span></span>
+                                            <div class="col-md-2">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" class="form-control unit-price-display" readonly value="0.00">
+                                                    <span class="input-group-text"><x-riyal-icon style="width: 14px; height: 14px;" /></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" class="form-control line-total-display" readonly value="0.00">
+                                                    <span class="input-group-text"><x-riyal-icon style="width: 14px; height: 14px;" /></span>
+                                                </div>
                                             </div>
                                             <div class="col-md-2">
                                                 <button type="button" class="btn btn-danger remove-product btn-sm"
@@ -126,7 +134,6 @@
                                                     <span>{{ __('messages.total') }}:</span>
                                                     <span><x-riyal-icon /> <span id="grand-total">0.00</span></span>
                                                 </div>
-                                                <hr class="my-2">
                                                 {{-- Event Commission Display Section --}}
                                                 {{-- Shows when an event is selected for the order --}}
                                                 {{-- Calculated as: (subtotal * event_commission_percentage) / 100 --}}
@@ -187,9 +194,9 @@
                                 <label for="status">{{ __('messages.status') }}</label>
                                 <select name="status" id="status" class="form-control" required>
                                     <option value="">{{ __('messages.select_status') ?? 'Select Status' }}</option>
-                                    <option value="1">{{ __('messages.completed') }}</option>
-                                    <option value="2">{{ __('messages.cancelled') }}</option>
-                                    <option value="6">{{ __('messages.refund') ?? 'Refund' }}</option>
+                                    @foreach(\App\Enums\OrderStatus::cases() as $status)
+                                        <option value="{{ $status->value }}">{{ $status->getLabelLocalized() }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -283,6 +290,7 @@
                             selectedRow.find('.product-search').val(ui.item.label);
                             selectedRow.find('.product-price').val(sellingPrice.toFixed(2));
                             selectedRow.find('.product-tax').val(taxRate);
+                            selectedRow.find('.unit-price-display').val(sellingPrice.toFixed(2));
 
                             // Calculate price without tax from selling price: priceWithoutTax = sellingPrice / (1 + tax/100)
                             const priceWithoutTax = sellingPrice / (1 + (taxRate / 100));
@@ -332,7 +340,8 @@
                     $(this).val('');
                 });
 
-                newRow.find('.line-total').text('0.00');
+                newRow.find('.unit-price-display').val('0.00');
+                newRow.find('.line-total-display').val('0.00');
                 newRow.find('.remove-product').prop('disabled', false);
 
                 container.append(newRow);
@@ -380,7 +389,7 @@
                 const taxAmount = (subtotal * tax) / 100;
                 const total = subtotal + taxAmount;
 
-                row.find('.line-total').text(total.toFixed(2));
+                row.find('.line-total-display').val(total.toFixed(2));
                 calculateTotals();
             }
 

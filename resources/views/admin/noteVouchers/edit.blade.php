@@ -184,7 +184,7 @@
                     <tr>
                         <th>{{ __('messages.product') }}</th>
                         <th>{{ __('messages.quantity') }}</th>
-                        <th>{{ __('messages.unit_price') }}</th>
+                        <th>{{ __('messages.unit_price') }} ({{ __('messages.tax_inclusive') }})</th>
                         <th>{{ __('messages.tax') }}</th>
                         @if($noteVoucher->noteVoucherType->have_price == 1)
                             <th>{{ __('messages.purchasing_Price') }}</th>

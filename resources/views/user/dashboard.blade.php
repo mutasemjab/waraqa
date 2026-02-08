@@ -115,13 +115,7 @@
                                         <td>{{ $order->date }}</td>
                                         <td><x-riyal-icon /> {{ number_format($order->total_prices, 2) }}</td>
                                         <td>
-                                            @if($order->status == 1)
-                                                <span class="badge bg-success">{{ __('messages.completed') }}</span>
-                                            @elseif($order->status == 2)
-                                                <span class="badge bg-warning">{{ __('messages.cancelled') }}</span>
-                                            @elseif($order->status == 6)
-                                                <span class="badge bg-info">{{ __('messages.refund') }}</span>
-                                            @endif
+                                            {!! \App\Enums\OrderStatus::tryFrom($order->status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
                                         </td>
                                         <td>
                                             <a href="#" class="btn btn-sm btn-outline-primary">

@@ -288,7 +288,7 @@ class ProviderDashboardController extends Controller
             ->join('users as u', 'w.user_id', '=', 'u.id')
             ->where('vp.product_id', $productId)
             ->whereNotNull('nv.to_warehouse_id')
-            ->select('u.*')
+            ->select('u.id', 'u.name', 'u.email', 'u.phone', 'u.created_at')
             ->selectRaw('SUM(vp.quantity) as received_quantity')
             ->selectRaw('COALESCE(sold.sold_quantity, 0) as sold_quantity')
             ->selectRaw('SUM(vp.quantity) - COALESCE(sold.sold_quantity, 0) as current_quantity')

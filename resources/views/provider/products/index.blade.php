@@ -84,9 +84,6 @@
                 <i class="fas fa-box text-muted" style="font-size: 4rem;"></i>
                 <h4 class="mt-3 text-muted">{{ __('messages.no_products_found') }}</h4>
                 <p class="text-muted">{{ __('messages.start_adding_products_message') }}</p>
-                <a href="{{ route('provider.products.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-1"></i>{{ __('messages.add_first_product') }}
-                </a>
             </div>
         @endif
     </div>

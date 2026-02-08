@@ -58,6 +58,10 @@
         .sidebar.collapsed .sidebar-header .logo {
             font-size: 1rem;
         }
+
+        .sidebar.collapsed .sidebar-header .logo span {
+            display: none;
+        }
         
         .nav-menu {
             padding: 20px 0;
@@ -118,6 +122,10 @@
         .main-content.expanded {
             margin-left: 70px;
         }
+
+        .main-content.expanded .navbar-left h5 {
+            display: none;
+        }
         
         /* Top Navigation */
         .top-navbar {
@@ -154,75 +162,32 @@
             display: flex;
             align-items: center;
         }
-        
-        .user-dropdown {
-            position: relative;
-        }
-        
-        .user-info {
+
+        .navbar-nav-links {
             display: flex;
             align-items: center;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .user-info:hover {
-            background: var(--light-color);
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: var(--icon-spacing);
-            border: 2px solid var(--primary-color);
-            object-fit: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            font-weight: 600;
-            color: white;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 5px;
         }
 
-        .user-avatar.has-image {
-            background: transparent;
-            font-size: 0;
+        .navbar-nav-links li {
+            display: inline-block;
         }
-        
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            border: none;
-            padding: 10px 0;
-            min-width: 200px;
-            z-index: 1000;
-        }
-        
-        .dropdown-item {
-            padding: 10px 20px;
+
+        .nav-link-item {
             color: var(--dark-color);
             text-decoration: none;
-            display: flex;
-            align-items: center;
+            padding: 8px 15px;
+            border-radius: 8px;
             transition: all 0.3s ease;
+            font-weight: 500;
         }
-        
-        .dropdown-item:hover {
+
+        .nav-link-item:hover {
             background: var(--light-color);
             color: var(--primary-color);
-        }
-        
-        .dropdown-item i {
-            width: 20px;
-            margin-right: var(--icon-spacing);
         }
         
         /* Content Area */
@@ -496,28 +461,22 @@
             </div>
             
             <div class="navbar-right">
-                <div class="user-dropdown">
-                    <div class="user-info" id="userMenuToggle">
-                        <div class="user-avatar" id="userAvatar">
-                            @if(auth()->user()->photo_url && file_exists(storage_path('app/public/' . auth()->user()->photo_url)))
-                                <img src="{{ asset('storage/' . auth()->user()->photo_url) }}" alt="User" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                            @else
-                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="dropdown-menu" id="userDropdown">
-                        <a href="{{ route('user.profile') }}" class="dropdown-item">
-                            <i class="fas fa-user"></i>{{ __('messages.profile') }}
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('logout') }}" class="dropdown-item"
+                <ul class="navbar-nav-links">
+                    <li><a href="{{ route('user.dashboard') }}" class="nav-link-item">{{ __('messages.Home') }}</a></li>
+                    <li>
+                        <a href="{{ route('logout') }}" class="nav-link-item"
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <i class="fas fa-sign-out-alt"></i>{{ __('messages.logout') }}
+                            {{ __('messages.Logout') }}
                         </a>
-                    </div>
-                </div>
+                    </li>
+                    @foreach(LaravelLocalization::getSupportedLocales() as $localeCode => $properties)
+                        <li>
+                            <a class="nav-link-item" hreflang="{{ $localeCode }}" href="{{ LaravelLocalization::getLocalizedURL($localeCode, null, [], true) }}">
+                                {{ $properties['native'] }}
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
             </div>
         </div>
         
@@ -548,23 +507,6 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
-        // User menu toggle
-        const userMenuToggle = document.getElementById('userMenuToggle');
-        const userDropdown = document.getElementById('userDropdown');
-
-        if (userMenuToggle && userDropdown) {
-            userMenuToggle.addEventListener('click', function(e) {
-                e.stopPropagation();
-                userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
-            });
-
-            document.addEventListener('click', function(e) {
-                if (!userMenuToggle.contains(e.target) && !userDropdown.contains(e.target)) {
-                    userDropdown.style.display = 'none';
-                }
-            });
-        }
-
         // Sidebar toggle functionality
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');

@@ -132,9 +132,9 @@
                                         <label for="status">{{ __('messages.Status') }}</label>
                                         <select class="form-control select2" id="status" name="status">
                                             <option value="">{{ __('messages.All') }}</option>
-                                            <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>{{ __('messages.done') }}</option>
-                                            <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>{{ __('messages.canceled') }}</option>
-                                            <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>{{ __('messages.refund') }}</option>
+                                            @foreach(\App\Enums\OrderStatus::cases() as $status)
+                                                <option value="{{ $status->value }}" {{ request('status') == $status->value ? 'selected' : '' }}>{{ $status->getLabelLocalized() }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
@@ -145,8 +145,9 @@
                                         <label for="payment_status">{{ __('messages.payment_status') }}</label>
                                         <select class="form-control select2" id="payment_status" name="payment_status">
                                             <option value="">{{ __('messages.All') }}</option>
-                                            <option value="1" {{ request('payment_status') == '1' ? 'selected' : '' }}>{{ __('messages.paid') }}</option>
-                                            <option value="0" {{ request('payment_status') == '0' ? 'selected' : '' }}>{{ __('messages.unpaid') }}</option>
+                                            @foreach(\App\Enums\PaymentStatus::cases() as $paymentStatus)
+                                                <option value="{{ $paymentStatus->value }}" {{ request('payment_status') == $paymentStatus->value ? 'selected' : '' }}>{{ $paymentStatus->getLabelLocalized() }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
@@ -257,20 +258,12 @@
                                         <td>{{ $order->order_date ? $order->order_date->format('Y-m-d') : '-' }}</td>
                                         <td>{{ $order->user->name ?? '-' }}</td>
                                         <td>
-                                            @if($order->status == 1)
-                                                <span class="badge badge-success">{{ __('messages.done') }}</span>
-                                            @elseif($order->status == 2)
-                                                <span class="badge badge-danger">{{ __('messages.canceled') }}</span>
-                                            @else
-                                                <span class="badge badge-info">{{ __('messages.refund') }}</span>
-                                            @endif
+                                            @php $statusEnum = \App\Enums\OrderStatus::tryFrom($order->status); @endphp
+                                            <span class="badge badge-{{ $statusEnum?->getColor() ?? 'secondary' }}">{{ $statusEnum?->getLabelLocalized() ?? 'N/A' }}</span>
                                         </td>
                                         <td>
-                                            @if($order->payment_status == 1)
-                                                <span class="badge badge-success">{{ __('messages.paid') }}</span>
-                                            @else
-                                                <span class="badge badge-warning">{{ __('messages.unpaid') }}</span>
-                                            @endif
+                                            @php $paymentEnum = \App\Enums\PaymentStatus::tryFrom($order->payment_status); @endphp
+                                            <span class="badge badge-{{ $paymentEnum?->getColor() ?? 'secondary' }}">{{ $paymentEnum?->getLabelLocalized() ?? 'N/A' }}</span>
                                         </td>
                                         <td>{{ number_format($order->total_prices ?? 0, 2) }} <x-riyal-icon /></td>
                                         <td>{{ number_format($order->total_taxes ?? 0, 2) }} <x-riyal-icon /></td>

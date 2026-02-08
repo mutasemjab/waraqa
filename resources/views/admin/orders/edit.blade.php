@@ -46,9 +46,9 @@
                                 <div class="form-group">
                                     <label for="status">{{ __('messages.order_status') }}</label>
                                     <select name="status" id="status" class="form-control" required>
-                                        <option value="1" {{ $order->status == 1 ? 'selected' : '' }}>{{ __('messages.done') }}</option>
-                                        <option value="2" {{ $order->status == 2 ? 'selected' : '' }}>{{ __('messages.canceled') }}</option>
-                                        <option value="6" {{ $order->status == 6 ? 'selected' : '' }}>{{ __('messages.refund') }}</option>
+                                        @foreach(\App\Enums\OrderStatus::cases() as $status)
+                                            <option value="{{ $status->value }}" {{ $order->status == $status->value ? 'selected' : '' }}>{{ $status->getLabelLocalized() }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -156,7 +156,6 @@
                                                 <span>{{ __('messages.total') }}:</span>
                                                 <span><x-riyal-icon /> <span id="grand-total">{{ number_format($order->total_prices, 2) }}</span></span>
                                             </div>
-                                            <hr class="my-2">
                                             {{-- Event Commission Display Section (Edit Mode) --}}
                                             {{-- Shows when an event is selected for the order --}}
                                             {{-- Calculated as: (subtotal * event.commission_percentage) / 100 --}}

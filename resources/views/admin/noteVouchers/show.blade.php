@@ -150,7 +150,7 @@
                             <th>#</th>
                             <th>{{ __('messages.product') }}</th>
                             <th>{{ __('messages.quantity') }}</th>
-                            <th>{{ __('messages.purchasing_Price') }}</th>
+                            <th>{{ __('messages.unit_price') }} ({{ __('messages.tax_inclusive') }})</th>
                             <th>{{ __('messages.tax_percentage') }}</th>
                             <th>{{ __('messages.Total') }}</th>
                             <th>{{ __('messages.Note') }}</th>
@@ -193,7 +193,7 @@
                             </tr>
                         @endforeach
                         <tr class="table-warning">
-                            <td colspan="2"><strong>{{ __('messages.Total') }}</strong></td>
+                            <td colspan="2"><strong>{{ __('messages.Total') }} ({{ __('messages.without_tax') }})</strong></td>
                             <td><strong>{{ number_format($total_quantity, 2) }}</strong></td>
                             <td>-</td>
                             <td>-</td>

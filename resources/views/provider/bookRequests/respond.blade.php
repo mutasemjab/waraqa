@@ -84,6 +84,7 @@
                             <div class="mb-4">
                                 <label for="price" class="form-label">
                                     {{ __('messages.Price') }}
+                                    <span class="text-muted">({{ __('messages.excluding_tax') }})</span>
                                     <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
