@@ -5,13 +5,13 @@
 
 @section('content')
 <div class="page-header mb-4">
-    <h1 class="page-title">{{ __('messages.my_orders') }}</h1>
-    <p class="page-subtitle">{{ __('messages.manage_your_purchases') }}</p>
+    <h1 class="page-title">{{ __('messages.my_sales') }}</h1>
+    <p class="page-subtitle">{{ __('messages.manage_your_sales') }}</p>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h5 class="mb-0">{{ __('messages.purchases_list') }}</h5>
+        <h5 class="mb-0">{{ __('messages.sales_list') }}</h5>
     </div>
     <div class="card-body">
         @if($orders->count() > 0)
@@ -20,7 +20,6 @@
                     <thead>
                         <tr>
                             <th>{{ __('messages.purchase_number') }}</th>
-                            <th>{{ __('messages.products') }}</th>
                             <th>{{ __('messages.quantity') }}</th>
                             <th>{{ __('messages.date') }}</th>
                             <th>{{ __('messages.total_amount') }}</th>
@@ -38,30 +37,22 @@
                                 </strong>
                             </td>
                             <td>
-                                <small>
-                                    @foreach($order->items as $item)
-                                        <div>{{ $item->product ? (app()->getLocale() == 'ar' ? $item->product->name_ar : $item->product->name_en) : 'N/A' }}</div>
-                                    @endforeach
-                                </small>
-                            </td>
-                            <td>
-                                <small>
-                                    @php
-                                        $totalQty = $order->items->sum('quantity');
-                                    @endphp
-                                    {{ $totalQty }} {{ __('messages.items') }}
-                                </small>
+                                @php
+                                    $totalQty = $order->items->sum('quantity');
+                                @endphp
+                                {{ $totalQty }}
                             </td>
                             <td>{{ $order->created_at->format('Y-m-d') }}</td>
-                            <td><x-riyal-icon /> {{ number_format($order->total_amount, 3) }}</td>
-                            <td>{{ $order->expected_delivery_date ? $order->expected_delivery_date->format('Y-m-d') : '-' }}</td>
+                            <td><x-riyal-icon /> {{ number_format($order->total_amount, 2) }}</td>
+                            <td>{{ $order->bookRequestResponse->expected_delivery_date ?? '-' }}</td>
                             <td>
                                 @php
                                     $statusColors = [
                                         'pending' => 'warning',
                                         'confirmed' => 'info',
                                         'received' => 'success',
-                                        'paid' => 'primary'
+                                        'paid' => 'primary',
+                                        'rejected' => 'danger'
                                     ];
                                     $statusColor = $statusColors[$order->status] ?? 'secondary';
                                 @endphp

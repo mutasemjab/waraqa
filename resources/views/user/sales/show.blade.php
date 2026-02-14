@@ -36,24 +36,6 @@
                             <label class="form-label text-muted">{{ __('messages.sale_date') }}</label>
                             <p class="fw-bold">{{ Carbon\Carbon::parse($sale->sale_date)->format('Y-m-d') }}</p>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted">{{ __('messages.customer_name') }}</label>
-                            <p class="fw-bold">{{ $sale->customer_name }}</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label text-muted">{{ __('messages.customer_phone') }}</label>
-                            <p class="fw-bold">{{ $sale->customer_phone ?? '-' }}</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted">{{ __('messages.customer_email') }}</label>
-                            <p class="fw-bold">{{ $sale->customer_email ?? '-' }}</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-muted">{{ __('messages.customer_address') }}</label>
-                            <p class="fw-bold">{{ $sale->customer_address ?? '-' }}</p>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Provider\ProviderDashboardController;
-use App\Http\Controllers\Provider\BookRequestController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\User\UserSalesController;
@@ -72,12 +71,15 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/warehouse', [UserSalesController::class, 'warehouse'])->name('warehouse');
         Route::post('/warehouse/create', [UserSalesController::class, 'createWarehouse'])->name('warehouse.create');
 
-        // Analytics & Reports
-        Route::get('/analytics', [UserDashboardController::class, 'analytics'])->name('analytics');
+        // Reports
         Route::get('/report', [UserDashboardController::class, 'generateReport'])->name('report');
 
         // Notifications
         Route::get('/notifications', [UserDashboardController::class, 'notifications'])->name('notifications');
+
+        // Seller Product Requests
+        Route::resource('sellerProductRequests', \App\Http\Controllers\User\SellerProductRequestController::class)
+            ->only(['index', 'create', 'store', 'show', 'destroy']);
     });
 
     // Provider Dashboard Routes (using 'web' guard with 'provider' role)
@@ -89,27 +91,21 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/profile', [ProviderDashboardController::class, 'profile'])->name('profile');
         Route::post('/profile', [ProviderDashboardController::class, 'updateProfile'])->name('profile.update');
 
-        // Products Management
-        Route::get('/products', [ProviderDashboardController::class, 'products'])->name('products');
-        Route::get('/products/create', [ProviderDashboardController::class, 'createProduct'])->name('products.create');
-        Route::post('/products', [ProviderDashboardController::class, 'storeProduct'])->name('products.store');
-        Route::get('/products/{product}/details', [ProviderDashboardController::class, 'productDetails'])->name('products.details');
-        Route::get('/products/{product}/edit', [ProviderDashboardController::class, 'editProduct'])->name('products.edit');
-        Route::put('/products/{product}', [ProviderDashboardController::class, 'updateProduct'])->name('products.update');
-        Route::delete('/products/{product}', [ProviderDashboardController::class, 'deleteProduct'])->name('products.destroy');
-
         // Orders Management
         Route::get('/orders', [ProviderDashboardController::class, 'orders'])->name('orders');
+        Route::get('/purchases', [ProviderDashboardController::class, 'purchases'])->name('purchases');
         Route::get('/purchases/{id}', [ProviderDashboardController::class, 'showPurchase'])->name('purchases.show');
 
-        // Book Requests Management
-        Route::get('/bookRequests', [BookRequestController::class, 'index'])->name('bookRequests.index');
-        Route::get('/bookRequests/{bookRequest}', [BookRequestController::class, 'show'])->name('bookRequests.show');
-        Route::get('/bookRequests/{bookRequest}/respond', [BookRequestController::class, 'createResponse'])->name('bookRequests.respond');
-        Route::post('/bookRequests/{bookRequest}/respond', [BookRequestController::class, 'storeResponse'])->name('bookRequests.storeResponse');
+        // Book Requests (Pending Book Requests list)
+        Route::get('/book-requests', [ProviderDashboardController::class, 'bookRequests'])->name('bookRequests');
 
-        // Analytics & Reports
-        Route::get('/analytics', [ProviderDashboardController::class, 'analytics'])->name('analytics');
+        // Book Requests Response
+        Route::get('/bookRequests/{bookRequestItem}/respond', [
+            \App\Http\Controllers\Provider\BookRequestController::class, 'createResponse'
+        ])->name('bookRequests.respond');
+        Route::post('/bookRequests/{bookRequestItem}/respond', [
+            \App\Http\Controllers\Provider\BookRequestController::class, 'storeResponse'
+        ])->name('bookRequests.storeResponse');
     });
 
     // Search Items Route (for search-select component)

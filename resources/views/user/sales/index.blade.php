@@ -114,8 +114,6 @@
                         <tr>
                             <th>{{ __('messages.sale_number') }}</th>
                             <th>{{ __('messages.date') }}</th>
-                            <th>{{ __('messages.customer_name') }}</th>
-                            <th>{{ __('messages.customer_phone') }}</th>
                             <th>{{ __('messages.products_count') }}</th>
                             <th>{{ __('messages.total_quantity') }}</th>
                             <th>{{ __('messages.total_amount') }}</th>
@@ -129,14 +127,6 @@
                                     <strong>{{ $sale->sale_number }}</strong>
                                 </td>
                                 <td>{{ Carbon\Carbon::parse($sale->sale_date)->format('Y-m-d') }}</td>
-                                <td>{{ $sale->customer_name }}</td>
-                                <td>
-                                    @if($sale->customer_phone)
-                                        <small class="text-muted">{{ $sale->customer_phone }}</small>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
                                 <td>
                                     <span class="badge bg-info">{{ $sale->items->count() }}</span>
                                 </td>

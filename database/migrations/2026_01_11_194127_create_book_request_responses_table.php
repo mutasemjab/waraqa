@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('book_request_responses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('book_request_id')->constrained('book_requests')->onDelete('cascade');
+            $table->foreignId('book_request_item_id')->constrained('book_request_items')->onDelete('cascade');
             $table->foreignId('provider_id')->constrained('providers')->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->integer('available_quantity');
@@ -23,7 +23,12 @@ return new class extends Migration
             $table->decimal('tax_percentage', 5, 2)->default(0);
             $table->string('status')->default('pending'); // pending, approved, rejected
             $table->text('note')->nullable();
+            $table->date('expected_delivery_date')->nullable();
             $table->timestamps();
+
+            $table->index('book_request_item_id');
+            $table->index('provider_id');
+            $table->index('status');
         });
     }
 

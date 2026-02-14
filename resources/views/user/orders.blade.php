@@ -55,9 +55,6 @@
                 <a href="{{ route('user.orders') }}" class="btn btn-secondary">
                     <i class="fas fa-refresh me-1"></i>{{ __('messages.clear') }}
                 </a>
-                <a href="{{ route('user.analytics') }}" class="btn btn-info">
-                    <i class="fas fa-chart-line me-1"></i>{{ __('messages.view_analytics') }}
-                </a>
             </div>
         </form>
     </div>

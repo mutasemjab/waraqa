@@ -62,4 +62,9 @@ class Purchase extends Model
     {
         return $this->hasOne(NoteVoucher::class, 'purchase_id');
     }
+
+    public function bookRequest()
+    {
+        return $this->hasOne(BookRequest::class);
+    }
 }

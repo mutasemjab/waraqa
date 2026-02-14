@@ -107,14 +107,6 @@ class PermissionSeeder extends Seeder
             'user_dept-make_payment',
             'user_dept-view_summary',
 
-            // Book Request Management
-            'bookRequest-table',
-            'bookRequest-add',
-            'bookRequest-edit',
-            'bookRequest-delete',
-            'bookRequest-approve',
-            'bookRequest-reject',
-
             // Sales Returns Management
             'sales-return-table',
             'sales-return-add',
@@ -124,7 +116,6 @@ class PermissionSeeder extends Seeder
             // Purchase Management
             'purchase-table',
             'purchase-add',
-            'purchase-edit',
             'purchase-delete',
             'purchase-confirm',
             'purchase-receive',
@@ -137,6 +128,16 @@ class PermissionSeeder extends Seeder
 
             // Distribution Point Sales Report
             'view_distribution_point_sales_report',
+
+            // Seller Product Request Management
+            'sellerProductRequest-table',
+            'sellerProductRequest-approve',
+            'sellerProductRequest-reject',
+
+            // Admin Seller Sales Management
+            'admin-seller-sales-list',
+            'admin-seller-sales-create',
+            'admin-seller-sales-view',
         ];
 
         $data = array_map(function ($permission) {

@@ -23,9 +23,32 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         $query = $request->input('term');
-        $products = Product::where('name_ar', 'LIKE', "%{$query}%")
-            ->orWhere('name_en', 'LIKE', "%{$query}%")
-            ->limit(10)
+        $excludeIds = $request->input('exclude_ids');
+        $providerId = $request->input('provider_id');
+
+        // Parse exclude_ids if it's a comma-separated string and convert to integers
+        $excludeIdArray = [];
+        if ($excludeIds) {
+            $excludeIdArray = array_filter(array_map(function($id) {
+                return (int) trim($id);
+            }, explode(',', $excludeIds)));
+        }
+
+        $products = Product::where(function($q) use ($query) {
+            $q->where('name_ar', 'LIKE', "%{$query}%")
+              ->orWhere('name_en', 'LIKE', "%{$query}%");
+        });
+
+        if (!empty($excludeIdArray)) {
+            $products->whereNotIn('id', $excludeIdArray);
+        }
+
+        // Filter by provider if provided
+        if ($providerId) {
+            $products->where('provider_id', $providerId);
+        }
+
+        $products = $products->limit(10)
             ->get()
             ->map(function ($product) {
                 $tax = floatval($product->tax ?? 0);

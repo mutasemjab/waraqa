@@ -252,10 +252,6 @@
                         <i class="fas fa-shopping-cart me-2"></i>{{ __('messages.view_my_orders') }}
                     </a>
 
-                    <a href="{{ route('user.analytics') }}" class="btn btn-outline-info">
-                        <i class="fas fa-chart-line me-2"></i>{{ __('messages.view_analytics') }}
-                    </a>
-
                 </div>
             </div>
         </div>

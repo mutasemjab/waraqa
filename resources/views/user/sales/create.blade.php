@@ -37,57 +37,6 @@
                         </div>
                     </div>
 
-                    <!-- Customer Information -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label for="customer_name" class="form-label">{{ __('messages.customer_name') }} <span class="text-danger">*</span></label>
-                            <input type="text"
-                                   class="form-control @error('customer_name') is-invalid @enderror"
-                                   id="customer_name"
-                                   name="customer_name"
-                                   value="{{ old('customer_name') }}"
-                                   required>
-                            @error('customer_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label for="customer_phone" class="form-label">{{ __('messages.customer_phone') }}</label>
-                            <input type="tel"
-                                   class="form-control @error('customer_phone') is-invalid @enderror"
-                                   id="customer_phone"
-                                   name="customer_phone"
-                                   value="{{ old('customer_phone') }}">
-                            @error('customer_phone')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label for="customer_email" class="form-label">{{ __('messages.customer_email') }}</label>
-                            <input type="email"
-                                   class="form-control @error('customer_email') is-invalid @enderror"
-                                   id="customer_email"
-                                   name="customer_email"
-                                   value="{{ old('customer_email') }}">
-                            @error('customer_email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label for="customer_address" class="form-label">{{ __('messages.customer_address') }}</label>
-                            <input type="text"
-                                   class="form-control @error('customer_address') is-invalid @enderror"
-                                   id="customer_address"
-                                   name="customer_address"
-                                   value="{{ old('customer_address') }}">
-                            @error('customer_address')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
                     
                     <!-- Products Section -->
                     <div class="mb-4">
@@ -241,6 +190,25 @@
                 <div class="summary-item d-flex justify-content-between">
                     <strong>{{ __('messages.products_count') }}:</strong>
                     <strong id="productsCount">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Commission -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-percent me-2"></i>{{ __('messages.my_commission') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="summary-item d-flex justify-content-between mb-2">
+                    <span>{{ __('messages.distribution_point_commission') }} ({{ $user->commission_percentage ?? 0 }}%):</span>
+                    <span><x-riyal-icon /> <span id="commissionAmount">0.00</span></span>
+                </div>
+                <div class="summary-item d-flex justify-content-between border-top pt-2">
+                    <strong>{{ __('messages.amount_due_to_waraqa') }}:</strong>
+                    <strong><x-riyal-icon /> <span id="remainingAmount">0.00</span></strong>
                 </div>
             </div>
         </div>
@@ -560,6 +528,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('totalTax').textContent = totalTaxAmount.toFixed(2);
         document.getElementById('totalAfterTax').textContent = totalAfterTax.toFixed(2);
         document.getElementById('productsCount').textContent = productsCount;
+
+        // Calculate commission and remaining amount
+        const commissionPercentage = {{ $user->commission_percentage ?? 0 }};
+        const commissionAmount = totalAfterTax * (commissionPercentage / 100);
+        const remainingAmount = totalAfterTax - commissionAmount;
+
+        document.getElementById('commissionAmount').textContent = commissionAmount.toFixed(2);
+        document.getElementById('remainingAmount').textContent = remainingAmount.toFixed(2);
     };
 
     // Event listeners

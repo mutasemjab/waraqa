@@ -141,62 +141,6 @@ class UserDashboardController extends Controller
         return back()->with('success', __('messages.profile_updated_successfully'));
     }
 
-    // Analytics and Reports
-    public function analytics()
-    {
-        $user = Auth::user();
-        
-        // Monthly spending data for the last 12 months
-        $monthlySpending = $user->orders()
-            ->select(
-                DB::raw('YEAR(date) as year'),
-                DB::raw('MONTH(date) as month'),
-                DB::raw('SUM(total_prices) as total')
-            )
-            ->where('date', '>=', Carbon::now()->subMonths(12))
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
-            ->get();
-
-        // Most purchased products
-        $topProducts = OrderProduct::select('products.name_ar', 'products.name_en', 'products.photo')
-            ->selectRaw('SUM(order_products.quantity) as total_quantity')
-            ->selectRaw('SUM(order_products.total_price_after_tax) as total_spent')
-            ->join('products', 'order_products.product_id', '=', 'products.id')
-            ->join('orders', 'order_products.order_id', '=', 'orders.id')
-            ->where('orders.user_id', $user->id)
-            ->groupBy('products.id', 'products.name_ar', 'products.name_en', 'products.photo')
-            ->orderBy('total_quantity', 'desc')
-            ->take(10)
-            ->get();
-
-        // Spending by category
-        $categorySpending = OrderProduct::select('categories.name_ar', 'categories.name_en')
-            ->selectRaw('SUM(order_products.total_price_after_tax) as total_spent')
-            ->selectRaw('COUNT(order_products.id) as total_items')
-            ->join('products', 'order_products.product_id', '=', 'products.id')
-            ->join('categories', 'products.category_id', '=', 'categories.id')
-            ->join('orders', 'order_products.order_id', '=', 'orders.id')
-            ->where('orders.user_id', $user->id)
-            ->groupBy('categories.id', 'categories.name_ar', 'categories.name_en')
-            ->orderBy('total_spent', 'desc')
-            ->get();
-
-        // Payment patterns
-        $paymentStats = [
-            'fully_paid' => $user->orders()->where('payment_status', 1)->count(),
-            'partially_paid' => $user->orders()->where('payment_status', 2)->where('paid_amount', '>', 0)->count(),
-            'unpaid' => $user->orders()->where('payment_status', 2)->where('paid_amount', 0)->count(),
-        ];
-
-        return view('user.analytics', compact(
-            'monthlySpending', 
-            'topProducts', 
-            'categorySpending', 
-            'paymentStats'
-        ));
-    }
 
     // Generate user report for admin
     public function generateReport()

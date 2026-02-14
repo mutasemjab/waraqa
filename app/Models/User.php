@@ -79,6 +79,11 @@ class User extends Authenticatable
         return $this->hasMany(BookRequestResponse::class, 'user_id');
     }
 
+    public function sellerProductRequests()
+    {
+        return $this->hasMany(SellerProductRequest::class);
+    }
+
     // Scope for filtering users without any roles (sellers/regular users)
     public function scopeWithoutRoles($query)
     {

@@ -103,38 +103,22 @@
                 </h5>
             </div>
             <div class="card-body text-center">
-                <div class="profile-image-container mb-3">
+                <div class="profile-image-container mb-4" style="margin-bottom: 2rem;">
                     <img src="{{ $user->photo_url }}"
                          alt="{{ $user->name }}"
                          class="rounded-circle border"
-                         width="120"
-                         height="120"
-                         style="object-fit: cover;">
+                         width="140"
+                         height="140"
+                         style="object-fit: cover; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); border-width: 5px;">
                 </div>
 
-                <h5 class="mb-1">{{ $user->name }}</h5>
-                <p class="text-muted mb-2">{{ $user->email ?: __('messages.no_email') }}</p>
-                <p class="text-muted mb-3">{{ $user->phone }}</p>
-
-                @if($user->provider)
-                <div class="row text-center">
-                    <div class="col-6">
-                        <h6 class="text-primary">{{ $user->provider->products()->count() }}</h6>
-                        <small class="text-muted">{{ __('messages.total_products') }}</small>
-                    </div>
-                    <div class="col-6">
-                        <h6 class="text-success">
-                            @php
-                                $ordersCount = \App\Models\Order::whereHas('orderProducts.product', function($q) use ($user) {
-                                    $q->where('provider_id', $user->provider->id);
-                                })->distinct('id')->count('id');
-                            @endphp
-                            {{ $ordersCount }}
-                        </h6>
-                        <small class="text-muted">{{ __('messages.total_orders') }}</small>
-                    </div>
-                </div>
-                @endif
+                <h5 class="mb-2 fw-bold" style="font-size: 1.3rem;">{{ $user->name }}</h5>
+                <p class="text-muted mb-2">
+                    <i class="fas fa-envelope me-1"></i>{{ $user->email ?: __('messages.no_email') }}
+                </p>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-phone me-1"></i>{{ $user->phone }}
+                </p>
             </div>
         </div>
 
@@ -175,16 +159,12 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="{{ route('provider.products') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-box me-2"></i>{{ __('messages.my_products') }}
-                    </a>
-
                     <a href="{{ route('provider.orders') }}" class="btn btn-outline-success">
                         <i class="fas fa-shopping-cart me-2"></i>{{ __('messages.orders') }}
                     </a>
 
-                    <a href="{{ route('provider.analytics') }}" class="btn btn-outline-info">
-                        <i class="fas fa-chart-line me-2"></i>{{ __('messages.analytics') }}
+                    <a href="{{ route('provider.bookRequests') }}" class="btn btn-outline-info">
+                        <i class="fas fa-book me-2"></i>{{ __('messages.book_requests') }}
                     </a>
                 </div>
             </div>

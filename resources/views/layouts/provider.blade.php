@@ -463,31 +463,27 @@
             </div>
             
             <div class="nav-item">
-                <a href="{{ route('provider.products') }}" class="nav-link {{ request()->routeIs('provider.products*') ? 'active' : '' }}">
-                    <i class="fas fa-box"></i>
-                    <span>{{ __('messages.my_products') }}</span>
-                </a>
-            </div>
-            
-            <div class="nav-item">
-                <a href="{{ route('provider.orders') }}" class="nav-link {{ request()->routeIs('provider.orders*') ? 'active' : '' }}">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>{{ __('messages.orders') }}</span>
+                <a href="{{ route('provider.purchases') }}" class="nav-link {{ request()->routeIs('provider.purchases*') ? 'active' : '' }}">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>{{ __('messages.purchases') }}</span>
                 </a>
             </div>
 
-            <div class="nav-item">
-                <a href="{{ route('provider.bookRequests.index') }}" class="nav-link {{ request()->routeIs('provider.bookRequests*') ? 'active' : '' }}">
-                    <i class="fas fa-book"></i>
+            <div class="nav-item" style="position: relative; display: flex; justify-content: space-between; align-items: center;">
+                <a href="{{ route('provider.bookRequests') }}" class="nav-link {{ request()->routeIs('provider.bookRequests') ? 'active' : '' }}" style="flex: 1; margin: 0;">
+                    <i class="fas fa-list-check"></i>
                     <span>{{ __('messages.book_requests') }}</span>
                 </a>
-            </div>
-
-            <div class="nav-item">
-                <a href="{{ route('provider.analytics') }}" class="nav-link {{ request()->routeIs('provider.analytics*') ? 'active' : '' }}">
-                    <i class="fas fa-chart-line"></i>
-                    <span>{{ __('messages.analytics') }}</span>
-                </a>
+                @php
+                    $pendingBookRequests = \App\Models\BookRequest::where('provider_id', auth()->user()->provider->id)
+                        ->whereDoesntHave('items.responses', function ($query) {
+                            $query->where('provider_id', auth()->user()->provider->id);
+                        })
+                        ->count();
+                @endphp
+                @if($pendingBookRequests > 0)
+                    <span class="notification-badge" style="position: static; margin-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }}: 10px;">{{ $pendingBookRequests }}</span>
+                @endif
             </div>
 
             <div class="nav-item">

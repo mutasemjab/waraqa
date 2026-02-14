@@ -60,21 +60,6 @@
                                    value="{{ $order->order_date ? $order->order_date->format('Y-m-d') : '' }}">
                         </div>
 
-                        {{-- Event Selection Input (Edit Mode) - Hidden Field --}}
-                        {{-- Populated dynamically after page load with seller's events --}}
-                        {{-- Pre-selects the event from the current order if one exists --}}
-                        <div class="form-group mb-3" style="display: none;">
-                            <label for="event_id">{{ __('messages.select_event') }}</label>
-                            <select name="event_id" id="event_id" class="form-control">
-                                <option value="">{{ __('messages.choose_event') }}</option>
-                            </select>
-                            {{-- Info showing count of total, active, and expired events --}}
-                            <small class="form-text text-muted d-block mt-2">
-                                <i class="fas fa-info-circle"></i>
-                                <span id="event-info"></span>
-                            </small>
-                        </div>
-
 
                         @php
                             $orderNoteVoucher = \App\Models\NoteVoucher::where('order_id', $order->id)->first();
@@ -156,23 +141,6 @@
                                                 <span>{{ __('messages.total') }}:</span>
                                                 <span><x-riyal-icon /> <span id="grand-total">{{ number_format($order->total_prices, 2) }}</span></span>
                                             </div>
-                                            {{-- Event Commission Display Section (Edit Mode) --}}
-                                            {{-- Shows when an event is selected for the order --}}
-                                            {{-- Calculated as: (subtotal * event.commission_percentage) / 100 --}}
-                                            {{-- Hidden when no event is selected --}}
-                                            <div id="event-commission-container" style="display:none;" class="mb-2">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span>{{ __('messages.event_commission') ?? 'Event Commission' }}:</span>
-                                                    {{-- Event commission percentage from event.commission_percentage --}}
-                                                    <span><span id="event-commission-percentage">0</span>%</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center text-info">
-                                                    <small>{{ __('messages.commission_value') ?? 'Value' }}:</small>
-                                                    {{-- Calculated commission value in currency --}}
-                                                    <small><x-riyal-icon /> <span id="event-commission-value">0.00</span></small>
-                                                </div>
-                                            </div>
-
                                             {{-- Seller Commission Display Section (Edit Mode) --}}
                                             {{-- Shows when seller has commission_percentage set in their user profile --}}
                                             {{-- Calculated as: (subtotal * user.commission_percentage) / 100 --}}
@@ -187,6 +155,23 @@
                                                     <small>{{ __('messages.commission_value') ?? 'Value' }}:</small>
                                                     {{-- Calculated commission value in currency --}}
                                                     <small><x-riyal-icon /> <span id="seller-commission-value">0.00</span></small>
+                                                </div>
+                                            </div>
+
+                                            {{-- Customer Discount Display Section (Edit Mode) --}}
+                                            {{-- Shows when buyer type is customer --}}
+                                            {{-- Calculated as: (grand_total * discount_percentage) / 100 --}}
+                                            {{-- Hidden when buyer is not a customer --}}
+                                            <div id="customer-discount-container" style="display:none;" class="mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>{{ __('messages.customer_discount') ?? 'Customer Discount' }}:</span>
+                                                    {{-- Customer discount percentage from user.commission_percentage (reused field) --}}
+                                                    <span><span id="customer-discount-percentage">0</span>%</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center text-info">
+                                                    <small>{{ __('messages.discount_value') ?? 'Discount Value' }}:</small>
+                                                    {{-- Calculated discount value in currency --}}
+                                                    <small><x-riyal-icon /> <span id="customer-discount-value">0.00</span></small>
                                                 </div>
                                             </div>
 
@@ -233,12 +218,9 @@
 <script>
 $(document).ready(function() {
     let rowIdx = {{ $order->orderProducts->count() }};
-    const currentEventId = {{ $order->event_id ?? 'null' }};
     const currentUserId = {{ $order->user_id ?? 'null' }};
     let userSearchTimer;
     let buyerType = 'seller'; // Default type
-    let allEventsData = {};
-    let eventCommissionData = {};
     let currentSellerCommission = {{ $order->user ? ($order->user->commission_percentage ?? 0) : 0 }};
 
     // Detect buyer type based on current user role
@@ -463,17 +445,37 @@ $(document).ready(function() {
 
         const grandTotal = subtotal + totalTax;
         const paidAmount = parseFloat($('#paid_amount').val()) || 0;
-        const remainingAmount = Math.max(0, grandTotal - paidAmount);
+
+        {{-- Calculate remaining amount, taking discount/commission into account --}}
+        {{-- For customers: remaining = grand_total - discount --}}
+        {{-- For sellers: remaining = grand_total - seller_commission --}}
+        let amountDue = grandTotal;
+        let deduction = 0;
+
+        if (buyerType === 'customer' && currentSellerCommission > 0) {
+            // Customer discount calculated on grand total
+            deduction = (grandTotal * currentSellerCommission) / 100;
+            amountDue = grandTotal - deduction;
+        } else if (buyerType === 'seller') {
+            // Seller commission calculated on subtotal
+            let sellerPercentage = currentSellerCommission || 0;
+
+            if (sellerPercentage > 0) {
+                deduction += (subtotal * sellerPercentage) / 100;
+            }
+
+            amountDue = grandTotal - deduction;
+        }
+
+        const remainingAmount = Math.max(0, amountDue - paidAmount);
 
         $('#subtotal').text(subtotal.toFixed(2));
         $('#tax-total').text(totalTax.toFixed(2));
         $('#grand-total').text(grandTotal.toFixed(2));
         $('#remaining-amount').text(remainingAmount.toFixed(2));
 
-        // Update commission if event is selected
-        if (eventCommissionData.id) {
-            updateCommissionBox();
-        }
+        // Update commission if event is selected or seller commission exists
+        updateCommissionBox();
     }
 
     // Initialize product search and quantity listeners
@@ -482,8 +484,8 @@ $(document).ready(function() {
         attachQuantityListener($(this));
     });
 
-    // Update commission on load if no event but seller commission exists
-    if (!currentEventId && currentSellerCommission > 0) {
+    // Update commission on load if seller commission exists
+    if (currentSellerCommission > 0) {
         updateCommissionBox();
     }
 
@@ -505,18 +507,39 @@ $(document).ready(function() {
         });
         const grandTotal = subtotal + totalTax;
 
+        {{-- Calculate amount due, taking discount/commission into account --}}
+        {{-- For customers: amount_due = grand_total - discount --}}
+        {{-- For sellers: amount_due = grand_total - (event_commission + seller_commission) --}}
+        let amountDue = grandTotal;
+        let deduction = 0;
+
+        if (buyerType === 'customer' && currentSellerCommission > 0) {
+            // Customer discount calculated on grand total
+            deduction = (grandTotal * currentSellerCommission) / 100;
+            amountDue = grandTotal - deduction;
+        } else if (buyerType === 'seller') {
+            // Seller commissions calculated on subtotal
+            let sellerPercentage = currentSellerCommission || 0;
+
+            if (sellerPercentage > 0) {
+                deduction += (subtotal * sellerPercentage) / 100;
+            }
+
+            amountDue = grandTotal - deduction;
+        }
+
         // Round both values to 2 decimals to handle floating-point precision issues
         const roundedPaidAmount = parseFloat(paidAmount.toFixed(2));
-        const roundedGrandTotal = parseFloat(grandTotal.toFixed(2));
+        const roundedAmountDue = parseFloat(amountDue.toFixed(2));
 
-        if (roundedPaidAmount > roundedGrandTotal) {
+        if (roundedPaidAmount > roundedAmountDue) {
             Swal.fire({
                 icon: 'error',
                 title: '{{ __("messages.error") }}',
                 text: '{{ __("messages.paid_amount_exceeds_total") }}',
                 confirmButtonText: '{{ __("messages.confirm") }}'
             });
-            $(this).val(grandTotal.toFixed(2));
+            $(this).val(amountDue.toFixed(2));
         }
 
         calculateTotals();
@@ -555,12 +578,6 @@ $(document).ready(function() {
                         // Update seller commission
                         currentSellerCommission = commission;
                         updateCommissionBox();
-
-                        if (buyerType === 'seller') {
-                            loadSellerEvents(id);
-                        } else {
-                            clearEvents();
-                        }
                     });
                 } else {
                     dropdown.html('<div class="p-2">{{ __("messages.no_results") }}</div>').show();
@@ -588,7 +605,9 @@ $(document).ready(function() {
         $('#user_search').val('');
         $('#users-dropdown').html('').hide();
         currentSellerCommission = 0;
-        clearEvents();
+
+        {{-- Update commission/discount display when buyer type changes --}}
+        calculateTotals();
     });
 
     $('#user_search').on('focus', function() {
@@ -620,204 +639,72 @@ $(document).ready(function() {
 
     // Update commission box with live calculations
     const updateCommissionBox = function() {
-        let eventPercentage = eventCommissionData.percentage || 0;
-        let sellerPercentage = 0;
-
-        if (buyerType === 'seller' && currentSellerCommission > 0) {
-            sellerPercentage = currentSellerCommission;
+        // CRITICAL: Only show commission/discount if a user is actually selected
+        // If no user is selected, hide everything immediately
+        if (!currentSellerCommission || currentSellerCommission <= 0) {
+            // Use cssText with !important to override Bootstrap's d-flex class
+            $('#customer-discount-container').css('cssText', 'display: none !important');
+            $('#seller-commission-container').css('cssText', 'display: none !important');
+            $('#total-commission-container').css('cssText', 'display: none !important');
+            $('#commission-divider').css('cssText', 'display: none !important');
+            return;
         }
+
+        let sellerPercentage = currentSellerCommission; // User is selected with commission > 0
 
         let subtotal = 0;
-        
-        // Calculate grand total
+        let totalTax = 0;
+
+        // Calculate totals
         $('.product-row').each(function() {
             const priceWithoutTax = parseFloat($(this).data('price-without-tax')) || 0;
+            const tax = parseFloat($(this).find('.product-tax').val()) || 0;
             const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
-            subtotal += priceWithoutTax * quantity;
+
+            const lineSubtotal = priceWithoutTax * quantity;
+            const lineTax = (lineSubtotal * tax) / 100;
+
+            subtotal += lineSubtotal;
+            totalTax += lineTax;
         });
 
-        let totalCommission = 0;
-        let hasCommission = false;
+        const grandTotal = subtotal + totalTax;
 
-        {{--
-            Commission Display Logic - Handles 4 scenarios:
-            1. No commissions (both event & seller = 0) → Hide all commission sections
-            2. Event commission only → Show Event Commission + Total Commission
-            3. Seller commission only → Show Seller Commission + Total Commission
-            4. Both commissions → Show Event + Seller + Total Commission
-        --}}
-
-        // Handle Event Commission
-        {{-- Scenario: User selected an event with commission_percentage > 0 --}}
-        if (eventPercentage > 0) {
-            const eventValue = (subtotal * eventPercentage) / 100;
-            $('#event-commission-percentage').text(eventPercentage.toFixed(2));
-            $('#event-commission-value').text(eventValue.toFixed(2));
-            $('#event-commission-container').show();
-            totalCommission += eventValue;
-            hasCommission = true;
+        {{-- Customer Discount Display Section --}}
+        {{-- When buyer type is 'customer', show discount based on grand total --}}
+        {{-- Formula: (grand_total × discount_percentage) / 100 --}}
+        if (buyerType === 'customer') {
+            // Calculate customer discount value from grand total
+            const discountValue = (grandTotal * sellerPercentage) / 100;
+            // Display percentage
+            $('#customer-discount-percentage').text(sellerPercentage.toFixed(2));
+            // Display calculated discount value
+            $('#customer-discount-value').text(discountValue.toFixed(2));
+            // Show customer discount container
+            $('#customer-discount-container').css('cssText', '');
+            // Hide seller commission container when customer is selected
+            $('#seller-commission-container').css('cssText', 'display: none !important');
+            $('#total-commission-container').css('cssText', 'display: none !important');
+            $('#commission-divider').css('cssText', 'display: none !important');
         } else {
-            {{-- Hide when: no event selected, or event has no commission --}}
-            $('#event-commission-container').hide();
-        }
+            // Seller selected - hide customer discount and show commission boxes
+            $('#customer-discount-container').css('cssText', 'display: none !important');
 
-        // Handle Seller Commission
-        {{-- Scenario: Buyer is a seller AND seller has commission_percentage set > 0 --}}
-        if (sellerPercentage > 0) {
+            {{-- Seller Commission Calculation and Display --}}
+            {{-- Formula: (subtotal × user.commission_percentage) / 100 --}}
+            {{-- Only shown when: buyerType='seller' AND user.commission_percentage > 0 --}}
             const sellerValue = (subtotal * sellerPercentage) / 100;
             $('#seller-commission-percentage').text(sellerPercentage.toFixed(2));
             $('#seller-commission-value').text(sellerValue.toFixed(2));
-            $('#seller-commission-container').show();
-            totalCommission += sellerValue;
-            hasCommission = true;
-        } else {
-            {{-- Hide when: buyer is customer, or seller has no commission_percentage --}}
-            $('#seller-commission-container').hide();
-        }
+            $('#seller-commission-container').css('cssText', '');
 
-        {{--
-            Total Commission Display Logic
-            Shows the SUM of Event Commission + Seller Commission (if any exist)
-
-            Scenarios where Total Commission is visible:
-            1. Event only: Shows Event + Total = Event value
-            2. Seller only: Shows Seller + Total = Seller value
-            3. Both: Shows Event + Seller + Total = sum
-        --}}
-        if (hasCommission) {
-            $('#total-commission-value').text(totalCommission.toFixed(2));
-            $('#total-commission-container').show();
-            $('#commission-divider').show();
-        } else {
-            {{-- Hide all commission sections when no commissions apply --}}
-            $('#total-commission-container').hide();
-            $('#commission-divider').hide();
+            {{-- Total Commission Display (which is just seller commission in this case) --}}
+            $('#total-commission-value').text(sellerValue.toFixed(2));
+            $('#total-commission-container').css('cssText', '');
+            $('#commission-divider').css('cssText', '');
         }
     };
 
-    function loadSellerEvents(sellerId, selectedEventId = null) {
-        const eventSelect = $('#event_id');
-        const eventInfo = $('#event-info');
-
-        if (!sellerId) {
-            eventSelect.html('<option value="">{{ __("messages.choose_event") }}</option>');
-            eventInfo.html('');
-            allEventsData = {};
-            return;
-        }
-
-        $.ajax({
-            url: '{{ route("sellers.events", ":sellerId") }}'.replace(':sellerId', sellerId),
-            method: 'GET',
-            success: function(data) {
-                let options = '<option value="">{{ __("messages.choose_event") }}</option>';
-                let validCount = 0;
-                let invalidCount = 0;
-
-                // Clear previous events data
-                allEventsData = {};
-
-                if (data.length > 0) {
-                    data.forEach(function(event) {
-                        // Store event data for later use
-                        allEventsData[event.id] = event;
-
-                        const selected = selectedEventId && event.id == selectedEventId ? 'selected' : '';
-                        if (event.is_valid) {
-                            options += `<option value="${event.id}" ${selected}>${event.text} <span style="color: green;">✓</span></option>`;
-                            validCount++;
-                        } else {
-                            options += `<option value="${event.id}" ${selected} style="color: #999;">${event.text}</option>`;
-                            invalidCount++;
-                        }
-                    });
-
-                    // Update info message
-                    let infoMsg = `{{ __("messages.total_events") }}: ${data.length} | `;
-                    infoMsg += `<span style="color: green;"><i class="fas fa-check-circle"></i> {{ __("messages.active_events") }}: ${validCount}</span>`;
-                    if (invalidCount > 0) {
-                        infoMsg += ` | <span style="color: #999;"><i class="fas fa-times-circle"></i> {{ __("messages.expired_events") }}: ${invalidCount}</span>`;
-                    }
-                    eventInfo.html(infoMsg);
-
-                    // If there was a selected event, show commission rows
-                    if (selectedEventId && allEventsData[selectedEventId]) {
-                        const eventData = allEventsData[selectedEventId];
-                        eventCommissionData = {
-                            id: eventData.id,
-                            percentage: parseFloat(eventData.commission_percentage)
-                        };
-                        updateCommissionBox();
-                    } else {
-                        // If no event is selected (deselected or not found), check if we should fall back to seller commission
-                        updateCommissionBox();
-                    }
-                } else {
-                    options = '<option value="">{{ __("messages.no_valid_events") }}</option>';
-                    eventInfo.html('');
-                }
-
-                eventSelect.html(options);
-            },
-            error: function(xhr) {
-                console.error('Error fetching events:', xhr);
-                eventSelect.html('<option value="">{{ __("messages.error_loading_events") }}</option>');
-                eventInfo.html('');
-                allEventsData = {};
-            }
-        });
-    }
-
-    // Clear events function
-    function clearEvents() {
-        $('#event_id').html('<option value="">{{ __("messages.choose_event") }}</option>');
-        $('#event-info').html('');
-        allEventsData = {};
-        eventCommissionData = {};
-        allEventsData = {};
-        eventCommissionData = {};
-        // clearEvents might be called when user changes. We should update commission box to hide or show seller commission.
-        // But if user changed, currentSellerCommission should be valid for new user?
-        // Actually clearEvents is used when changing type to Customer.
-        updateCommissionBox();
-    }
-
-    $(document).on('change', '#user_id', function() {
-        const userId = $(this).val();
-        if (buyerType === 'seller') {
-            loadSellerEvents(userId);
-        } else {
-            clearEvents();
-        }
-    });
-
-    // Handle event selection change
-    $(document).on('change', '#event_id', function() {
-        const eventId = $(this).val();
-
-        if (!eventId || !allEventsData[eventId]) {
-            eventCommissionData = {};
-        if (!eventId || !allEventsData[eventId]) {
-            eventCommissionData = {};
-            // Fallback to seller commission
-            updateCommissionBox();
-            return;
-        }
-        }
-
-        // Get event data from stored events
-        const eventData = allEventsData[eventId];
-        eventCommissionData = {
-            id: eventData.id,
-            percentage: parseFloat(eventData.commission_percentage)
-        };
-        updateCommissionBox();
-    });
-
-    // Load events for current user on page load
-    if (currentUserId) {
-        loadSellerEvents(currentUserId, currentEventId);
-    }
     
     // Fetch available quantities for existing products
     function fetchExistingQuantities() {

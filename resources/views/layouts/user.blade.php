@@ -453,6 +453,20 @@
                     <span>{{ __('messages.my_sales') }}</span>
                 </a>
             </div>
+
+            <div class="nav-item">
+                <a href="{{ route('user.sellerProductRequests.index') }}" class="nav-link {{ request()->routeIs('user.sellerProductRequests*') ? 'active' : '' }}">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>{{ __('messages.seller_product_requests') }}</span>
+                    @php
+                        $pendingCount = Auth::user()->sellerProductRequests()
+                            ->where('status', \App\Enums\SellerProductRequestStatus::PENDING)->count();
+                    @endphp
+                    @if($pendingCount > 0)
+                        <span class="badge badge-warning ms-auto" style="background: #f59e0b;">{{ $pendingCount }}</span>
+                    @endif
+                </a>
+            </div>
         </nav>
     </div>
     

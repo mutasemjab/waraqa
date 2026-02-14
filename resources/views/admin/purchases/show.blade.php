@@ -30,13 +30,6 @@
                                 {{ __('messages.Purchase_Number') }}: <strong>{{ $purchase->purchase_number }}</strong>
                             </h3>
                             <div class="card-tools">
-                                @can('purchase-edit')
-                                    @if ($purchase->status === 'pending')
-                                        <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-warning btn-sm">
-                                            <i class="fas fa-edit"></i> {{ __('messages.Edit') }}
-                                        </a>
-                                    @endif
-                                @endcan
                                 <a href="{{ route('purchases.index') }}" class="btn btn-secondary btn-sm">
                                     <i class="fas fa-arrow-left"></i> {{ __('messages.Back_to_List') }}
                                 </a>
@@ -64,6 +57,8 @@
                                                 <span class="badge badge-success">{{ __('messages.Received') }}</span>
                                             @elseif ($purchase->status === 'paid')
                                                 <span class="badge badge-primary">{{ __('messages.Paid') }}</span>
+                                            @elseif ($purchase->status === 'rejected')
+                                                <span class="badge badge-danger">{{ __('messages.Rejected') }}</span>
                                             @endif
                                         </p>
                                     </div>
@@ -75,8 +70,8 @@
                                     <div class="form-group">
                                         <label>{{ __('messages.Expected_Delivery_Date') }}</label>
                                         <p>
-                                            @if ($purchase->expected_delivery_date)
-                                                {{ \Carbon\Carbon::parse($purchase->expected_delivery_date)->format('Y-m-d') }}
+                                            @if ($purchase->bookRequestResponse && $purchase->bookRequestResponse->expected_delivery_date)
+                                                {{ $purchase->bookRequestResponse->expected_delivery_date }}
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
@@ -114,13 +109,20 @@
                                             <tr>
                                                 <th>{{ __('messages.Product') }}</th>
                                                 <th>{{ __('messages.Quantity') }}</th>
-                                                <th>{{ __('messages.Unit_Price') }}</th>
+                                                <th>{{ __('messages.Price') }} ({{ __('messages.tax_inclusive') }})</th>
                                                 <th>{{ __('messages.Tax') }} %</th>
+                                                <th>{{ __('messages.Subtotal') }}</th>
+                                                <th>{{ __('messages.Tax') }}</th>
                                                 <th>{{ __('messages.total_price') }}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach ($purchase->items as $item)
+                                                @php
+                                                    $unit_price_with_tax = $item->unit_price * (1 + $item->tax_percentage / 100);
+                                                    $subtotal_without_tax = $item->total_price / (1 + $item->tax_percentage / 100);
+                                                    $tax_amount = $item->total_price - $subtotal_without_tax;
+                                                @endphp
                                                 <tr>
                                                     <td>
                                                         @if ($item->product)
@@ -130,23 +132,32 @@
                                                         @endif
                                                     </td>
                                                     <td>{{ $item->quantity }}</td>
-                                                    <td>{{ number_format($item->unit_price, 2) }}</td>
+                                                    <td>{{ number_format($unit_price_with_tax, 2) }}</td>
                                                     <td>{{ number_format($item->tax_percentage, 2) }}</td>
+                                                    <td>{{ number_format($subtotal_without_tax, 2) }}</td>
+                                                    <td>{{ number_format($tax_amount, 2) }}</td>
                                                     <td><strong>{{ number_format($item->total_price, 2) }}</strong></td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                         <tfoot>
+                                            @php
+                                                $total_with_tax = $purchase->items->sum('total_price');
+                                                $total_without_tax = 0;
+                                                $total_tax = 0;
+                                                foreach ($purchase->items as $item) {
+                                                    $subtotal = $item->total_price / (1 + $item->tax_percentage / 100);
+                                                    $tax = $item->total_price - $subtotal;
+                                                    $total_without_tax += $subtotal;
+                                                    $total_tax += $tax;
+                                                }
+                                            @endphp
                                             <tr class="table-dark">
                                                 <td colspan="4" class="text-right"><strong>{{ __('messages.total_amount') }}:</strong></td>
-                                                <td><strong>{{ number_format($purchase->items->sum('total_price'), 2) }}</strong></td>
+                                                <td><strong>{{ number_format($total_without_tax, 2) }}</strong></td>
+                                                <td><strong>{{ number_format($total_tax, 2) }}</strong></td>
+                                                <td><strong>{{ number_format($total_with_tax, 2) }}</strong></td>
                                             </tr>
-                                            @if ($purchase->total_tax)
-                                                <tr class="table-light">
-                                                    <td colspan="4" class="text-right"><strong>{{ __('messages.Total_Tax') }}:</strong></td>
-                                                    <td><strong>{{ number_format($purchase->total_tax, 2) }}</strong></td>
-                                                </tr>
-                                            @endif
                                         </tfoot>
                                     </table>
                                 </div>
@@ -155,20 +166,158 @@
                                     {{ __('messages.No_Items') }}
                                 </div>
                             @endif
+
+                            <hr>
+
+                            <h5>{{ __('messages.Responses') }}</h5>
+
+                            @php
+                                $allResponses = [];
+                                foreach ($purchase->bookRequest->items ?? [] as $item) {
+                                    $responses = $item->responses;
+                                    $allResponses = array_merge($allResponses, $responses->toArray());
+                                }
+                            @endphp
+
+                            @if (count($allResponses) > 0)
+                                @foreach ($allResponses as $response)
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0">
+                                                {{ $response['provider_id'] ? \App\Models\Provider::find($response['provider_id'])->name : 'Unknown' }}
+                                                @if ($response['status'] === 'pending')
+                                                    <span class="badge badge-warning float-right">{{ __('messages.Pending') }}</span>
+                                                @elseif ($response['status'] === 'approved')
+                                                    <span class="badge badge-success float-right">{{ __('messages.Approved') }}</span>
+                                                @elseif ($response['status'] === 'rejected')
+                                                    <span class="badge badge-danger float-right">{{ __('messages.Rejected') }}</span>
+                                                @endif
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label class="text-muted">{{ __('messages.Available_Quantity') }}</label>
+                                                    <p>{{ $response['available_quantity'] }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="text-muted">{{ __('messages.Price') }}</label>
+                                                    <p>{{ number_format($response['price'] ?? 0, 2, '.', '') }}</p>
+                                                </div>
+                                            </div>
+
+                                            @if ($response['note'])
+                                                <div class="form-group">
+                                                    <label class="text-muted">{{ __('messages.notes') }}</label>
+                                                    <p>{{ $response['note'] }}</p>
+                                                </div>
+                                            @endif
+
+                                            @if ($response['status'] === 'pending')
+                                                <hr>
+                                                <h6>{{ __('messages.Products') }}</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>{{ __('messages.Quantity') }}</th>
+                                                                <th>{{ __('messages.Price') }} ({{ __('messages.tax_inclusive') }})</th>
+                                                                <th>{{ __('messages.Tax') }} %</th>
+                                                                <th>{{ __('messages.Subtotal') }}</th>
+                                                                <th>{{ __('messages.Tax') }}</th>
+                                                                <th>{{ __('messages.total_price') }}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr data-response-id="{{ $response['id'] }}">
+                                                                <td>
+                                                                    <input type="number" name="quantity" class="form-control form-control-sm qty-input" data-response-id="{{ $response['id'] }}" value="{{ $response['available_quantity'] }}" max="{{ $response['available_quantity'] }}" min="1" style="width: 80px;">
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" name="price" class="form-control form-control-sm price-input" data-response-id="{{ $response['id'] }}" value="{{ number_format($response['price'] ?? 0, 2, '.', '') }}" step="0.01" min="0" style="width: 120px;">
+                                                                </td>
+                                                                <td>
+                                                                    {{ number_format($response['tax_percentage'] ?? 0, 2) }}%
+                                                                    <input type="hidden" name="tax_percentage" class="tax-input" data-response-id="{{ $response['id'] }}" value="{{ $response['tax_percentage'] ?? 0 }}">
+                                                                </td>
+                                                                <td class="subtotal-display" data-response-id="{{ $response['id'] }}">{{ number_format($response['available_quantity'] * ($response['price'] / (1 + ($response['tax_percentage'] ?? 0) / 100)), 2) }}</td>
+                                                                <td class="tax-amount-display" data-response-id="{{ $response['id'] }}">{{ number_format($response['available_quantity'] * ($response['price'] / (1 + ($response['tax_percentage'] ?? 0) / 100)) * (($response['tax_percentage'] ?? 0) / 100), 2) }}</td>
+                                                                <td class="total-display" data-response-id="{{ $response['id'] }}"><strong>{{ number_format($response['available_quantity'] * $response['price'], 2) }}</strong></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <div class="btn-group mt-3" role="group">
+                                                    <form action="{{ route('purchases.responses.approve', $response['id']) }}" method="POST" style="display:inline;" class="approve-form" data-response-id="{{ $response['id'] }}">
+                                                        @csrf
+                                                        <input type="hidden" name="quantity" class="form-quantity" value="{{ $response['available_quantity'] }}">
+                                                        <input type="hidden" name="price" class="form-price" value="{{ $response['price'] }}">
+                                                        <input type="hidden" name="tax_percentage" class="form-tax" value="{{ $response['tax_percentage'] ?? 0 }}">
+                                                        <button type="submit" class="btn btn-sm btn-success approve-btn" data-response-id="{{ $response['id'] }}">
+                                                            <i class="fas fa-check"></i> {{ __('messages.Approve') }}
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ route('purchases.responses.reject', $response['id']) }}" method="POST" style="display:inline;">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('messages.are_you_sure') }}');">
+                                                            <i class="fas fa-times"></i> {{ __('messages.Reject') }}
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+
+                                <script>
+                                    $(document).ready(function() {
+                                        function updateCalculations(responseId) {
+                                            const row = $('tr[data-response-id="' + responseId + '"]');
+                                            const qty = parseFloat(row.find('.qty-input').val()) || 1;
+                                            const price = parseFloat(row.find('.price-input').val()) || 0;
+                                            const taxPercent = parseFloat(row.find('.tax-input').val()) || 0;
+
+                                            const priceWithoutTax = price / (1 + taxPercent / 100);
+                                            const subtotal = priceWithoutTax * qty;
+                                            const taxAmount = subtotal * (taxPercent / 100);
+                                            const total = subtotal + taxAmount;
+
+                                            row.find('.subtotal-display').text(subtotal.toFixed(2));
+                                            row.find('.tax-amount-display').text(taxAmount.toFixed(2));
+                                            row.find('.total-display').html('<strong>' + total.toFixed(2) + '</strong>');
+                                        }
+
+                                        // تحديث الحسابات عند تغيير الكمية أو السعر
+                                        $('.qty-input, .price-input').on('change input', function() {
+                                            const responseId = $(this).data('response-id');
+                                            updateCalculations(responseId);
+                                        });
+
+                                        // تحديث الـ hidden inputs من الـ inputs المرئية عند الإرسال
+                                        $('.approve-form').on('submit', function(e) {
+                                            const responseId = $(this).data('response-id');
+                                            const row = $('tr[data-response-id="' + responseId + '"]');
+                                            const qty = row.find('.qty-input').val();
+                                            const price = row.find('.price-input').val();
+                                            const tax = row.find('.tax-input').val();
+
+                                            // تحديث قيم الـ hidden inputs
+                                            $(this).find('.form-quantity').val(qty);
+                                            $(this).find('.form-price').val(price);
+                                            $(this).find('.form-tax').val(tax);
+                                        });
+                                    });
+                                </script>
+                            @else
+                                <div class="alert alert-info">
+                                    {{ __('messages.No_Responses') }}
+                                </div>
+                            @endif
+
                         </div>
 
                         <div class="card-footer">
-                            @can('purchase-confirm')
-                                @if ($purchase->status === 'pending' && $purchase->items->count() > 0)
-                                    <form action="{{ route('purchases.confirm', $purchase) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        <button type="submit" class="btn btn-success" onclick="return confirm('{{ __('messages.are_you_sure') }}');">
-                                            <i class="fas fa-check"></i> {{ __('messages.Confirm_Purchase') }}
-                                        </button>
-                                    </form>
-                                @endif
-                            @endcan
-
                             @can('purchase-receive')
                                 @if ($purchase->status === 'confirmed')
                                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#receiveModal">
@@ -177,17 +326,6 @@
                                 @endif
                             @endcan
 
-                            @can('purchase-delete')
-                                @if ($purchase->status === 'pending')
-                                    <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('{{ __('messages.Delete_Confirm') }}');">
-                                            <i class="fas fa-trash"></i> {{ __('messages.Delete') }}
-                                        </button>
-                                    </form>
-                                @endif
-                            @endcan
                         </div>
                     </div>
                 </div>

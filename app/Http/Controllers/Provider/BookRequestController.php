@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Provider;
 
 use App\Http\Controllers\Controller;
-use App\Models\BookRequest;
+use App\Models\BookRequestItem;
 use App\Models\BookRequestResponse;
 use Illuminate\Http\Request;
 
@@ -14,57 +14,32 @@ class BookRequestController extends Controller
         $this->middleware(['auth:web', 'role:provider']);
     }
 
-    // عرض قائمة الطلبات الموجهة لهذا المورد
-    public function index()
-    {
-        $user = auth()->user();
-        $provider = $user->provider;
-        $bookRequests = BookRequest::where('provider_id', $provider->id)
-            ->with(['product.category', 'responses.provider'])
-            ->get();
-        return view('provider.bookRequests.index', compact('bookRequests', 'provider'));
-    }
-
-    // عرض تفاصيل الطلب
-    public function show(BookRequest $bookRequest)
+    // صفحة إنشاء الرد على عنصر من طلب الكتب
+    public function createResponse(BookRequestItem $bookRequestItem)
     {
         $user = auth()->user();
         $provider = $user->provider;
 
-        // التحقق من أن الطلب موجه لهذا المورد
-        if ($bookRequest->provider_id !== $provider->id) {
+        // التحقق من أن العنصر موجود في طلب موجه لهذا المورد
+        if ($bookRequestItem->bookRequest->provider_id !== $provider->id) {
             abort(403);
         }
 
-        $bookRequest->load(['product.category', 'responses.provider']);
-        $hasResponse = $bookRequest->responses()
+        $bookRequestItem->load(['product', 'bookRequest']);
+        $hasResponse = $bookRequestItem->responses()
             ->where('provider_id', $provider->id)
             ->exists();
 
-        return view('provider.bookRequests.show', compact('bookRequest', 'hasResponse', 'provider'));
+        return view('provider.bookRequests.respond', compact('bookRequestItem', 'hasResponse'));
     }
 
-    // صفحة إنشاء الرد
-    public function createResponse(BookRequest $bookRequest)
+    // حفظ الرد على عنصر من طلب الكتب
+    public function storeResponse(Request $request, BookRequestItem $bookRequestItem)
     {
         $user = auth()->user();
         $provider = $user->provider;
 
-        if ($bookRequest->provider_id !== $provider->id) {
-            abort(403);
-        }
-
-        $bookRequest->load('product');
-        return view('provider.bookRequests.respond', compact('bookRequest'));
-    }
-
-    // حفظ الرد
-    public function storeResponse(Request $request, BookRequest $bookRequest)
-    {
-        $user = auth()->user();
-        $provider = $user->provider;
-
-        if ($bookRequest->provider_id !== $provider->id) {
+        if ($bookRequestItem->bookRequest->provider_id !== $provider->id) {
             abort(403);
         }
 
@@ -72,29 +47,37 @@ class BookRequestController extends Controller
             'available_quantity' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
             'tax_percentage' => 'nullable|numeric|min:0|max:100',
+            'expected_delivery_date' => 'nullable|date',
             'note' => 'nullable|string',
         ]);
 
-        // التحقق من عدم وجود رد سابق من هذا المورد
-        $existingResponse = BookRequestResponse::where('book_request_id', $bookRequest->id)
+        // التحقق من عدم وجود رد سابق من هذا المورد على نفس العنصر
+        $existingResponse = BookRequestResponse::where('book_request_item_id', $bookRequestItem->id)
             ->where('provider_id', $provider->id)
             ->first();
 
         if ($existingResponse) {
-            return redirect()->back()->with('error', 'لقد قمت برد الفعل على هذا الطلب من قبل');
+            return redirect()->back()->with('error', 'لقد قمت برد الفعل على هذا العنصر من قبل');
         }
 
-        BookRequestResponse::create([
-            'book_request_id' => $bookRequest->id,
+        $response = BookRequestResponse::create([
+            'book_request_item_id' => $bookRequestItem->id,
             'provider_id' => $provider->id,
             'available_quantity' => $validated['available_quantity'],
             'price' => $validated['price'],
             'tax_percentage' => $validated['tax_percentage'] ?? 0,
             'status' => 'pending',
             'note' => $validated['note'] ?? null,
+            'expected_delivery_date' => $validated['expected_delivery_date'] ?? null,
         ]);
 
-        return redirect()->route('provider.bookRequests.show', $bookRequest)
+        // Update the purchase with the book request response
+        $purchase = $bookRequestItem->bookRequest->purchase;
+        if ($purchase) {
+            $purchase->update(['book_request_response_id' => $response->id]);
+        }
+
+        return redirect()->route('provider.purchases.show', $purchase->id)
             ->with('success', 'تم إرسال الرد بنجاح');
     }
 }

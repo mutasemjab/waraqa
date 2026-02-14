@@ -14,7 +14,6 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserDeptController;
 use App\Http\Controllers\Admin\WarehouseController;
-use App\Http\Controllers\Admin\BookRequestController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\PurchaseReturnController;
 use App\Http\Controllers\Admin\ReportController;
@@ -27,6 +26,7 @@ use App\Http\Controllers\Admin\EventReportController;
 use App\Http\Controllers\Admin\WarehouseMovementReportController;
 use App\Http\Controllers\Admin\SalesReturnController;
 use App\Http\Controllers\Admin\DistributionPointSalesReportController;
+use App\Http\Controllers\Admin\SellerSalesController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Spatie\Permission\Models\Permission;
 /*
@@ -91,12 +91,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('warehouses/{id}/quantities', [WarehouseController::class, 'quantities'])->name('warehouses.quantities');
         Route::resource('noteVouchers', NoteVoucherController::class);
         Route::resource('user_depts', UserDeptController::class);
-        Route::resource('bookRequests', BookRequestController::class);
-        Route::resource('purchases', PurchaseController::class);
+        Route::resource('purchases', PurchaseController::class)->except(['edit', 'update']);
 
         // Purchase Actions
         Route::post('purchases/{purchase}/confirm', [PurchaseController::class, 'confirm'])->name('purchases.confirm');
         Route::post('purchases/{purchase}/mark-as-received', [PurchaseController::class, 'markAsReceived'])->name('purchases.mark-as-received');
+        Route::post('purchases/responses/{response}/approve', [PurchaseController::class, 'approveResponse'])->name('purchases.responses.approve');
+        Route::post('purchases/responses/{response}/reject', [PurchaseController::class, 'rejectResponse'])->name('purchases.responses.reject');
 
         // Sales Returns
         Route::prefix('returns')->name('admin.')->group(function () {
@@ -125,11 +126,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
                 'destroy' => 'purchase-returns.destroy',
             ]);
         });
-
-        // Book Request Responses
-        Route::get('bookRequests/responses/{response}/show', [BookRequestController::class, 'showResponse'])->name('bookRequests.responses.show');
-        Route::post('bookRequests/responses/{response}/approve', [BookRequestController::class, 'approve'])->name('bookRequests.responses.approve');
-        Route::post('bookRequests/responses/{response}/reject', [BookRequestController::class, 'reject'])->name('bookRequests.responses.reject');
 
         // Additional routes for user debts
         Route::post('user_depts/{userDept}/make_payment', [UserDeptController::class, 'makePayment'])->name('user_depts.make_payment');
@@ -168,6 +164,24 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
 
         // Sales Details
         Route::get('sales/{id}/details', [DistributionPointSalesReportController::class, 'showSaleDetails'])->name('admin.sales.details');
+
+        // Seller Product Requests
+        Route::prefix('sellerProductRequests')->name('sellerProductRequests.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'index'])->name('index');
+            Route::get('/{sellerProductRequest}', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'show'])->name('show');
+            Route::get('/{sellerProductRequest}/approve', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'showApprovalForm'])->name('approve.form');
+            Route::post('/{sellerProductRequest}/approve', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'approve'])->name('approve');
+            Route::post('/{sellerProductRequest}/reject', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'reject'])->name('reject');
+        });
+
+        // Seller Sales Management
+        Route::prefix('seller-sales')->name('admin.seller-sales.')->group(function () {
+            Route::get('/', [SellerSalesController::class, 'index'])->name('index');
+            Route::get('/create', [SellerSalesController::class, 'create'])->name('create');
+            Route::post('/', [SellerSalesController::class, 'store'])->name('store');
+            Route::get('/{id}', [SellerSalesController::class, 'show'])->name('show');
+            Route::get('/get-products/{sellerId}', [SellerSalesController::class, 'getSellerProducts'])->name('get-products');
+        });
     });
 });
 

@@ -77,6 +77,7 @@
             .provider-info-section,
             .distribution-section,
             .sales-section,
+            .purchases-section,
             .refunds-section,
             .sellers-payments-section,
             .sales-by-place-section,
@@ -500,6 +501,7 @@
             /* Section styling */
             .distribution-section,
             .sales-section,
+            .purchases-section,
             .refunds-section,
             .sellers-payments-section,
             .sales-by-place-section,
@@ -513,6 +515,7 @@
             /* Section card styling */
             .distribution-section .card,
             .sales-section .card,
+            .purchases-section .card,
             .refunds-section .card,
             .sellers-payments-section .card,
             .sales-by-place-section .card,
@@ -525,6 +528,7 @@
             /* Section header styling */
             .distribution-section .card-header,
             .sales-section .card-header,
+            .purchases-section .card-header,
             .refunds-section .card-header,
             .sellers-payments-section .card-header,
             .sales-by-place-section .card-header,
@@ -540,6 +544,7 @@
 
             .distribution-section .card-title,
             .sales-section .card-title,
+            .purchases-section .card-title,
             .refunds-section .card-title,
             .sellers-payments-section .card-title,
             .sales-by-place-section .card-title,
@@ -553,6 +558,7 @@
 
             .distribution-section .card-header.bg-primary,
             .sales-section .card-header.bg-success,
+            .purchases-section .card-header.bg-info,
             .refunds-section .card-header.bg-danger,
             .sellers-payments-section .card-header.bg-warning,
             .sales-by-place-section .card-header.bg-success {
@@ -568,6 +574,7 @@
             /* Section body styling */
             .distribution-section .card-body,
             .sales-section .card-body,
+            .purchases-section .card-body,
             .refunds-section .card-body,
             .sellers-payments-section .card-body,
             .sales-by-place-section .card-body,
@@ -745,6 +752,23 @@
                             </div>
                             <div class="card-body">
                                 <div id="productsTableContainer">
+                                    <p class="text-center text-muted">{{ __('messages.No_data') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchases Section -->
+                <div class="row mb-4 purchases-section printable-section" style="display:block;">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h3 class="card-title"><i class="fas fa-shopping-cart"></i>
+                                    {{ __('messages.purchases') }}</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="purchasesTableContainer">
                                     <p class="text-center text-muted">{{ __('messages.No_data') }}</p>
                                 </div>
                             </div>
@@ -1123,6 +1147,23 @@
 
                     </div>
 
+                    <!-- Purchases Section -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input display-section-toggle"
+                                            id="display_purchases" data-section="purchases" checked>
+                                        <label class="custom-control-label font-weight-bold" for="display_purchases">
+                                            <i class="fas fa-shopping-cart"></i> {{ __('messages.purchases') }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Distribution & Sales Section -->
                     <div class="row">
                         <div class="col-md-6">
@@ -1360,8 +1401,8 @@
                             <div class="card mb-3">
                                 <div class="card-header bg-light">
                                     <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input section-toggle"
-                                            id="export_products" checked data-section="products">
+                                        <input type="checkbox" class="custom-control-input section-toggle export-option"
+                                            id="export_products" name="export_options[]" value="products" checked data-section="products">
                                         <label class="custom-control-label font-weight-bold" for="export_products">
                                             <i class="fas fa-box"></i> {{ __('messages.products_table') }}
                                         </label>
@@ -1369,6 +1410,24 @@
                                 </div>
                                 <div class="card-body" id="products_options">
                                     <small class="text-muted">{{ __('messages.products_table_description') }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Purchases Section -->
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input section-toggle export-option"
+                                            id="export_purchases" name="export_options[]" value="purchases" checked data-section="purchases">
+                                        <label class="custom-control-label font-weight-bold" for="export_purchases">
+                                            <i class="fas fa-shopping-cart"></i> {{ __('messages.purchases') }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="card-body" id="purchases_options">
+                                    <small class="text-muted">{{ __('messages.purchases_table_description') }}</small>
                                 </div>
                             </div>
                         </div>
@@ -1487,8 +1546,8 @@
                             <div class="card mb-3">
                                 <div class="card-header bg-light">
                                     <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input section-toggle"
-                                            id="export_book_requests" checked data-section="book_requests">
+                                        <input type="checkbox" class="custom-control-input section-toggle export-option"
+                                            id="export_book_requests" name="export_options[]" value="book_requests" checked data-section="book_requests">
                                         <label class="custom-control-label font-weight-bold" for="export_book_requests">
                                             <i class="fas fa-book"></i> {{ __('messages.book_requests_section') }}
                                         </label>
@@ -1960,7 +2019,6 @@
                 const providerId = providerIdInput.val();
                 const fromDate = $('#from_date').val();
                 const toDate = $('#to_date').val();
-                const productId = productSelect.val();
 
                 // Collect export options
                 const exportOptions = {
@@ -1975,6 +2033,7 @@
                     total_quantity: $('#export_total_quantity').is(':checked'),
                     total_revenue: $('#export_total_revenue').is(':checked'),
                     products: $('#export_products').is(':checked'),
+                    purchases: $('#export_purchases').is(':checked'),
                     distribution: $('#export_distribution').is(':checked'),
                     sales: $('#export_sales').is(':checked'),
                     refunds: $('#export_refunds').is(':checked'),
@@ -2025,6 +2084,7 @@
                     provider_info: $('#display_provider_info').is(':checked'),
                     statistics: $('#display_statistics').is(':checked'),
                     products: $('#display_products').is(':checked'),
+                    purchases: $('#display_purchases').is(':checked'),
                     distribution: $('#display_distribution').is(':checked'),
                     sales: $('#display_sales').is(':checked'),
                     refunds: $('#display_refunds').is(':checked'),
@@ -2057,6 +2117,7 @@
                 $('.provider-info-section').toggle(options.provider_info);
                 $('.statistics-section').toggle(options.statistics);
                 $('.products-section').toggle(options.products);
+                $('.purchases-section').toggle(options.purchases);
                 $('.distribution-section').toggle(options.distribution);
                 $('.sales-section').toggle(options.sales);
                 $('.refunds-section').toggle(options.refunds);
@@ -2072,6 +2133,7 @@
                     provider_info: $('#display_provider_info').is(':checked'),
                     statistics: $('#display_statistics').is(':checked'),
                     products: $('#display_products').is(':checked'),
+                    purchases: $('#display_purchases').is(':checked'),
                     distribution: $('#display_distribution').is(':checked'),
                     sales: $('#display_sales').is(':checked'),
                     refunds: $('#display_refunds').is(':checked'),
@@ -2474,11 +2536,88 @@
                 $('#stockBalanceTableContainer').html(html);
             }
 
+            // Load Purchases Data
+            function loadPurchasesData(providerId) {
+                const fromDate = $('#from_date').val();
+                const toDate = $('#to_date').val();
+
+                $.ajax({
+                    url: '{{ route('admin.reports.providers.purchases', ':id') }}'.replace(':id',
+                        providerId),
+                    method: 'GET',
+                    data: {
+                        from_date: fromDate,
+                        to_date: toDate
+                    },
+                    success: function(response) {
+                        if (response.success && response.purchases) {
+                            populatePurchasesTable(response.purchases);
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading purchases data:', xhr);
+                        $('#purchasesTableContainer').html(
+                            '<p class="text-center text-danger">{{ __('messages.error_loading_data') }}</p>'
+                        );
+                    }
+                });
+            }
+
+            // Populate Purchases Table
+            function populatePurchasesTable(data) {
+                if (data.length === 0) {
+                    $('#purchasesTableContainer').html(
+                        '<p class="text-center text-muted">{{ __('messages.no_data_available') }}</p>');
+                    return;
+                }
+
+                const riyalIcon =
+                    '<svg class="riyal-icon" style="width: 14px; height: 14px; display: inline-block; margin: 0 2px; vertical-align: middle;" viewBox="0 0 1124.14 1256.39" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></svg>';
+
+                let html = `
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>{{ __('messages.purchase_number') }}</th>
+                            <th>{{ __('messages.total_amount') }}</th>
+                            <th>{{ __('messages.tax') }}</th>
+                            <th>{{ __('messages.status') }}</th>
+                            <th>{{ __('messages.date') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+                data.forEach(function(item, index) {
+                    html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.purchase_number}</strong></td>
+                    <td>${parseFloat(item.total_amount).toFixed(2)} ${riyalIcon}</td>
+                    <td>${parseFloat(item.total_tax).toFixed(2)} ${riyalIcon}</td>
+                    <td><span class="badge badge-secondary">${item.status}</span></td>
+                    <td>${item.created_at}</td>
+                </tr>
+            `;
+                });
+
+                html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+                $('#purchasesTableContainer').html(html);
+            }
+
             // Update loadProviderData to load all sections
             const originalLoadProviderData = loadProviderData;
 
             function newLoadProviderData(providerId) {
                 originalLoadProviderData(providerId);
+                loadPurchasesData(providerId);
                 loadDistributionData(providerId);
                 loadSalesByWarehouse(providerId);
                 loadRefundsData(providerId);

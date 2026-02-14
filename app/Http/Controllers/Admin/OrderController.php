@@ -103,7 +103,6 @@ class OrderController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'from_warehouse_id' => 'required|exists:warehouses,id',
-            'event_id' => 'nullable|exists:events,id',
             'order_date' => 'required|date',
             'status' => 'required|in:' . implode(',', array_column(OrderStatus::cases(), 'value')),
             'products' => 'required|array',
@@ -297,7 +296,6 @@ public function update(Request $request, Order $order)
     $request->validate([
         'user_id' => 'required|exists:users,id',
         'from_warehouse_id' => 'required|exists:warehouses,id',
-        'event_id' => 'nullable|exists:events,id',
         'order_date' => 'required|date',
         'products' => 'required|array',
         'products.*.id' => 'required|exists:products,id',

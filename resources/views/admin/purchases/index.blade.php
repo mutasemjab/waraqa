@@ -71,13 +71,15 @@
                                             <span class="badge badge-success">{{ __('messages.Received') }}</span>
                                         @elseif ($purchase->status === 'paid')
                                             <span class="badge badge-primary">{{ __('messages.Paid') }}</span>
+                                        @elseif ($purchase->status === 'rejected')
+                                            <span class="badge badge-danger">{{ __('messages.Rejected') }}</span>
                                         @else
                                             <span class="badge badge-secondary">{{ $purchase->status }}</span>
                                         @endif
                                     </td>
                                     <td>
-                                        @if ($purchase->expected_delivery_date)
-                                            {{ \Carbon\Carbon::parse($purchase->expected_delivery_date)->format('Y-m-d') }}
+                                        @if ($purchase->bookRequestResponse && $purchase->bookRequestResponse->expected_delivery_date)
+                                            {{ $purchase->bookRequestResponse->expected_delivery_date }}
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
@@ -86,39 +88,11 @@
                                         <a href="{{ route('purchases.show', $purchase) }}" class="btn btn-sm btn-info" title="{{ __('messages.view') }}">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        @can('purchase-edit')
-                                            @if ($purchase->status === 'pending')
-                                                <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-sm btn-warning" title="{{ __('messages.Edit') }}">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            @endif
-                                        @endcan
-                                        @can('purchase-confirm')
-                                            @if ($purchase->status === 'pending' && $purchase->items->count() > 0)
-                                                <form action="{{ route('purchases.confirm', $purchase) }}" method="POST" style="display:inline;">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-success" title="{{ __('messages.Confirm_Purchase') }}" onclick="return confirm('{{ __('messages.are_you_sure') }}');">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        @endcan
                                         @can('purchase-receive')
                                             @if ($purchase->status === 'confirmed')
                                                 <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#receiveModal{{ $purchase->id }}" title="{{ __('messages.Mark_as_Received') }}">
                                                     <i class="fas fa-download"></i>
                                                 </button>
-                                            @endif
-                                        @endcan
-                                        @can('purchase-delete')
-                                            @if ($purchase->status === 'pending')
-                                                <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="{{ __('messages.Delete') }}" onclick="return confirm('{{ __('messages.Delete_Confirm') }}');">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
                                             @endif
                                         @endcan
                                     </td>

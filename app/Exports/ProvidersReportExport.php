@@ -95,10 +95,12 @@ class ProvidersReportExport implements WithMultipleSheets
 class ProviderInfoSheet implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles, WithTitle
 {
     private $data;
+    private $exportOptions;
 
     public function __construct($data)
     {
         $this->data = $data;
+        $this->exportOptions = $data['export_options'] ?? [];
     }
 
     public function title(): string
@@ -111,15 +113,30 @@ class ProviderInfoSheet implements FromCollection, WithHeadings, ShouldAutoSize,
         $rows = new Collection();
         $provider = $this->data['provider'];
 
-        $rows->push([__('messages.name'), $provider['name'] ?? '-']);
-        $rows->push([__('messages.email'), $provider['email'] ?? '-']);
-        $rows->push([__('messages.phone'), $provider['phone'] ?? '-']);
-        $rows->push([__('messages.country'), $provider['country'] ?? '-']);
-        $rows->push([__('messages.address'), $provider['address'] ?? '-']);
+        if ($this->shouldIncludeField('provider_name')) {
+            $rows->push([__('messages.name'), $provider['name'] ?? '-']);
+        }
+        if ($this->shouldIncludeField('provider_email')) {
+            $rows->push([__('messages.email'), $provider['email'] ?? '-']);
+        }
+        if ($this->shouldIncludeField('provider_phone')) {
+            $rows->push([__('messages.phone'), $provider['phone'] ?? '-']);
+        }
+        if ($this->shouldIncludeField('provider_country')) {
+            $rows->push([__('messages.country'), $provider['country'] ?? '-']);
+        }
+        if ($this->shouldIncludeField('provider_address')) {
+            $rows->push([__('messages.address'), $provider['address'] ?? '-']);
+        }
         $rows->push([__('messages.created_date'), $provider['created_at'] ?? '-']);
         $rows->push([__('messages.status'), $provider['activate'] == 1 ? 'مفعل' : 'غير مفعل']);
 
         return $rows;
+    }
+
+    private function shouldIncludeField($field)
+    {
+        return $this->exportOptions[$field] ?? true;
     }
 
     public function headings(): array
@@ -143,10 +160,12 @@ class ProviderInfoSheet implements FromCollection, WithHeadings, ShouldAutoSize,
 class StatisticsSheet implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles, WithTitle
 {
     private $data;
+    private $exportOptions;
 
     public function __construct($data)
     {
         $this->data = $data;
+        $this->exportOptions = $data['export_options'] ?? [];
     }
 
     public function title(): string
@@ -159,9 +178,15 @@ class StatisticsSheet implements FromCollection, WithHeadings, ShouldAutoSize, W
         $rows = new Collection();
         $stats = $this->data['statistics'];
 
-        $rows->push([__('messages.total_products'), $stats['total_products'] ?? '-']);
-        $rows->push([__('messages.total_quantity'), $stats['total_quantity'] ?? '-']);
-        $rows->push([__('messages.total_revenue'), ($stats['total_revenue'] ?? '-') . ' ' . __('messages.SAR')]);
+        if ($this->shouldIncludeField('total_products')) {
+            $rows->push([__('messages.total_products'), $stats['total_products'] ?? '-']);
+        }
+        if ($this->shouldIncludeField('total_quantity')) {
+            $rows->push([__('messages.total_quantity'), $stats['total_quantity'] ?? '-']);
+        }
+        if ($this->shouldIncludeField('total_revenue')) {
+            $rows->push([__('messages.total_revenue'), ($stats['total_revenue'] ?? '-') . ' ' . __('messages.SAR')]);
+        }
         $rows->push([__('messages.total_requests'), $stats['total_requests'] ?? '-']);
         $rows->push([__('messages.approved'), $stats['approved'] ?? '-']);
         $rows->push([__('messages.rejected'), $stats['rejected'] ?? '-']);
@@ -171,6 +196,11 @@ class StatisticsSheet implements FromCollection, WithHeadings, ShouldAutoSize, W
         $rows->push([__('messages.total_import_tax'), ($stats['total_import_tax'] ?? '-') . ' ' . __('messages.SAR')]);
 
         return $rows;
+    }
+
+    private function shouldIncludeField($field)
+    {
+        return $this->exportOptions[$field] ?? true;
     }
 
     public function headings(): array
@@ -614,10 +644,12 @@ class StockBalanceSheet implements FromCollection, WithHeadings, ShouldAutoSize,
 class BookRequestsSheet implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles, WithTitle
 {
     private $data;
+    private $exportOptions;
 
     public function __construct($data)
     {
         $this->data = $data;
+        $this->exportOptions = $data['export_options'] ?? [];
     }
 
     public function title(): string
@@ -628,6 +660,11 @@ class BookRequestsSheet implements FromCollection, WithHeadings, ShouldAutoSize,
     public function collection()
     {
         $rows = new Collection();
+        $includeDetails = $this->shouldIncludeField('book_details');
+
+        if (!$includeDetails) {
+            return $rows; // Return empty if book_details not selected
+        }
 
         foreach ($this->data['requests'] as $index => $request) {
             $rows->push([
@@ -645,6 +682,11 @@ class BookRequestsSheet implements FromCollection, WithHeadings, ShouldAutoSize,
         }
 
         return $rows;
+    }
+
+    private function shouldIncludeField($field)
+    {
+        return $this->exportOptions[$field] ?? true;
     }
 
     public function headings(): array

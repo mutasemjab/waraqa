@@ -29,7 +29,7 @@
                         @csrf
 
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <x-search-select
                                     model="App\Models\Provider"
                                     fieldName="provider_id"
@@ -41,7 +41,7 @@
                                 />
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <x-search-select
                                     model="App\Models\Warehouse"
                                     fieldName="warehouse_id"
@@ -51,16 +51,6 @@
                                     required="false"
                                     value="{{ old('warehouse_id') }}"
                                 />
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="expected_delivery_date" class="form-label">{{ __('messages.Expected_Delivery_Date') }}</label>
-                                    <input type="date" class="form-control @error('expected_delivery_date') is-invalid @enderror" id="expected_delivery_date" name="expected_delivery_date" value="{{ old('expected_delivery_date') }}" min="{{ date('Y-m-d') }}">
-                                    @error('expected_delivery_date')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                </div>
                             </div>
                         </div>
 
@@ -73,9 +63,8 @@
                                         <tr>
                                             <th>{{ __('messages.Product') }}</th>
                                             <th style="width: 100px;">{{ __('messages.Quantity') }}</th>
-                                            <th style="width: 120px;">{{ __('messages.Unit_Price') }}</th>
-                                            <th style="width: 80px;">{{ __('messages.Tax') }}%</th>
-                                            <th style="width: 120px;">{{ __('messages.total_price') }}</th>
+                                            <th style="width: 120px;">{{ __('messages.Tax') }}%</th>
+                                            <th style="width: 120px;">{{ __('messages.Price_with_tax') }}</th>
                                             <th style="width: 50px;">{{ __('messages.Actions') }}</th>
                                         </tr>
                                     </thead>
@@ -89,13 +78,10 @@
                                                 <input type="number" name="products[0][quantity]" class="form-control quantity-input" min="1" value="1" required />
                                             </td>
                                             <td>
-                                                <input type="number" name="products[0][unit_price]" class="form-control unit-price-input" min="0" step="0.01" value="0" required />
-                                            </td>
-                                            <td>
                                                 <input type="number" name="products[0][tax_percentage]" class="form-control tax-input" min="0" max="100" value="0" step="0.01" required />
                                             </td>
                                             <td>
-                                                <span class="line-total">0.00</span>
+                                                <input type="number" name="products[0][price_with_tax]" class="form-control price-with-tax-input" min="0" step="0.01" value="0" required />
                                             </td>
                                             <td>
                                                 <button type="button" class="btn btn-danger btn-sm remove-product" style="display: none;">
@@ -170,10 +156,10 @@
 $(document).ready(function() {
     let rowIdx = 1;
 
-    // Submit form - استخدم القيم الدقيقة
+    // Submit form
     $('#purchaseForm').on('submit', function(e) {
         $('#productsContainer').find('.product-row').each(function() {
-            const priceInput = $(this).find('.unit-price-input');
+            const priceInput = $(this).find('.price-with-tax-input');
             const actualPrice = parseFloat(priceInput.data('actual-price')) || parseFloat(priceInput.val()) || 0;
             priceInput.val(actualPrice);
         });
@@ -194,13 +180,10 @@ $(document).ready(function() {
                     <input type="number" name="products[${rowIdx}][quantity]" class="form-control quantity-input" min="1" value="1" required />
                 </td>
                 <td>
-                    <input type="number" name="products[${rowIdx}][unit_price]" class="form-control unit-price-input" min="0" step="0.01" value="0" required />
-                </td>
-                <td>
                     <input type="number" name="products[${rowIdx}][tax_percentage]" class="form-control tax-input" min="0" max="100" value="0" step="0.01" required />
                 </td>
                 <td>
-                    <span class="line-total">0.00</span>
+                    <input type="number" name="products[${rowIdx}][price_with_tax]" class="form-control price-with-tax-input" min="0" step="0.01" value="0" required />
                 </td>
                 <td>
                     <button type="button" class="btn btn-danger btn-sm remove-product">
@@ -224,18 +207,48 @@ $(document).ready(function() {
     });
 
     // Calculate totals when values change
-    $(document).on('change keyup', '.quantity-input, .unit-price-input, .tax-input', function() {
+    $(document).on('change keyup', '.quantity-input, .price-with-tax-input, .tax-input', function() {
         calculateTotals();
     });
 
     function initializeProductSearch() {
         $('.product-search:not(.ui-autocomplete-input)').autocomplete({
             source: function(request, response) {
+                // تحقق من وجود المورد المختار
+                const providerId = $('[name="provider_id"]').val();
+                if (!providerId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '{{ __("messages.warning") }}',
+                        text: '{{ __("messages.Please_select_provider_first") }}',
+                        confirmButtonText: '{{ __("messages.Ok") }}'
+                    });
+                    response([]);
+                    return;
+                }
+
+                // احصل على قائمة المنتجات المختارة بالفعل
+                const selectedProductIds = [];
+                $('#productsContainer').find('.product-id').each(function() {
+                    const id = $(this).val();
+                    if (id) {
+                        selectedProductIds.push(id);
+                    }
+                });
+
+                console.log('Selected Product IDs:', selectedProductIds);
+                console.log('Search Term:', request.term);
+                console.log('Exclude IDs String:', selectedProductIds.join(','));
+                console.log('Provider ID:', providerId);
+
                 $.ajax({
                     url: '{{ route("products.search") }}',
                     dataType: 'json',
+                    cache: false,
                     data: {
-                        term: request.term
+                        term: request.term,
+                        exclude_ids: selectedProductIds.join(','),
+                        provider_id: providerId
                     },
                     success: function(data) {
                         if (data.length === 0) {
@@ -262,12 +275,21 @@ $(document).ready(function() {
                     event.preventDefault();
                 } else {
                     const row = $(this).closest('.product-row');
-                    const priceInput = row.find('.unit-price-input');
-                    const actualPrice = parseFloat(ui.item.price || 0);
+                    const priceInput = row.find('.price-with-tax-input');
+
+                    // حساب السعر الشامل الضريبة
+                    const basePrice = parseFloat(ui.item.price || 0);
+                    const taxPercentage = parseFloat(ui.item.tax || 0);
+                    const priceWithTax = basePrice + (basePrice * taxPercentage / 100);
+
                     row.find('.product-id').val(ui.item.id);
                     row.find('.product-search').val(ui.item.label);
-                    priceInput.val(actualPrice.toFixed(2)).data('actual-price', actualPrice);
+                    priceInput.val(priceWithTax.toFixed(2)).data('actual-price', priceWithTax);
                     row.find('.tax-input').val(ui.item.tax || 0);
+
+                    // تحديث نتائج البحث في جميع الصفوف الأخرى
+                    reinitializeAllSearches();
+
                     calculateTotals();
                     return false;
                 }
@@ -283,28 +305,35 @@ $(document).ready(function() {
         });
     }
 
+    function reinitializeAllSearches() {
+        // إعادة تهيئة البحث في جميع الصفوف
+        $('.product-search').autocomplete('destroy');
+        initializeProductSearch();
+    }
+
     function calculateTotals() {
-        let subtotal = 0;
+        let grandTotal = 0;
         let totalTax = 0;
 
         $('#productsContainer').find('.product-row').each(function() {
             const quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
-            const priceInput = $(this).find('.unit-price-input');
+            const priceInput = $(this).find('.price-with-tax-input');
             // استخدام القيمة الدقيقة من data attribute إن وجدت، وإلا استخدام قيمة الـ input
-            const unitPrice = parseFloat(priceInput.data('actual-price')) || parseFloat(priceInput.val()) || 0;
+            const priceWithTax = parseFloat(priceInput.data('actual-price')) || parseFloat(priceInput.val()) || 0;
             const taxPercentage = parseFloat($(this).find('.tax-input').val()) || 0;
 
-            const rowSubtotal = quantity * unitPrice;
-            const rowTax = (rowSubtotal * taxPercentage) / 100;
-            const rowGrandTotal = rowSubtotal + rowTax;
+            const rowTotal = quantity * priceWithTax;
 
-            $(this).find('.line-total').text(rowGrandTotal.toFixed(2));
+            // حساب الضريبة من السعر الشامل
+            const priceBeforeTax = priceWithTax / (1 + taxPercentage / 100);
+            const rowTax = priceWithTax - priceBeforeTax;
 
-            subtotal += rowSubtotal;
-            totalTax += rowTax;
+            grandTotal += rowTotal;
+            totalTax += (rowTax * quantity);
         });
 
-        const grandTotal = subtotal + totalTax;
+        // حساب المجموع قبل الضريبة
+        const subtotal = grandTotal - totalTax;
 
         // عرض النتائج مقربة إلى رقمين عشريين فقط
         $('#subtotal').text(subtotal.toFixed(2));

@@ -9,16 +9,26 @@ class BookRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'provider_id', 'requested_quantity'];
-
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
+    protected $fillable = ['provider_id', 'user_id', 'purchase_id', 'note'];
 
     public function provider()
     {
         return $this->belongsTo(Provider::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function purchase()
+    {
+        return $this->belongsTo(Purchase::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(BookRequestItem::class);
     }
 
     public function responses()

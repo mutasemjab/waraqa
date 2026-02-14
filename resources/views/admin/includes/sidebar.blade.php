@@ -141,13 +141,33 @@
                 </li>
                 @endcanany
 
-                <!-- Book Requests -->
+                <!-- Seller Product Requests -->
+                @can('sellerProductRequest-table')
                 <li class="nav-item">
-                    <a href="{{ route('bookRequests.index') }}" class="nav-link {{ request()->routeIs('bookRequests.*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-book"></i>
-                        <p>{{ __('messages.book_requests') }}</p>
+                    <a href="{{ route('sellerProductRequests.index') }}" class="nav-link {{ request()->routeIs('sellerProductRequests.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-shopping-bag"></i>
+                        <p>
+                            {{ __('messages.seller_product_requests') }}
+                            @php
+                                $pendingCount = \App\Models\SellerProductRequest::where('status', \App\Enums\SellerProductRequestStatus::PENDING)->count();
+                            @endphp
+                            @if($pendingCount > 0)
+                                <span class="badge badge-warning right">{{ $pendingCount }}</span>
+                            @endif
+                        </p>
                     </a>
                 </li>
+                @endcan
+
+                <!-- Admin Seller Sales Management -->
+                @can('admin-seller-sales-list')
+                <li class="nav-item">
+                    <a href="{{ route('admin.seller-sales.index') }}" class="nav-link {{ request()->routeIs('admin.seller-sales.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-cash-register"></i>
+                        <p>{{ __('messages.seller_sales_management') }}</p>
+                    </a>
+                </li>
+                @endcan
 
                 <!-- Purchases Management -->
                 @canany(['purchase-table', 'purchase-add', 'purchase-edit', 'purchase-delete'])
@@ -187,12 +207,12 @@
                     </ul>
                 </li>
 
-                <!-- Analytics Group -->
+                <!-- Reports Group -->
                 <li class="nav-item {{ request()->is('admin/reports/warehouse-movement*') || request()->is('admin/reports/providers*') || request()->is('admin/reports/orders*') || request()->is('admin/reports/sales-returns*') || request()->is('admin/reports/purchase-returns*') || request()->is('admin/reports/purchases*') || request()->is('admin/reports/customers*') || request()->is('admin/reports/events*') || request()->is('admin/reports/distribution-point-sales*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-chart-bar"></i>
                         <p>
-                            {{ __('messages.statistics') }}
+                            {{ __('messages.reports') }}
                             <i class="right fas fa-angle-left"></i>
                         </p>
                     </a>

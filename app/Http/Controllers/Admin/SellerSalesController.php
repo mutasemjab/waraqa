@@ -1,37 +1,38 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\NoteVoucher;
 use App\Models\VoucherProduct;
 use App\Models\Product;
-use App\Models\Warehouse;
+use App\Models\User;
 use App\Models\SellerSale;
 use App\Models\SellerSaleItem;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class UserSalesController extends Controller
+class SellerSalesController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:web');
+        $this->middleware('permission:admin-seller-sales-list')->only(['index']);
+        $this->middleware('permission:admin-seller-sales-create')->only(['create', 'store']);
+        $this->middleware('permission:admin-seller-sales-view')->only(['show']);
     }
 
+    /**
+     * Display a listing of all seller sales
+     */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $userWarehouse = $user->warehouse;
+        $query = SellerSale::with('user');
 
-        if (!$userWarehouse) {
-            return redirect()->route('user.dashboard')->with('error', __('messages.no_warehouse_assigned'));
+        // Filter by seller
+        if ($request->filled('seller_id')) {
+            $query->where('user_id', $request->seller_id);
         }
-
-        // Get user's sales from SellerSale
-        $query = SellerSale::with('items');
 
         // Filter by date
         if ($request->filled('date_from')) {
@@ -46,47 +47,38 @@ class UserSalesController extends Controller
             $query->where('sale_number', 'like', '%' . $request->search . '%');
         }
 
-        $sales = $query->latest('sale_date')->paginate(10);
+        $sales = $query->latest('sale_date')->paginate(20);
 
-        // Calculate statistics
-        $allSales = SellerSale::all();
-        $stats = [
-            'total_sales' => $allSales->count(),
-            'total_items_sold' => SellerSaleItem::sum('quantity'),
-            'this_month_sales' => SellerSale::whereMonth('sale_date', Carbon::now()->month)
-                ->whereYear('sale_date', Carbon::now()->year)
-                ->count(),
-            'current_inventory' => $this->getCurrentInventoryCount($userWarehouse->id),
-        ];
+        // Get sellers for filter dropdown
+        $sellers = User::role('seller')
+            ->whereHas('warehouse')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
 
-        return view('user.sales.index', compact('sales', 'stats'));
+        return view('admin.sellerSales.index', compact('sales', 'sellers'));
     }
 
+    /**
+     * Show the form for creating a new seller sale
+     */
     public function create()
     {
-        $user = Auth::user();
-        $userWarehouse = $user->warehouse;
+        // Get sellers with warehouses
+        $sellers = User::role('seller')
+            ->whereHas('warehouse')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'commission_percentage']);
 
-        if (!$userWarehouse) {
-            return redirect()->route('user.dashboard')->with('error', __('messages.no_warehouse_assigned'));
-        }
-
-        // Get user's available products (products they have in their warehouse)
-        $availableProducts = $this->getUserAvailableProducts($userWarehouse->id);
-
-        return view('user.sales.create', compact('availableProducts', 'user'));
+        return view('admin.sellerSales.create', compact('sellers'));
     }
 
+    /**
+     * Store a newly created seller sale in database
+     */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        $userWarehouse = $user->warehouse;
-
-        if (!$userWarehouse) {
-            return redirect()->route('user.dashboard')->with('error', __('messages.no_warehouse_assigned'));
-        }
-
         $request->validate([
+            'seller_id' => 'required|exists:users,id',
             'sale_date' => 'required|date',
             'products' => 'required|array|min:1',
             'products.*.product_id' => 'required|exists:products,id',
@@ -96,7 +88,15 @@ class UserSalesController extends Controller
             'notes' => 'nullable|string'
         ]);
 
-        // Check if user has enough inventory for all products
+        // Get selected seller and validate
+        $seller = User::findOrFail($request->seller_id);
+        $userWarehouse = $seller->warehouse;
+
+        if (!$userWarehouse) {
+            return back()->with('error', __('messages.seller_has_no_warehouse'))->withInput();
+        }
+
+        // Check if seller has enough inventory for all products
         $availableProducts = $this->getUserAvailableProducts($userWarehouse->id);
 
         foreach ($request->products as $productData) {
@@ -143,21 +143,21 @@ class UserSalesController extends Controller
             $totalAmount = 0;
             $totalTax = 0;
 
-            // Create seller sale
+            // Create seller sale with selected seller
             $sellerSale = SellerSale::create([
-                'user_id' => $user->id,
+                'user_id' => $seller->id,
                 'sale_number' => $saleNumber,
                 'sale_date' => $request->sale_date,
                 'notes' => $request->notes,
-                'total_amount' => 0, // Will be updated after items
-                'total_tax' => 0 // Will be updated after items
+                'total_amount' => 0,
+                'total_tax' => 0
             ]);
 
             // Create sale items
             foreach ($request->products as $productData) {
                 $product = Product::find($productData['product_id']);
                 $quantity = (int)$productData['quantity'];
-                $unitPrice = (float)$productData['unit_price']; // This price is inclusive of tax
+                $unitPrice = (float)$productData['unit_price'];
                 $taxPercentage = (float)($productData['tax_percentage'] ?? 0);
 
                 // Since unitPrice is inclusive of tax
@@ -196,7 +196,6 @@ class UserSalesController extends Controller
             ]);
 
             // Create automatic exit note voucher for inventory deduction
-            // Extract number from sale number (e.g., 'PO-1001' -> 1001)
             $numberOnly = (int)str_replace('PO-', '', $saleNumber);
 
             $noteVoucher = NoteVoucher::create([
@@ -213,14 +212,15 @@ class UserSalesController extends Controller
                     'note_voucher_id' => $noteVoucher->id,
                     'product_id' => $productData['product_id'],
                     'quantity' => (int)$productData['quantity'],
-                    'purchasing_price' => (float)$productData['unit_price'], // السعر الشامل الضريبة
+                    'purchasing_price' => (float)$productData['unit_price'],
                     'tax_percentage' => (float)($productData['tax_percentage'] ?? 0)
                 ]);
             }
 
             DB::commit();
 
-            return redirect()->route('user.sales.index')->with('success', __('messages.sale_recorded_successfully') . ' - ' . $saleNumber);
+            return redirect()->route('admin.seller-sales.index')
+                ->with('success', __('messages.sale_recorded_successfully') . ' - ' . $saleNumber);
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -228,30 +228,55 @@ class UserSalesController extends Controller
         }
     }
 
- 
+    /**
+     * Display the specified seller sale
+     */
+    public function show($id)
+    {
+        $sale = SellerSale::with(['user', 'items.product'])->findOrFail($id);
+        return view('admin.sellerSales.show', compact('sale'));
+    }
 
- 
+    /**
+     * Get available products for a seller (AJAX endpoint)
+     */
+    public function getSellerProducts($sellerId)
+    {
+        $seller = User::findOrFail($sellerId);
+        $userWarehouse = $seller->warehouse;
 
+        if (!$userWarehouse) {
+            return response()->json(['error' => __('messages.seller_has_no_warehouse')], 422);
+        }
+
+        $availableProducts = $this->getUserAvailableProducts($userWarehouse->id);
+
+        return response()->json($availableProducts);
+    }
+
+    /**
+     * Get available products for a warehouse
+     */
     private function getUserAvailableProducts($warehouseId)
     {
         $products = Product::all();
         $availableProducts = collect();
 
         foreach ($products as $product) {
-            // الكمية المستقبلة في المستودع
+            // Products received in warehouse
             $received = VoucherProduct::whereHas('noteVoucher', function($q) use ($warehouseId) {
                 $q->where('to_warehouse_id', $warehouseId);
             })->where('product_id', $product->id)->sum('quantity');
 
-            // الكمية المباعة من المستودع
+            // Products sold from warehouse
             $sold = VoucherProduct::whereHas('noteVoucher', function($q) use ($warehouseId) {
                 $q->where('from_warehouse_id', $warehouseId);
             })->where('product_id', $product->id)->sum('quantity');
 
-            // الكمية المتاحة
+            // Available quantity
             $availableQuantity = $received - $sold;
 
-            // إضافة فقط إذا كانت متاحة
+            // Add only if available
             if ($availableQuantity > 0) {
                 $product->available_quantity = $availableQuantity;
                 $availableProducts->push($product);
@@ -260,95 +285,4 @@ class UserSalesController extends Controller
 
         return $availableProducts;
     }
-
-    private function getCurrentInventoryCount($warehouseId)
-    {
-        $received = VoucherProduct::whereHas('noteVoucher', function($q) use ($warehouseId) {
-            $q->where('to_warehouse_id', $warehouseId);
-        })->sum('quantity');
-
-        $sold = VoucherProduct::whereHas('noteVoucher', function($q) use ($warehouseId) {
-            $q->where('from_warehouse_id', $warehouseId);
-        })->sum('quantity');
-
-        return $received - $sold;
-    }
-
-    public function show($id)
-    {
-        $sale = SellerSale::with('items.product')->findOrFail($id);
-
-        return view('user.sales.show', compact('sale'));
-    }
-
-    public function warehouse()
-    {
-        $user = Auth::user();
-        $warehouse = $user->warehouse;
-        $locale = app()->getLocale();
-        $nameColumn = $locale === 'ar' ? 'name_ar' : 'name_en';
-
-        if (!$warehouse) {
-            return view('user.warehouse.no-warehouse');
-        }
-
-        // Get all products with their quantities in this warehouse
-        $products = DB::table('voucher_products')
-            ->join('note_vouchers', 'voucher_products.note_voucher_id', '=', 'note_vouchers.id')
-            ->join('note_voucher_types', 'note_vouchers.note_voucher_type_id', '=', 'note_voucher_types.id')
-            ->join('products', 'voucher_products.product_id', '=', 'products.id')
-            ->select(
-                'voucher_products.product_id',
-                DB::raw('products.' . $nameColumn . ' as product_name'),
-                DB::raw('SUM(CASE
-                    WHEN (note_voucher_types.in_out_type = 1 AND note_vouchers.to_warehouse_id = ' . $warehouse->id . ')
-                    OR (note_voucher_types.in_out_type = 3 AND note_vouchers.to_warehouse_id = ' . $warehouse->id . ')
-                    THEN voucher_products.quantity
-                    ELSE 0
-                END) as input_quantity'),
-                DB::raw('SUM(CASE
-                    WHEN note_voucher_types.in_out_type IN (2, 3) AND note_vouchers.from_warehouse_id = ' . $warehouse->id . '
-                    THEN voucher_products.quantity
-                    ELSE 0
-                END) as output_quantity')
-            )
-            ->where(function($query) use ($warehouse) {
-                $query->where(function($q) use ($warehouse) {
-                    $q->where('note_voucher_types.in_out_type', 1)
-                      ->where('note_vouchers.to_warehouse_id', $warehouse->id);
-                })
-                ->orWhere(function($q) use ($warehouse) {
-                    $q->where('note_voucher_types.in_out_type', 3)
-                      ->where('note_vouchers.to_warehouse_id', $warehouse->id);
-                })
-                ->orWhere(function($q) use ($warehouse) {
-                    $q->whereIn('note_voucher_types.in_out_type', [2, 3])
-                      ->where('note_vouchers.from_warehouse_id', $warehouse->id);
-                });
-            })
-            ->groupBy('voucher_products.product_id', 'products.' . $nameColumn)
-            ->get();
-
-        return view('user.warehouse.show', compact('warehouse', 'products'));
-    }
-
-    public function createWarehouse()
-    {
-        $user = Auth::user();
-
-        // Check if user already has a warehouse
-        if ($user->warehouse) {
-            return redirect()->route('user.warehouse')->with('info', __('messages.you_already_have_warehouse'));
-        }
-
-        // Create a new warehouse with user's name
-        $warehouse = new Warehouse();
-        $warehouse->name = $user->name;
-        $warehouse->user_id = $user->id;
-        $warehouse->save();
-
-        return redirect()->route('user.warehouse')->with('success', __('messages.warehouse_created_successfully'));
-    }
-
-
 }
