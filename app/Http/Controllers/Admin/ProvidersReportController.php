@@ -46,7 +46,7 @@ class ProvidersReportController extends Controller
         // Get approved book requests from this provider
         $bookResponsesQuery = \App\Models\BookRequestResponse::where('provider_id', $providerId)
             ->where('status', 'approved')
-            ->with('bookRequest.product');
+            ->with('bookRequestItem.product');
 
         if ($fromDate && $toDate) {
             $bookResponsesQuery->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
@@ -61,8 +61,8 @@ class ProvidersReportController extends Controller
         $uniqueProducts = [];
 
         foreach ($bookResponses as $response) {
-            $productId = $response->bookRequest->product_id;
-            $product = $response->bookRequest->product;
+            $productId = $response->bookRequestItem->product_id;
+            $product = $response->bookRequestItem->product;
             $quantity = $response->available_quantity;
             $revenue = $quantity * ($response->price ?? 0);
 
@@ -128,7 +128,7 @@ class ProvidersReportController extends Controller
     {
         // Get book requests responses for this provider
         $query = \App\Models\BookRequestResponse::where('provider_id', $providerId)
-            ->with('bookRequest.product');
+            ->with('bookRequestItem.product');
 
         if ($fromDate && $toDate) {
             $query->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
@@ -159,12 +159,12 @@ class ProvidersReportController extends Controller
         $requestsData = $bookResponses->map(function ($response) {
             return [
                 'id' => $response->id,
-                'product_name' => $response->bookRequest->product->name ?? '-',
-                'requested_quantity' => $response->bookRequest->requested_quantity,
+                'product_name' => $response->bookRequestItem->product->name ?? '-',
+                'requested_quantity' => $response->bookRequestItem->requested_quantity,
                 'available_quantity' => $response->available_quantity,
                 'price' => number_format($response->price ?? 0, 2),
                 'tax_percentage' => $response->tax_percentage . '%',
-                'total_with_tax' => number_format(($response->available_quantity * ($response->price ?? 0) * (1 + ($response->tax_percentage ?? 0) / 100)), 2),
+                'total_with_tax' => number_format(($response->available_quantity * ($response->price ?? 0)), 2),  // Price already includes tax
                 'status' => $response->status,
                 'status_badge' => $this->getStatusBadge($response->status),
                 'note' => $response->note ?? '-',
@@ -182,7 +182,7 @@ class ProvidersReportController extends Controller
                 'approval_rate' => $approvalRate,
                 'total_import_value' => number_format($totalImportValue, 2),
                 'total_import_tax' => number_format($totalImportTax, 2),
-                'total_with_tax' => number_format($totalImportValue + $totalImportTax, 2),
+                'total_with_tax' => number_format($totalImportValue, 2),  // Already includes tax
             ],
             'requests' => $requestsData,
         ];
@@ -353,14 +353,14 @@ class ProvidersReportController extends Controller
         // Get approved book requests from this provider
         $query = \App\Models\BookRequestResponse::where('provider_id', $providerId)
             ->where('status', 'approved')
-            ->with('bookRequest.product');
+            ->with('bookRequestItem.product');
 
         if ($fromDate && $toDate) {
             $query->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
         }
 
         $bookResponses = $query->get();
-        $productIds = $bookResponses->pluck('bookRequest.product_id')->unique();
+        $productIds = $bookResponses->pluck('bookRequestItem.product_id')->unique();
 
         // Get NoteVouchers Type 3 (transfers to sellers) for these products
         $vouchersQuery = \App\Models\NoteVoucher::where('note_voucher_type_id', 3)
@@ -378,8 +378,8 @@ class ProvidersReportController extends Controller
         $totalQuantity = 0;
 
         foreach ($bookResponses as $response) {
-            $productId = $response->bookRequest->product_id;
-            $productName = $response->bookRequest->product?->name ?? 'Unknown';
+            $productId = $response->bookRequestItem->product_id;
+            $productName = $response->bookRequestItem->product?->name ?? 'Unknown';
 
             // Find matching vouchers for this product
             foreach ($vouchers as $voucher) {
@@ -426,10 +426,10 @@ class ProvidersReportController extends Controller
         // Get products from this provider via BookRequestResponse
         $bookRequests = \App\Models\BookRequestResponse::where('provider_id', $providerId)
             ->where('status', 'approved')
-            ->with('bookRequest.product')
+            ->with('bookRequestItem.product')
             ->get();
 
-        $productIds = $bookRequests->pluck('bookRequest.product_id')->unique()->toArray();
+        $productIds = $bookRequests->pluck('bookRequestItem.product_id')->unique()->toArray();
 
         // If no products, return empty
         if (empty($productIds)) {
@@ -499,10 +499,10 @@ class ProvidersReportController extends Controller
         // Get products from this provider via BookRequestResponse
         $bookRequests = \App\Models\BookRequestResponse::where('provider_id', $providerId)
             ->where('status', 'approved')
-            ->with('bookRequest.product')
+            ->with('bookRequestItem.product')
             ->get();
 
-        $productIds = $bookRequests->pluck('bookRequest.product_id')->unique()->toArray();
+        $productIds = $bookRequests->pluck('bookRequestItem.product_id')->unique()->toArray();
 
         // If no products, return empty
         if (empty($productIds)) {
@@ -572,10 +572,10 @@ class ProvidersReportController extends Controller
         // Get products from this provider via BookRequestResponse
         $bookRequests = \App\Models\BookRequestResponse::where('provider_id', $providerId)
             ->where('status', 'approved')
-            ->with('bookRequest.product')
+            ->with('bookRequestItem.product')
             ->get();
 
-        $productIds = $bookRequests->pluck('bookRequest.product_id')->unique()->toArray();
+        $productIds = $bookRequests->pluck('bookRequestItem.product_id')->unique()->toArray();
 
         // If no products, return empty
         if (empty($productIds)) {
@@ -703,10 +703,10 @@ class ProvidersReportController extends Controller
         // Get products from this provider via BookRequestResponse
         $bookRequests = \App\Models\BookRequestResponse::where('provider_id', $providerId)
             ->where('status', 'approved')
-            ->with('bookRequest.product')
+            ->with('bookRequestItem.product')
             ->get();
 
-        $productIds = $bookRequests->pluck('bookRequest.product_id')->unique()->toArray();
+        $productIds = $bookRequests->pluck('bookRequestItem.product_id')->unique()->toArray();
 
         // If no products, return empty
         if (empty($productIds)) {

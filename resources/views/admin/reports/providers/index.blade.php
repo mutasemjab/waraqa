@@ -1011,7 +1011,7 @@
                                     <div class="info-box">
                                         <span class="info-box-icon bg-info"><i class="fas fa-calculator"></i></span>
                                         <div class="info-box-content">
-                                            <span class="info-box-text">{{ __('messages.total_sales') }}</span>
+                                            <span class="info-box-text">{{ __('messages.total_quantity') }}</span>
                                             <span class="info-box-number" id="payments-total-amount">0.00</span>
                                         </div>
                                     </div>
@@ -1848,7 +1848,6 @@
                                 <th>${trans.totalWithTax}</th>
                                 <th>${trans.status}</th>
                                 <th>${trans.date}</th>
-                                <th>{{ __('messages.actions') ?? 'Actions' }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1859,8 +1858,6 @@
 
                     requests.forEach(function(request, index) {
                         const statusBadge = request.status_badge;
-                        const detailsUrl = '{{ route('bookRequests.responses.show', ':id') }}'.replace(
-                            ':id', request.id);
                         requestsHtml += `
                     <tr>
                         <td>${index + 1}</td>
@@ -1872,11 +1869,6 @@
                         <td><span class="badge badge-success">${request.total_with_tax} ${riyalIcon}</span></td>
                         <td>${statusBadge}</td>
                         <td>${request.created_at}</td>
-                        <td>
-                            <a href="${detailsUrl}" class="btn btn-sm btn-info" title="{{ __('messages.details') }}">
-                                <i class="fas fa-eye"></i> {{ __('messages.details') }}
-                            </a>
-                        </td>
                     </tr>
                 `;
                     });
@@ -2426,7 +2418,7 @@
                         <tr>
                             <th>#</th>
                             <th>{{ __('messages.distribution_point') }}</th>
-                            <th>{{ __('messages.total_sales') }}</th>
+                            <th>{{ __('messages.total_quantity') }}</th>
                             <th>{{ __('messages.paid') }}</th>
                             <th>{{ __('messages.remaining') }}</th>
                             <th>{{ __('messages.status') }}</th>

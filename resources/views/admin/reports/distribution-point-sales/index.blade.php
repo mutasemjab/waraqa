@@ -152,7 +152,7 @@
                             <th>{{ __('messages.customer_phone') }}</th>
                             <th>{{ __('messages.products_count') }}</th>
                             <th>{{ __('messages.total_quantity') }}</th>
-                            <th>{{ __('messages.total_amount') }}</th>
+                            <th>{{ __('messages.total_quantity') }}</th>
                             <th>{{ __('messages.actions') }}</th>
                         </tr>
                     </thead>
@@ -323,14 +323,14 @@
                     + '<td>' + (sale.customer_phone || '-') + '</td>'
                     + '<td><span class="badge bg-info">' + sale.products_count + '</span></td>'
                     + '<td><span class="badge bg-success">' + sale.total_quantity + '</span></td>'
-                    + '<td><strong>' + sale.total_amount + ' ' + riyalIcon + '</strong></td>'
+                    + '<td><span class="badge bg-success">' + sale.total_quantity + '</span></td>'
                     + '<td><a href="' + detailsUrl + '" class="btn btn-sm btn-primary" target="_blank"><i class="fas fa-eye"></i> {{ __("messages.details") }}</a></td>'
                     + '</tr>';
                 tbody.append(row);
             });
         } else {
             tbody.html('<tr>'
-                + '<td colspan="8" class="text-center py-4 text-muted">'
+                + '<td colspan="9" class="text-center py-4 text-muted">'
                 + '<i class="fas fa-inbox" style="font-size: 2rem;"></i>'
                 + '<p class="mt-2">{{ __("messages.no_sales_found") }}</p>'
                 + '</td>'
