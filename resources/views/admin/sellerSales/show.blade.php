@@ -1,115 +1,69 @@
-@extends('layouts.admin')
+@extends("layouts.admin")
 
-@section('title', __('messages.sale_details') . ' - ' . $sale->sale_number)
-@section('page-title', $sale->sale_number)
+@section("title", __("messages.sale_details"))
+@section("page-title", __("messages.sale_details"))
 
-@section('content')
-<div class="page-header">
-    <div class="row align-items-center">
-        <div class="col">
-            <h1 class="page-title">{{ __('messages.sale_details') }}</h1>
-            <p class="page-subtitle">{{ __('messages.sale_number') }}: <strong>{{ $sale->sale_number }}</strong></p>
+@section("content")
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">{{ __("messages.sale_details") }}</h1>
+            <p class="page-subtitle">{{ $sale->sale_number }}</p>
         </div>
-        <div class="col-auto">
-            <a href="{{ route('admin.seller-sales.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>{{ __('messages.back_to_list') }}
-            </a>
-        </div>
+        <a href="{{ route("admin.seller-sales.index") }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>{{ __("messages.back") }}
+        </a>
     </div>
 </div>
 
 <div class="row">
-    <!-- Main Content -->
-    <div class="col-md-8">
-        <!-- Sale Header Info -->
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">{{ __('messages.sale_information') }}</h5>
+    <div class="col-lg-8">
+        <!-- Sale Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ __("messages.sale_information") }}</h5>
             </div>
             <div class="card-body">
-                <div class="row mb-3">
+                <div class="row">
                     <div class="col-md-6">
-                        <p class="mb-2">
-                            <strong>{{ __('messages.sale_number') }}:</strong><br>
-                            <span class="badge bg-primary">{{ $sale->sale_number }}</span>
-                        </p>
-                        <p class="mb-2">
-                            <strong>{{ __('messages.date') }}:</strong><br>
-                            {{ \Carbon\Carbon::parse($sale->sale_date)->format('Y-m-d H:i') }}
-                        </p>
+                        <p><strong>{{ __("messages.sale_number") }}:</strong> {{ $sale->sale_number }}</p>
+                        <p><strong>{{ __("messages.seller") }}:</strong> {{ $sale->user->name }}</p>
+                        <p><strong>{{ __("messages.sale_date") }}:</strong> {{ $sale->sale_date }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p class="mb-2">
-                            <strong>{{ __('messages.seller_name') }}:</strong><br>
-                            {{ $sale->user->name }}
-                        </p>
+                        <p><strong>{{ __("messages.status") }}:</strong> <span class="badge bg-{{ $sale->status->getColor() }}">{{ $sale->status->getLabel() }}</span></p>
+                        <p><strong>{{ __("messages.total_amount") }}:</strong> {{ number_format($sale->total_amount, 2) }}</p>
+                        <p><strong>{{ __("messages.total_tax") }}:</strong> {{ number_format($sale->total_tax, 2) }}</p>
                     </div>
                 </div>
-
-                @if($sale->notes)
-                    <div class="alert alert-info">
-                        <strong>{{ __('messages.notes') }}:</strong><br>
-                        {{ $sale->notes }}
-                    </div>
-                @endif
             </div>
         </div>
 
-        <!-- Sale Items -->
-        <div class="card mt-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">{{ __('messages.sale_items') }}</h5>
+        <!-- Products Table -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ __("messages.products") }}</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-striped">
+                        <thead class="table-light">
                             <tr>
-                                <th>{{ __('messages.product') }}</th>
-                                <th>{{ __('messages.product_code') }}</th>
-                                <th class="text-center">{{ __('messages.quantity') }}</th>
-                                <th class="text-right">{{ __('messages.price_with_tax') ?? 'السعر (شامل الضريبة)' }}</th>
-                                <th class="text-center">{{ __('messages.tax_percentage') }}</th>
-                                <th class="text-right">{{ __('messages.subtotal') }}</th>
-                                <th class="text-right">{{ __('messages.tax_amount') }}</th>
-                                <th class="text-right">{{ __('messages.total') }}</th>
+                                <th>{{ __("messages.product") }}</th>
+                                <th>{{ __("messages.quantity") }}</th>
+                                <th>{{ __("messages.unit_price") }} ({{ __("messages.after_tax") ?? "شامل الضريبة" }})</th>
+                                <th>{{ __("messages.tax_percentage") }}</th>
+                                <th>{{ __("messages.total_price") }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($sale->items as $item)
                                 <tr>
-                                    <td>
-                                        <strong>{{ $item->product_name }}</strong>
-                                    </td>
-                                    <td>
-                                        <code>{{ $item->product_code ?? 'N/A' }}</code>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-success">{{ $item->quantity }}</span>
-                                    </td>
-                                    <td class="text-right">
-                                        <x-riyal-icon /> {{ number_format($item->unit_price, 2) }}
-                                    </td>
-                                    <td class="text-center">
-                                        @if($item->tax_percentage > 0)
-                                            <span class="badge bg-warning">{{ $item->tax_percentage }}%</span>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-right">
-                                        <x-riyal-icon /> {{ number_format($item->total_price_before_tax, 2) }}
-                                    </td>
-                                    <td class="text-right">
-                                        @if($item->total_tax > 0)
-                                            <span class="text-warning"><x-riyal-icon /> {{ number_format($item->total_tax, 2) }}</span>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-right">
-                                        <strong><x-riyal-icon /> {{ number_format($item->total_price_after_tax, 2) }}</strong>
-                                    </td>
+                                    <td>{{ $item->product->name }}</td>
+                                    <td>{{ $item->quantity }}</td>
+                                    <td>{{ number_format($item->unit_price, 2) }}</td>
+                                    <td>{{ $item->tax_percentage }}%</td>
+                                    <td>{{ number_format($item->total_price_after_tax, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -117,116 +71,147 @@
                 </div>
             </div>
         </div>
+
+        <!-- Actions -->
+        @if($sale->status === App\Enums\SellerSaleStatus::PENDING)
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ __("messages.actions") }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form method="POST" action="{{ route("admin.seller-sales.approve", $sale->id) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-success w-100" onclick="return confirm(\"{{ __("messages.confirm_approve_sale") }}\")">
+                                    <i class="fas fa-check me-2"></i>{{ __("messages.approve") }}
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                <i class="fas fa-times me-2"></i>{{ __("messages.reject") }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reject Modal -->
+            <div class="modal fade" id="rejectModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="POST" action="{{ route("admin.seller-sales.reject", $sale->id) }}">
+                            @csrf
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ __("messages.reject_sale") }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label>{{ __("messages.rejection_reason") }} *</label>
+                                    <textarea name="rejection_reason" class="form-control" rows="4" required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __("messages.cancel") }}</button>
+                                <button type="submit" class="btn btn-danger">{{ __("messages.reject") }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Rejection Information -->
+        @if($sale->status === App\Enums\SellerSaleStatus::REJECTED)
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">{{ __("messages.rejection_information") }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>{{ __("messages.rejected_by") }}:</strong> {{ $sale->approvedBy->name }}</p>
+                    <p><strong>{{ __("messages.rejected_at") }}:</strong> {{ $sale->approved_at->format("Y-m-d H:i") }}</p>
+                    <div class="alert alert-danger mt-3">
+                        <strong>{{ __("messages.rejection_reason") }}:</strong><br>
+                        {{ $sale->rejection_reason }}
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 
-    <!-- Summary Panel -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">{{ __('messages.summary') }}</h5>
+    <!-- Right Sidebar -->
+    <div class="col-lg-4">
+        <!-- Summary Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ __('messages.sale_summary') ?? 'ملخص المبيعة' }}</h5>
             </div>
             <div class="card-body">
-                <div class="summary-item mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>{{ __('messages.total_items') }}:</span>
-                        <strong>{{ $sale->items->count() }}</strong>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">{{ __('messages.total_items') ?? 'إجمالي المنتجات' }}</label>
+                    <p class="h5 fw-bold">{{ $sale->items->count() }}</p>
                 </div>
-
-                <div class="summary-item mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>{{ __('messages.total_quantity') }}:</span>
-                        <strong>{{ $sale->items->sum('quantity') }}</strong>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">{{ __('messages.total_quantity') ?? 'إجمالي الكمية' }}</label>
+                    <p class="h5 fw-bold">{{ $sale->items->sum('quantity') }}</p>
                 </div>
-
-                <div class="summary-item mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>{{ __('messages.subtotal') }}:</span>
-                        <strong><x-riyal-icon /> {{ number_format($sale->items->sum('total_price_before_tax'), 2) }}</strong>
-                    </div>
-                </div>
-
-                <div class="summary-item mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>{{ __('messages.total_tax') }}:</span>
-                        <strong class="text-warning"><x-riyal-icon /> {{ number_format($sale->total_tax, 2) }}</strong>
-                    </div>
-                </div>
-
                 <hr>
-
-                <div class="summary-item mb-3">
-                    <div class="d-flex justify-content-between">
-                        <h5>{{ __('messages.total_amount') }}:</h5>
-                        <h5 class="text-primary"><x-riyal-icon /> {{ number_format($sale->total_amount, 2) }}</h5>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">{{ __('messages.subtotal') ?? 'المجموع قبل الضريبة' }}</label>
+                    <p class="h5 fw-bold">{{ number_format($sale->total_amount - $sale->total_tax, 2) }}</p>
                 </div>
-
-                <!-- Commission Info -->
-                @if($sale->user && $sale->user->commission_percentage)
-                    <hr>
-                    <div class="alert alert-info">
-                        <h6 class="mb-2">{{ __('messages.commission') }}</h6>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>{{ __('messages.seller_commission') }} ({{ $sale->user->commission_percentage }}%):</span>
-                            <strong><x-riyal-icon /> {{ number_format($sale->total_amount * ($sale->user->commission_percentage / 100), 2) }}</strong>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span>{{ __('messages.amount_due_to_waraqa') }}:</span>
-                            <strong><x-riyal-icon /> {{ number_format($sale->total_amount * (1 - $sale->user->commission_percentage / 100), 2) }}</strong>
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Actions -->
-                <div class="d-grid gap-2 mt-4">
-                    <a href="{{ route('admin.seller-sales.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>{{ __('messages.back_to_list') }}
-                    </a>
+                <div class="mb-3">
+                    <label class="form-label text-muted">{{ __('messages.total_tax') }}</label>
+                    <p class="h5 fw-bold text-danger">{{ number_format($sale->total_tax, 2) }}</p>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <label class="form-label text-muted">{{ __('messages.total_amount') }}</label>
+                    <p class="h4 fw-bold text-success">{{ number_format($sale->total_amount, 2) }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Metadata -->
-        <div class="card mt-3">
-            <div class="card-header bg-light">
-                <h6 class="mb-0">{{ __('messages.metadata') }}</h6>
+        <!-- Status Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ __('messages.status_information') ?? 'معلومات الحالة' }}</h5>
             </div>
-            <div class="card-body" style="font-size: 0.85rem;">
-                <p class="mb-2">
-                    <strong>{{ __('messages.created_at') }}:</strong><br>
-                    {{ $sale->created_at->format('Y-m-d H:i:s') }}
-                </p>
-                <p class="mb-0">
-                    <strong>{{ __('messages.updated_at') }}:</strong><br>
-                    {{ $sale->updated_at->format('Y-m-d H:i:s') }}
-                </p>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">{{ __('messages.current_status') ?? 'الحالة الحالية' }}</label>
+                    <p>
+                        <span class="badge bg-{{ $sale->status->getColor() }} fs-6">
+                            {{ $sale->status->getLabel() }}
+                        </span>
+                    </p>
+                </div>
+                @if($sale->status !== App\Enums\SellerSaleStatus::PENDING)
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('messages.processed_by') ?? 'تمت المعالجة بواسطة' }}</label>
+                        <p class="mb-0">{{ $sale->approvedBy?->name ?? 'N/A' }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('messages.processed_at') ?? 'تاريخ المعالجة' }}</label>
+                        <p class="mb-0">{{ $sale->approved_at?->format('Y-m-d H:i') ?? 'N/A' }}</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Seller Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ __('messages.seller_information') ?? 'معلومات البائع' }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>{{ __('messages.name') ?? 'الاسم' }}:</strong><br>{{ $sale->user->name }}</p>
+                <p><strong>{{ __('messages.email') ?? 'البريد الإلكتروني' }}:</strong><br>{{ $sale->user->email }}</p>
+                <p><strong>{{ __('messages.phone') ?? 'الهاتف' }}:</strong><br>{{ $sale->user->phone ?? 'N/A' }}</p>
             </div>
         </div>
     </div>
 </div>
-
 @endsection
-
-@push('styles')
-<style>
-    @media print {
-        .page-header {
-            display: none;
-        }
-        .btn {
-            display: none !important;
-        }
-    }
-
-    .summary-item {
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    .summary-item:last-child {
-        border-bottom: none;
-    }
-</style>
-@endpush

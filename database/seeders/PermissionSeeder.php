@@ -138,6 +138,9 @@ class PermissionSeeder extends Seeder
             'admin-seller-sales-list',
             'admin-seller-sales-create',
             'admin-seller-sales-view',
+            'sellerSale-view',
+            'sellerSale-approve',
+            'sellerSale-reject',
         ];
 
         $data = array_map(function ($permission) {

@@ -37,7 +37,28 @@
                             <p class="fw-bold">{{ Carbon\Carbon::parse($sale->sale_date)->format('Y-m-d') }}</p>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">{{ __('messages.status') }}</label>
+                            <p>
+                                <span class="badge bg-{{ $sale->status->getColor() }} fs-6">
+                                    {{ $sale->status->getLabel() }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
+                @if($sale->status === App\Enums\SellerSaleStatus::REJECTED)
+                    <div class="alert alert-danger mt-3">
+                        <strong>{{ __('messages.rejection_reason') }}:</strong><br>
+                        {{ $sale->rejection_reason }}
+                    </div>
+                @endif
+                @if($sale->status !== App\Enums\SellerSaleStatus::PENDING)
+                    <div class="alert alert-info mt-3">
+                        <strong>{{ __('messages.processed_by') }}:</strong> {{ $sale->approvedBy?->name ?? 'N/A' }} - {{ $sale->approved_at?->format('Y-m-d H:i') ?? 'N/A' }}
+                    </div>
+                @endif
             </div>
         </div>
 

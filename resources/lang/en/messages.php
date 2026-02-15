@@ -1148,7 +1148,7 @@ return [
     'Submit_Response' => 'Submit Response',
     'your_response' => 'Your Response',
 
-    // Purchases
+    // Purchases (Admin buying from providers)
     'Purchases' => 'Purchases',
     'purchases' => 'Purchases',
     'Purchase' => 'Purchase',
@@ -1157,6 +1157,10 @@ return [
     'Add_Purchase' => 'Add Purchase',
     'Create_Purchase' => 'Create New Purchase',
     'Edit_Purchase' => 'Edit Purchase',
+
+    // Provider Purchases (Provider selling to admin - shows as sales from provider perspective)
+    'provider_purchases' => 'Sales',
+    'provider_purchase_details' => 'Sale Details',
     'Expected_Delivery_Date' => 'Expected Delivery Date',
     'Received_Date' => 'Received Date',
     'Total_Tax' => 'Total Tax',
@@ -1914,4 +1918,52 @@ return [
     'please_fill_all_required_fields' => 'Please Fill All Required Fields',
     'requested' => 'Requested',
     'seller_name' => 'Seller Name',
+
+    // Sales Approval Workflow - Status
+    'pending' => 'Pending',
+    'approved' => 'Approved',
+    'rejected' => 'Rejected',
+
+    // Sales Approval Workflow - Actions
+    'sale_created_pending_approval' => 'Sale created and is pending admin approval',
+    'sale_deleted_successfully' => 'Sale deleted successfully',
+    'sale_approved_successfully' => 'Sale approved successfully',
+    'sale_rejected_successfully' => 'Sale rejected successfully',
+
+    // Sales Approval Workflow - Errors
+    'cannot_delete_approved_sale' => 'Cannot delete an approved or rejected sale',
+    'sale_already_processed' => 'This sale has already been processed',
+    'seller_no_warehouse' => 'Seller has no assigned warehouse',
+    'rejection_reason_required' => 'Rejection reason is required',
+    'unauthorized_action' => 'Unauthorized action',
+
+    // Sales Approval Workflow - Confirmations
+    'confirm_delete_sale' => 'Are you sure you want to delete this sale?',
+    'confirm_approve_sale' => 'Are you sure you want to approve this sale?',
+
+    // Sales Approval Workflow - Labels & UI
+    'rejection_reason' => 'Rejection Reason',
+    'processed_by' => 'Processed By',
+    'rejected_by' => 'Rejected By',
+    'rejected_at' => 'Rejected At',
+    'filter_by_status' => 'Filter by Status',
+    'rejection_information' => 'Rejection Information',
+    'reject_sale' => 'Reject Sale',
+    'no_sales_found' => 'No Sales Found',
+    'seller_sales' => 'Seller Sales',
+    'sale_details' => 'Sale Details',
+    'approve' => 'Approve',
+    'reject' => 'Reject',
+    'sale_number' => 'Sale Number',
+    'seller' => 'Seller',
+    'sale_date' => 'Sale Date',
+    'total_amount' => 'Total Amount',
+    'total_tax' => 'Total Tax',
+    'products' => 'Products',
+    'product' => 'Product',
+    'quantity' => 'Quantity',
+    'unit_price' => 'Unit Price',
+    'tax_percentage' => 'Tax Percentage',
+    'total_price' => 'Total Price',
+    'all' => 'All',
 ];

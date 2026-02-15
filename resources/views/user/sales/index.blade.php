@@ -117,6 +117,7 @@
                             <th>{{ __('messages.products_count') }}</th>
                             <th>{{ __('messages.total_quantity') }}</th>
                             <th>{{ __('messages.total_amount') }}</th>
+                            <th>{{ __('messages.status') }}</th>
                             <th>{{ __('messages.actions') }}</th>
                         </tr>
                     </thead>
@@ -137,9 +138,23 @@
                                     <strong><x-riyal-icon style="width: 12px; height: 12px;" /> {{ number_format($sale->total_amount, 2) }}</strong>
                                 </td>
                                 <td>
+                                    <span class="badge bg-{{ $sale->status->getColor() }}">
+                                        {{ $sale->status->getLabel() }}
+                                    </span>
+                                </td>
+                                <td>
                                     <a href="{{ route('user.sales.show', $sale->id) }}" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye me-1"></i>{{ __('messages.details') ?? 'التفاصيل' }}
                                     </a>
+                                    @if($sale->status === App\Enums\SellerSaleStatus::PENDING)
+                                        <form method="POST" action="{{ route('user.sales.destroy', $sale->id) }}" style="display: inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('messages.confirm_delete_sale') }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

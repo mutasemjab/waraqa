@@ -179,6 +179,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::get('/', [SellerSalesController::class, 'index'])->name('index');
             Route::get('/create', [SellerSalesController::class, 'create'])->name('create');
             Route::post('/', [SellerSalesController::class, 'store'])->name('store');
+            Route::post('/{id}/approve', [SellerSalesController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [SellerSalesController::class, 'reject'])->name('reject');
             Route::get('/{id}', [SellerSalesController::class, 'show'])->name('show');
             Route::get('/get-products/{sellerId}', [SellerSalesController::class, 'getSellerProducts'])->name('get-products');
         });

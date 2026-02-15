@@ -1208,15 +1208,19 @@ return [
     'request_details' => 'تفاصيل الطلب',
     'Request_ID' => 'رقم الطلب',
 
-    // Purchases
-    'Purchases' => 'عمليات البيع',
-    'purchases' => 'عمليات البيع',
+    // Purchases (Admin buying from providers)
+    'Purchases' => 'عمليات الشراء',
+    'purchases' => 'عمليات الشراء',
     'Purchase' => 'عملية شراء',
     'Purchase_Number' => 'رقم الشراء',
     'Purchase_Details' => 'تفاصيل عملية الشراء',
     'Add_Purchase' => 'إضافة عملية شراء',
     'Create_Purchase' => 'إنشاء عملية شراء جديدة',
     'Edit_Purchase' => 'تعديل عملية الشراء',
+
+    // Provider Purchases (Provider selling to admin - shows as sales from provider perspective)
+    'provider_purchases' => 'عمليات البيع',
+    'provider_purchase_details' => 'تفاصيل عملية البيع',
     'Expected_Delivery_Date' => 'تاريخ التسليم المتوقع',
     'Received_Date' => 'تاريخ الاستلام',
     'Total_Tax' => 'إجمالي الضرائب',
@@ -1977,4 +1981,52 @@ return [
     'please_fill_all_required_fields' => 'يرجى ملء جميع الحقول المطلوبة',
     'requested' => 'مطلوب',
     'seller_name' => 'اسم البائع',
+
+    // Sales Approval Workflow - Status
+    'pending' => 'معلقة',
+    'approved' => 'موافق عليها',
+    'rejected' => 'مرفوضة',
+
+    // Sales Approval Workflow - Actions
+    'sale_created_pending_approval' => 'تم إنشاء المبيعة وهي في انتظار موافقة الإدارة',
+    'sale_deleted_successfully' => 'تم حذف المبيعة بنجاح',
+    'sale_approved_successfully' => 'تمت الموافقة على المبيعة بنجاح',
+    'sale_rejected_successfully' => 'تم رفض المبيعة بنجاح',
+
+    // Sales Approval Workflow - Errors
+    'cannot_delete_approved_sale' => 'لا يمكن حذف مبيعة تمت الموافقة عليها أو رفضها',
+    'sale_already_processed' => 'تمت معالجة هذه المبيعة مسبقاً',
+    'seller_no_warehouse' => 'البائع ليس لديه مخزن مخصص',
+    'rejection_reason_required' => 'يجب إدخال سبب الرفض',
+    'unauthorized_action' => 'إجراء غير مصرح به',
+
+    // Sales Approval Workflow - Confirmations
+    'confirm_delete_sale' => 'هل أنت متأكد من حذف هذه المبيعة؟',
+    'confirm_approve_sale' => 'هل أنت متأكد من الموافقة على هذه المبيعة؟',
+
+    // Sales Approval Workflow - Labels & UI
+    'rejection_reason' => 'سبب الرفض',
+    'processed_by' => 'تمت المعالجة بواسطة',
+    'rejected_by' => 'تم الرفض بواسطة',
+    'rejected_at' => 'تاريخ الرفض',
+    'filter_by_status' => 'تصفية حسب الحالة',
+    'rejection_information' => 'معلومات الرفض',
+    'reject_sale' => 'رفض المبيعة',
+    'no_sales_found' => 'لا توجد مبيعات',
+    'seller_sales' => 'مبيعات البائعين',
+    'sale_details' => 'تفاصيل المبيعة',
+    'approve' => 'موافقة',
+    'reject' => 'رفض',
+    'sale_number' => 'رقم المبيعة',
+    'seller' => 'البائع',
+    'sale_date' => 'تاريخ المبيعة',
+    'total_amount' => 'المبلغ الإجمالي',
+    'total_tax' => 'الضريبة الإجمالية',
+    'products' => 'المنتجات',
+    'product' => 'المنتج',
+    'quantity' => 'الكمية',
+    'unit_price' => 'السعر الوحدة',
+    'tax_percentage' => 'نسبة الضريبة',
+    'total_price' => 'السعر الإجمالي',
+    'all' => 'الكل',
 ];

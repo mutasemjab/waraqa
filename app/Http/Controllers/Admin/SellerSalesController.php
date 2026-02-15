@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\SellerSaleStatus;
 use App\Http\Controllers\Controller;
 use App\Models\NoteVoucher;
 use App\Models\VoucherProduct;
@@ -9,6 +10,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\SellerSale;
 use App\Models\SellerSaleItem;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -20,6 +22,8 @@ class SellerSalesController extends Controller
         $this->middleware('permission:admin-seller-sales-list')->only(['index']);
         $this->middleware('permission:admin-seller-sales-create')->only(['create', 'store']);
         $this->middleware('permission:admin-seller-sales-view')->only(['show']);
+        $this->middleware('permission:sellerSale-approve')->only(['approve']);
+        $this->middleware('permission:sellerSale-reject')->only(['reject']);
     }
 
     /**
@@ -27,14 +31,20 @@ class SellerSalesController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SellerSale::with('user');
+        // 1. Build query with relationships
+        $query = SellerSale::with(['user', 'items.product', 'approvedBy']);
 
-        // Filter by seller
+        // 2. Filter by status if provided
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // 3. Filter by seller
         if ($request->filled('seller_id')) {
             $query->where('user_id', $request->seller_id);
         }
 
-        // Filter by date
+        // 4. Filter by date
         if ($request->filled('date_from')) {
             $query->whereDate('sale_date', '>=', $request->date_from);
         }
@@ -42,14 +52,15 @@ class SellerSalesController extends Controller
             $query->whereDate('sale_date', '<=', $request->date_to);
         }
 
-        // Search by sale number
+        // 5. Search by sale number
         if ($request->filled('search')) {
             $query->where('sale_number', 'like', '%' . $request->search . '%');
         }
 
+        // 6. Paginate results
         $sales = $query->latest('sale_date')->paginate(20);
 
-        // Get sellers for filter dropdown
+        // 7. Get sellers for filter dropdown
         $sellers = User::role('seller')
             ->whereHas('warehouse')
             ->orderBy('name')
@@ -233,8 +244,114 @@ class SellerSalesController extends Controller
      */
     public function show($id)
     {
-        $sale = SellerSale::with(['user', 'items.product'])->findOrFail($id);
+        // 1. Load sale with all relationships
+        $sale = SellerSale::with([
+            'user',
+            'items.product',
+            'approvedBy',
+        ])->findOrFail($id);
+
         return view('admin.sellerSales.show', compact('sale'));
+    }
+
+    /**
+     * Approve a pending sale and create NoteVoucher
+     *
+     * @param int $id Sale ID
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function approve($id)
+    {
+        // 1. Find the sale
+        $sale = SellerSale::with('items')->findOrFail($id);
+
+        // 2. Verify status is PENDING
+        if ($sale->status !== SellerSaleStatus::PENDING) {
+            return redirect()->back()
+                ->with('error', __('messages.sale_already_processed'));
+        }
+
+        // 3. Check seller has warehouse
+        $warehouse = Warehouse::where('user_id', $sale->user_id)->first();
+        if (!$warehouse) {
+            return redirect()->back()
+                ->with('error', __('messages.seller_no_warehouse'));
+        }
+
+        DB::transaction(function () use ($sale, $warehouse) {
+            // 4. Generate unique voucher number
+            $lastVoucher = NoteVoucher::latest('id')->lockForUpdate()->first();
+            $voucherNumber = 'NV-' . str_pad(($lastVoucher ? $lastVoucher->id + 1 : 1), 4, '0', STR_PAD_LEFT);
+
+            // 5. Create NoteVoucher (Type 2 = OUT)
+            $noteVoucher = NoteVoucher::create([
+                'number' => (int)str_replace('NV-', '', $voucherNumber),
+                'date_note_voucher' => $sale->sale_date,
+                'from_warehouse_id' => $warehouse->id,
+                'note_voucher_type_id' => 2, // OUT
+                'note' => 'Auto-generated from approved sale: ' . $sale->sale_number,
+            ]);
+
+            // 6. Create VoucherProduct records for each sale item
+            foreach ($sale->items as $item) {
+                VoucherProduct::create([
+                    'note_voucher_id' => $noteVoucher->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'purchasing_price' => $item->unit_price,
+                    'tax_percentage' => $item->tax_percentage,
+                ]);
+            }
+
+            // 7. Update sale status to APPROVED
+            $sale->update([
+                'status' => SellerSaleStatus::APPROVED,
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+            ]);
+        });
+
+        // 8. Redirect with success
+        return redirect()->route('admin.seller-sales.index')
+            ->with('success', __('messages.sale_approved_successfully'));
+    }
+
+    /**
+     * Reject a pending sale
+     *
+     * @param Request $request
+     * @param int $id Sale ID
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function reject(Request $request, $id)
+    {
+        // 1. Validate rejection reason
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ], [
+            'rejection_reason.required' => __('messages.rejection_reason_required'),
+        ]);
+
+        // 2. Find the sale
+        $sale = SellerSale::findOrFail($id);
+
+        // 3. Verify status is PENDING
+        if ($sale->status !== SellerSaleStatus::PENDING) {
+            return redirect()->back()
+                ->with('error', __('messages.sale_already_processed'));
+        }
+
+        // 4. Update sale status to REJECTED
+        $sale->update([
+            'status' => SellerSaleStatus::REJECTED,
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+            'rejection_reason' => $request->rejection_reason,
+        ]);
+
+        // 5. Redirect with success
+        return redirect()->route('admin.seller-sales.index')
+            ->with('success', __('messages.sale_rejected_successfully'));
     }
 
     /**

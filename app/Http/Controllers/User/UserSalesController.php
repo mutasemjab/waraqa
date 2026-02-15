@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Enums\SellerSaleStatus;
 use App\Http\Controllers\Controller;
 use App\Models\NoteVoucher;
 use App\Models\VoucherProduct;
@@ -143,17 +144,18 @@ class UserSalesController extends Controller
             $totalAmount = 0;
             $totalTax = 0;
 
-            // Create seller sale
+            // 4. Create seller sale with PENDING status (awaiting admin approval)
             $sellerSale = SellerSale::create([
                 'user_id' => $user->id,
                 'sale_number' => $saleNumber,
+                'status' => SellerSaleStatus::PENDING,
                 'sale_date' => $request->sale_date,
                 'notes' => $request->notes,
                 'total_amount' => 0, // Will be updated after items
                 'total_tax' => 0 // Will be updated after items
             ]);
 
-            // Create sale items
+            // 5. Create sale items
             foreach ($request->products as $productData) {
                 $product = Product::find($productData['product_id']);
                 $quantity = (int)$productData['quantity'];
@@ -189,38 +191,19 @@ class UserSalesController extends Controller
                 $totalTax += $tax;
             }
 
-            // Update seller sale totals
+            // 6. Update seller sale totals
             $sellerSale->update([
                 'total_amount' => round($totalAmount, 2),
                 'total_tax' => round($totalTax, 2)
             ]);
 
-            // Create automatic exit note voucher for inventory deduction
-            // Extract number from sale number (e.g., 'PO-1001' -> 1001)
-            $numberOnly = (int)str_replace('PO-', '', $saleNumber);
-
-            $noteVoucher = NoteVoucher::create([
-                'number' => $numberOnly,
-                'date_note_voucher' => $request->sale_date,
-                'from_warehouse_id' => $userWarehouse->id,
-                'note_voucher_type_id' => 2, // OUT type
-                'note' => 'الموزع: ' . $userWarehouse->name . ' | رقم المبيعة: ' . $saleNumber
-            ]);
-
-            // Create voucher products for inventory deduction
-            foreach ($request->products as $productData) {
-                VoucherProduct::create([
-                    'note_voucher_id' => $noteVoucher->id,
-                    'product_id' => $productData['product_id'],
-                    'quantity' => (int)$productData['quantity'],
-                    'purchasing_price' => (float)$productData['unit_price'], // السعر الشامل الضريبة
-                    'tax_percentage' => (float)($productData['tax_percentage'] ?? 0)
-                ]);
-            }
+            // NOTE: NoteVoucher will be created by admin approval only
+            // Inventory deduction will happen after admin approval, not immediately
 
             DB::commit();
 
-            return redirect()->route('user.sales.index')->with('success', __('messages.sale_recorded_successfully') . ' - ' . $saleNumber);
+            return redirect()->route('user.sales.index')
+                ->with('success', __('messages.sale_created_pending_approval'));
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -279,6 +262,42 @@ class UserSalesController extends Controller
         $sale = SellerSale::with('items.product')->findOrFail($id);
 
         return view('user.sales.show', compact('sale'));
+    }
+
+    /**
+     * Delete a pending sale
+     *
+     * @param int $id Sale ID
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroy($id)
+    {
+        // 1. Find the sale
+        $sale = SellerSale::findOrFail($id);
+
+        // 2. Check ownership
+        if ($sale->user_id !== auth()->id()) {
+            return redirect()->back()
+                ->with('error', __('messages.unauthorized_action'));
+        }
+
+        // 3. Check if status is PENDING
+        if ($sale->status !== SellerSaleStatus::PENDING) {
+            return redirect()->back()
+                ->with('error', __('messages.cannot_delete_approved_sale'));
+        }
+
+        DB::transaction(function () use ($sale) {
+            // 4. Delete sale items
+            $sale->items()->delete();
+
+            // 5. Delete sale
+            $sale->delete();
+        });
+
+        // 6. Redirect with success
+        return redirect()->route('user.sales.index')
+            ->with('success', __('messages.sale_deleted_successfully'));
     }
 
     public function warehouse()

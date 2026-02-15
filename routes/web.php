@@ -65,6 +65,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('/sales/create', [UserSalesController::class, 'create'])->name('sales.create');
         Route::post('/sales', [UserSalesController::class, 'store'])->name('sales.store');
         Route::get('/sales/{id}', [UserSalesController::class, 'show'])->name('sales.show');
+        Route::delete('/sales/{id}', [UserSalesController::class, 'destroy'])->name('sales.destroy');
         Route::get('/sales-report', [UserSalesController::class, 'salesReport'])->name('sales.report');
 
         // Warehouse Management
