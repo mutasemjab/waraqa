@@ -1966,4 +1966,8 @@ return [
     'tax_percentage' => 'Tax Percentage',
     'total_price' => 'Total Price',
     'all' => 'All',
+    'current_status' => 'Current Status',
+    'processed_at' => 'Processed At',
+    'seller_information' => 'Seller Information',
+    'status_information' => 'Status Information',
 ];

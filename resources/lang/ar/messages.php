@@ -2029,4 +2029,8 @@ return [
     'tax_percentage' => 'نسبة الضريبة',
     'total_price' => 'السعر الإجمالي',
     'all' => 'الكل',
+    'current_status' => 'الحالة الحالية',
+    'processed_at' => 'معالج في',
+    'seller_information' => 'معلومات البائع',
+    'status_information' => 'معلومات الحالة',
 ];
