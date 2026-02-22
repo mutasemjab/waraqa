@@ -171,6 +171,25 @@
                     <label class="form-label text-muted">{{ __('messages.total_amount') }}</label>
                     <p class="h4 fw-bold text-success">{{ number_format($sale->total_amount, 2) }}</p>
                 </div>
+
+                @php
+                    $commissionPercentage = $sale->user->commission_percentage ?? 0;
+                    $commissionAmount = $sale->total_amount * ($commissionPercentage / 100);
+                    $dueToWaraqa = $sale->total_amount - $commissionAmount;
+                @endphp
+
+                <hr>
+                <div class="mb-0">
+                    <h6 class="mb-3">{{ __('messages.commission') ?? 'عمولتي' }}</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">{{ __('messages.seller_commission') }} ({{ $commissionPercentage }}%):</span>
+                        <strong>{{ number_format($commissionAmount, 2) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">{{ __('messages.amount_due_to_waraqa') }}:</span>
+                        <strong class="text-success">{{ number_format($dueToWaraqa, 2) }}</strong>
+                    </div>
+                </div>
             </div>
         </div>
 

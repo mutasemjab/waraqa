@@ -148,6 +148,36 @@
             </div>
         </div>
 
+        <!-- My Commission -->
+        @php
+            $commissionPercentage = auth()->user()->commission_percentage ?? 0;
+            $commissionAmount = $sale->total_amount * ($commissionPercentage / 100);
+            $remainingAmount = $sale->total_amount - $commissionAmount;
+        @endphp
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-percent me-2"></i>{{ __('messages.my_commission') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="summary-item d-flex justify-content-between mb-2">
+                    <span>{{ __('messages.distribution_point_commission') }} ({{ $commissionPercentage }}%):</span>
+                    <span>
+                        <x-riyal-icon style="width: 12px; height: 12px;" />
+                        <strong>{{ number_format($commissionAmount, 2) }}</strong>
+                    </span>
+                </div>
+                <div class="summary-item d-flex justify-content-between border-top pt-2">
+                    <strong>{{ __('messages.amount_due_to_waraqa') }}:</strong>
+                    <strong class="text-success">
+                        <x-riyal-icon style="width: 12px; height: 12px;" />
+                        {{ number_format($remainingAmount, 2) }}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
         <!-- Notes -->
         @if($sale->notes)
             <div class="card">

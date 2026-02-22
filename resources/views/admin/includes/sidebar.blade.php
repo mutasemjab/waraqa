@@ -164,7 +164,15 @@
                 <li class="nav-item">
                     <a href="{{ route('admin.seller-sales.index') }}" class="nav-link {{ request()->routeIs('admin.seller-sales.*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-cash-register"></i>
-                        <p>{{ __('messages.seller_sales_management') }}</p>
+                        <p>
+                            {{ __('messages.seller_sales_management') }}
+                            @php
+                                $pendingSalesCount = \App\Models\SellerSale::where('status', \App\Enums\SellerSaleStatus::PENDING)->count();
+                            @endphp
+                            @if($pendingSalesCount > 0)
+                                <span class="badge badge-warning right">{{ $pendingSalesCount }}</span>
+                            @endif
+                        </p>
                     </a>
                 </li>
                 @endcan
