@@ -147,6 +147,13 @@ class SellerProductRequestController extends Controller
             }
 
             // Create Order with total price including tax
+            // Calculate seller commission if user has commission percentage
+            $user = $sellerProductRequest->user;
+            $commissionAmount = 0;
+            if ($user && $user->commission_percentage) {
+                $commissionAmount = round($totalPrice * $user->commission_percentage / 100, 2);
+            }
+
             $order = Order::create([
                 'number' => $orderNumber,
                 'user_id' => $sellerProductRequest->user_id,
@@ -158,7 +165,8 @@ class SellerProductRequestController extends Controller
                 'total_prices' => $totalPrice,
                 'total_taxes' => $totalTaxAmount,
                 'paid_amount' => 0,
-                'remaining_amount' => $totalPrice,
+                // Remaining amount after deducting seller commission
+                'remaining_amount' => $totalPrice - $commissionAmount,
                 'note' => 'Order created from Seller Product Request #' . $sellerProductRequest->id,
             ]);
 

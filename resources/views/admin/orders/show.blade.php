@@ -17,7 +17,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        @if(session('success'))
+                        @if (session('success'))
                             <div class="alert alert-success">{{ session('success') }}</div>
                         @endif
 
@@ -41,16 +41,18 @@
                                             <tr>
                                                 <td><strong>{{ __('messages.status') }}:</strong></td>
                                                 <td>
-                                                    {!! \App\Enums\OrderStatus::tryFrom($order->status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
+                                                    {!! \App\Enums\OrderStatus::tryFrom($order->status)?->getBadgeHtml() ??
+                                                        '<span class="badge bg-secondary">N/A</span>' !!}
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>{{ __('messages.payment_status') }}:</strong></td>
                                                 <td>
-                                                    {!! \App\Enums\PaymentStatus::tryFrom($order->payment_status)?->getBadgeHtml() ?? '<span class="badge bg-secondary">N/A</span>' !!}
+                                                    {!! \App\Enums\PaymentStatus::tryFrom($order->payment_status)?->getBadgeHtml() ??
+                                                        '<span class="badge bg-secondary">N/A</span>' !!}
                                                 </td>
                                             </tr>
-                                            @if($order->note)
+                                            @if ($order->note)
                                                 <tr>
                                                     <td><strong>{{ __('messages.note') }}:</strong></td>
                                                     <td>{{ $order->note }}</td>
@@ -68,7 +70,7 @@
                                         <h5>{{ __('messages.customer_information') }}</h5>
                                     </div>
                                     <div class="card-body">
-                                        @if($order->user)
+                                        @if ($order->user)
                                             <table class="table table-borderless">
                                                 <tr>
                                                     <td><strong>{{ __('messages.name') }}:</strong></td>
@@ -78,7 +80,7 @@
                                                     <td><strong>{{ __('messages.phone') }}:</strong></td>
                                                     <td>{{ $order->user->phone }}</td>
                                                 </tr>
-                                                @if($order->user->email)
+                                                @if ($order->user->email)
                                                     <tr>
                                                         <td><strong>{{ __('messages.email') }}:</strong></td>
                                                         <td>{{ $order->user->email }}</td>
@@ -121,20 +123,23 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($order->orderProducts as $orderProduct)
+                                            @foreach ($order->orderProducts as $orderProduct)
                                                 <tr>
                                                     <td>
                                                         <strong>{{ $orderProduct->product->name_en }}</strong><br>
-                                                        <small class="text-muted">{{ $orderProduct->product->name_ar }}</small>
+                                                        <small
+                                                            class="text-muted">{{ $orderProduct->product->name_ar }}</small>
                                                     </td>
                                                     {{-- Selling price (with tax) per unit --}}
-                                                    <td><x-riyal-icon /> {{ number_format($orderProduct->unit_price, 2) }}</td>
+                                                    <td><x-riyal-icon /> {{ number_format($orderProduct->unit_price, 2) }}
+                                                    </td>
                                                     {{-- Quantity ordered --}}
                                                     <td>{{ $orderProduct->quantity }}</td>
                                                     {{-- Tax percentage applied to this product --}}
                                                     <td>{{ $orderProduct->tax_percentage }}%</td>
                                                     {{-- Calculated tax amount for this line item --}}
-                                                    <td><x-riyal-icon /> {{ number_format($orderProduct->tax_value, 2) }}</td>
+                                                    <td><x-riyal-icon /> {{ number_format($orderProduct->tax_value, 2) }}
+                                                    </td>
                                                     {{-- Total price before tax for this line item --}}
                                                     <td><x-riyal-icon />
                                                         {{ number_format($orderProduct->total_price_before_tax, 2) }}</td>
@@ -197,7 +202,7 @@
                             {{-- Event Commission Display Section (Show View) --}}
                             {{-- Only displayed if the order is linked to an event --}}
                             {{-- Shows event details, commission percentage, and calculated values --}}
-                            @if($order->event)
+                            @if ($order->event)
                                 <div class="col-md-6">
                                     <div class="card border-primary">
                                         <div class="card-header bg-light">
@@ -220,11 +225,14 @@
                                                         // Calculate total before tax (order.total_prices - order.total_taxes)
                                                         $totalBeforeTax = $order->total_prices - $order->total_taxes;
                                                         // Calculate event commission value
-                                                        $commissionValue = ($totalBeforeTax * $order->event->commission_percentage) / 100;
+                                                        $commissionValue =
+                                                            ($totalBeforeTax * $order->event->commission_percentage) /
+                                                            100;
                                                         // Calculate amount due to supplier after commission deduction
                                                         $amountDueToSupplier = $totalBeforeTax - $commissionValue;
                                                     @endphp
-                                                    <span class="badge badge-success" style="font-size: 0.95rem;"><x-riyal-icon
+                                                    <span class="badge badge-success"
+                                                        style="font-size: 0.95rem;"><x-riyal-icon
                                                             style="width: 12px; height: 12px;" />
                                                         {{ number_format($commissionValue, 2) }}</span>
                                                 </div>
@@ -235,14 +243,21 @@
                                                     {{-- Amount Due to Supplier After Commission --}}
                                                     {{-- Formula: total_before_tax - commission_value --}}
                                                     {{-- This is what the supplier/seller receives after commission deduction --}}
-                                                    <strong class="text-primary">{{ __('messages.amount_due_to_supplier') ?? 'المبلغ المستحق للمورد' }} <small>({{ __('messages.without_tax') ?? 'بدون الضريبة' }})</small>:</strong><br>
-                                                    <span class="badge badge-warning" style="font-size: 1.1rem; width: 100%;">
+                                                    <strong
+                                                        class="text-primary">{{ __('messages.amount_due_to_supplier') ?? 'المبلغ المستحق للمورد' }}
+                                                        <small>({{ __('messages.without_tax') ?? 'بدون الضريبة' }})</small>:</strong><br>
+                                                    <span class="badge badge-warning"
+                                                        style="font-size: 1.1rem; width: 100%;">
                                                         <x-riyal-icon style="width: 14px; height: 14px;" />
                                                         {{ number_format($amountDueToSupplier, 2) }}
                                                     </span>
                                                     {{-- Show the formula used for transparency --}}
                                                     <small class="d-block mt-1 text-muted">
-                                                        {{ __('messages.calculation_formula') ?? 'المعادلة' }}: {{ number_format($totalBeforeTax, 2) }} ({{ __('messages.total_before_tax') ?? 'الإجمالي قبل الضريبة' }}) - {{ number_format($commissionValue, 2) }} ({{ __('messages.commission') ?? 'العمولة' }})
+                                                        {{ __('messages.calculation_formula') ?? 'المعادلة' }}:
+                                                        {{ number_format($totalBeforeTax, 2) }}
+                                                        ({{ __('messages.total_before_tax') ?? 'الإجمالي قبل الضريبة' }}) -
+                                                        {{ number_format($commissionValue, 2) }}
+                                                        ({{ __('messages.commission') ?? 'العمولة' }})
                                                     </small>
                                                 </div>
                                             </div>
@@ -259,11 +274,11 @@
                             {{-- Commission Display Section (Show View) --}}
                             {{-- Displayed based on user role (seller or customer) --}}
                             {{-- Shows commission details and calculated amounts --}}
-                            @if($order->user && ($order->user->commission_percentage ?? 0) > 0)
+                            @if ($order->user && ($order->user->commission_percentage ?? 0) > 0)
                                 <div class="col-md-6">
                                     <div class="card border-primary">
                                         <div class="card-header bg-light">
-                                            @if($order->user->hasRole('seller'))
+                                            @if ($order->user->hasRole('seller'))
                                                 <h5>{{ __('messages.seller_commission') }}</h5>
                                             @else
                                                 <h5>{{ __('messages.commission_percentage') }}</h5>
@@ -285,11 +300,14 @@
                                                         // Calculate total before tax
                                                         $totalBeforeTax = $order->total_prices - $order->total_taxes;
                                                         // Calculate commission value
-                                                        $commissionValue = ($totalBeforeTax * $order->user->commission_percentage) / 100;
+                                                        $commissionValue =
+                                                            ($totalBeforeTax * $order->user->commission_percentage) /
+                                                            100;
                                                         // Calculate amount due after commission deduction
                                                         $amountDueToSupplier = $totalBeforeTax - $commissionValue;
                                                     @endphp
-                                                    <span class="badge badge-success" style="font-size: 0.95rem;"><x-riyal-icon
+                                                    <span class="badge badge-success"
+                                                        style="font-size: 0.95rem;"><x-riyal-icon
                                                             style="width: 12px; height: 12px;" />
                                                         {{ number_format($commissionValue, 2) }}</span>
                                                 </div>
@@ -299,14 +317,21 @@
                                                 <div class="col-md-12">
                                                     {{-- Amount Due After Commission --}}
                                                     {{-- Formula: total_before_tax - commission_value --}}
-                                                    <strong class="text-primary">{{ __('messages.amount_due_to_supplier') ?? 'المبلغ المستحق للمورد' }} <small>({{ __('messages.without_tax') ?? 'بدون الضريبة' }})</small>:</strong><br>
-                                                    <span class="badge badge-warning" style="font-size: 1.1rem; width: 100%;">
+                                                    <strong
+                                                        class="text-primary">{{ __('messages.amount_due_to_supplier') ?? 'المبلغ المستحق للمورد' }}
+                                                        <small>({{ __('messages.without_tax') ?? 'بدون الضريبة' }})</small>:</strong><br>
+                                                    <span class="badge badge-warning"
+                                                        style="font-size: 1.1rem; width: 100%;">
                                                         <x-riyal-icon style="width: 14px; height: 14px;" />
                                                         {{ number_format($amountDueToSupplier, 2) }}
                                                     </span>
                                                     {{-- Show the formula used for transparency --}}
                                                     <small class="d-block mt-1 text-muted">
-                                                        {{ __('messages.calculation_formula') ?? 'المعادلة' }}: {{ number_format($totalBeforeTax, 2) }} ({{ __('messages.total_before_tax') ?? 'الإجمالي قبل الضريبة' }}) - {{ number_format($commissionValue, 2) }} ({{ __('messages.commission') ?? 'العمولة' }})
+                                                        {{ __('messages.calculation_formula') ?? 'المعادلة' }}:
+                                                        {{ number_format($totalBeforeTax, 2) }}
+                                                        ({{ __('messages.total_before_tax') ?? 'الإجمالي قبل الضريبة' }}) -
+                                                        {{ number_format($commissionValue, 2) }}
+                                                        ({{ __('messages.commission') ?? 'العمولة' }})
                                                     </small>
                                                 </div>
                                             </div>
@@ -314,7 +339,7 @@
                                             {{-- User Name --}}
                                             {{-- Shows the name of the seller or customer --}}
                                             <small class="text-muted">
-                                                @if($order->user->hasRole('seller'))
+                                                @if ($order->user->hasRole('seller'))
                                                     {{ __('messages.seller') }}:
                                                 @else
                                                     {{ __('messages.name') }}:
@@ -328,7 +353,7 @@
                         </div>
 
                         <!-- Debt Information -->
-                        @if($order->userDebt && $order->userDebt->status == 1)
+                        @if ($order->userDebt && $order->userDebt->status == 1)
                             <div class="row mt-3">
                                 <div class="col-md-6">
                                     <div class="card">
@@ -353,7 +378,7 @@
                                                 </tr>
                                             </table>
 
-                                            @if($order->remaining_amount > 0)
+                                            @if ($order->remaining_amount > 0)
                                                 <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
                                                     data-bs-target="#paymentModal">
                                                     {{ __('messages.receive_payment') }}
@@ -397,7 +422,7 @@
     </div>
 
     <!-- Payment Modal -->
-    @if($order->userDebt && $order->remaining_amount > 0)
+    @if ($order->userDebt && $order->remaining_amount > 0)
         <div class="modal fade" id="paymentModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -422,9 +447,10 @@
                             <div class="form-group">
                                 <label for="payment_amount">{{ __('messages.payment_amount') }}</label>
                                 <div class="input-group">
-                                    <span class="input-group-text"><x-riyal-icon style="width: 16px; height: 16px;" /></span>
-                                    <input type="number" name="payment_amount" id="payment_amount" class="form-control" min="0"
-                                        max="{{ $order->remaining_amount }}" step="0.01" required>
+                                    <span class="input-group-text"><x-riyal-icon
+                                            style="width: 16px; height: 16px;" /></span>
+                                    <input type="number" name="payment_amount" id="payment_amount" class="form-control"
+                                        min="0" max="{{ $order->remaining_amount }}" step="0.01" required>
                                 </div>
                                 <small class="text-muted">{{ __('messages.payment_amount_max') }}</small>
                             </div>

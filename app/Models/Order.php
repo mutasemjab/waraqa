@@ -10,14 +10,14 @@ class Order extends Model
     use HasFactory;
 
     protected $guarded = [];
-    
+
     protected $casts = [
-        'date'=>'date',
-        'order_date'=>'date',
+        'date' => 'date',
+        'order_date' => 'date',
     ];
 
 
-   public function orderProducts()
+    public function orderProducts()
     {
         return $this->hasMany(OrderProduct::class);
     }

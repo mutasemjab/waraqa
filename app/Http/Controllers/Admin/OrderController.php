@@ -189,7 +189,16 @@ class OrderController extends Controller
              $totalPrices = round($totalPrices, 2);
 
              $paidAmount = round($request->paid_amount ?? 0, 2);
-             $remainingAmount = round($totalPrices - $paidAmount, 2);
+
+             // Calculate seller commission if user is a seller
+             $user = User::find($request->user_id);
+             $commissionAmount = 0;
+             if ($user && $user->commission_percentage) {
+                 $commissionAmount = round($totalPrices * $user->commission_percentage / 100, 2);
+             }
+
+             // Remaining amount after deducting paid amount AND seller commission
+             $remainingAmount = round($totalPrices - $commissionAmount - $paidAmount, 2);
 
              // Create order
              $order = Order::create([
@@ -346,7 +355,16 @@ public function update(Request $request, Order $order)
         $totalPrices = round($totalPrices, 2);
 
         $paidAmount = round($request->paid_amount ?? 0, 2);
-        $remainingAmount = round($totalPrices - $paidAmount, 2);
+
+        // Calculate seller commission if user is a seller
+        $user = User::find($request->user_id);
+        $commissionAmount = 0;
+        if ($user && $user->commission_percentage) {
+            $commissionAmount = round($totalPrices * $user->commission_percentage / 100, 2);
+        }
+
+        // Remaining amount after deducting paid amount AND seller commission
+        $remainingAmount = round($totalPrices - $commissionAmount - $paidAmount, 2);
 
         // Update order
         $order->update([

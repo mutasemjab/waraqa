@@ -201,7 +201,9 @@ function loadSellerProducts(sellerId) {
                 sellerProducts[product.id] = {
                     name: product.name_ar || product.name_en,
                     code: product.code,
-                    availableQuantity: product.available_quantity
+                    availableQuantity: product.available_quantity,
+                    sellingPrice: product.selling_price,
+                    tax: product.tax ?? 0
                 };
             });
             updateProductSelects();
@@ -225,6 +227,8 @@ function updateProductSelects() {
             opt.value = id;
             opt.textContent = product.name;
             opt.setAttribute('data-available', product.availableQuantity);
+            opt.setAttribute('data-price', product.sellingPrice);
+            opt.setAttribute('data-tax', product.tax);
             if(id == currentValue) opt.selected = true;
             select.appendChild(opt);
         });
@@ -341,8 +345,12 @@ function updateRowDisplay(rowId) {
     const select = document.querySelector('[data-row="' + rowId + '"].product-select');
     const option = select.selectedOptions[0];
     const availableQty = option.getAttribute('data-available') || '0';
+    const price = option.getAttribute('data-price') || '0';
+    const tax = option.getAttribute('data-tax') || '0';
 
     document.querySelector('[data-row="' + rowId + '"].available-qty').textContent = availableQty;
+    document.querySelector('[data-row="' + rowId + '"].unit-price-input').value = price;
+    document.querySelector('[data-row="' + rowId + '"].tax-percentage-input').value = tax;
     calculateRow(rowId);
 }
 

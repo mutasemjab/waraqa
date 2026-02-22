@@ -11,9 +11,9 @@ use App\Models\User;
 use App\Models\SellerSale;
 use App\Models\SellerSaleItem;
 use App\Models\Warehouse;
+use App\Services\OrderPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class SellerSalesController extends Controller
 {
@@ -203,7 +203,11 @@ class SellerSalesController extends Controller
             // Update seller sale totals
             $sellerSale->update([
                 'total_amount' => round($totalAmount, 2),
-                'total_tax' => round($totalTax, 2)
+                'total_tax' => round($totalTax, 2),
+                // Auto-approve when created by admin
+                'status' => SellerSaleStatus::APPROVED,
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
             ]);
 
             // Create automatic exit note voucher for inventory deduction
@@ -227,6 +231,21 @@ class SellerSalesController extends Controller
                     'tax_percentage' => (float)($productData['tax_percentage'] ?? 0)
                 ]);
             }
+
+            // Repay seller's debts for each sold product
+            $paymentService = new OrderPaymentService();
+            $soldItems = collect($request->products)->map(function ($productData) {
+                $quantity = (int)$productData['quantity'];
+                $unitPrice = (float)$productData['unit_price'];
+                $taxPercentage = (float)($productData['tax_percentage'] ?? 0);
+                $totalPriceAfterTax = round($quantity * $unitPrice, 2);
+                return [
+                    'product_id' => $productData['product_id'],
+                    'amount' => $totalPriceAfterTax,
+                    'quantity' => $quantity,
+                ];
+            })->toArray();
+            $paymentService->repaySellerDebts($seller->id, $soldItems);
 
             DB::commit();
 
@@ -309,9 +328,20 @@ class SellerSalesController extends Controller
                 'approved_by' => auth()->id(),
                 'approved_at' => now(),
             ]);
+
+            // 8. Repay seller's debts for each sold product
+            $paymentService = new OrderPaymentService();
+            $soldItems = $sale->items->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'amount' => $item->total_price_after_tax,
+                    'quantity' => $item->quantity,
+                ];
+            })->toArray();
+            $paymentService->repaySellerDebts($sale->user_id, $soldItems);
         });
 
-        // 8. Redirect with success
+        // 9. Redirect with success
         return redirect()->route('admin.seller-sales.index')
             ->with('success', __('messages.sale_approved_successfully'));
     }
