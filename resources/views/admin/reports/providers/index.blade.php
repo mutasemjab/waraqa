@@ -33,12 +33,7 @@
             .printable-section {
                 position: static;
                 width: 100%;
-                page-break-after: always;
                 page-break-inside: avoid;
-            }
-
-            .provider-info-section {
-                page-break-after: always;
             }
 
             /* Hide unwanted elements */
@@ -107,12 +102,7 @@
 
             /* Provider Info - Table Style */
             .provider-info-section {
-                page-break-after: always;
-            }
-
-            .provider-info-section {
                 background: white;
-                page-break-after: always;
             }
 
             .provider-info-section h3 {
