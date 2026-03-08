@@ -32,14 +32,16 @@ class UserDashboardController extends Controller
             'unpaid_orders' => $user->orders()->where('payment_status', 2)->count(),
         ];
 
-        // Get sales statistics
+        // Get sales statistics for current user only
         $salesStats = [
-            'total_sales' => SellerSale::count(),
-            'total_sales_amount' => SellerSale::sum('total_amount'),
-            'this_month_sales' => SellerSale::whereMonth('sale_date', Carbon::now()->month)
+            'total_sales' => SellerSale::where('user_id', $user->id)->count(),
+            'total_sales_amount' => SellerSale::where('user_id', $user->id)->sum('total_amount'),
+            'this_month_sales' => SellerSale::where('user_id', $user->id)
+                ->whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
                 ->count(),
-            'this_month_amount' => SellerSale::whereMonth('sale_date', Carbon::now()->month)
+            'this_month_amount' => SellerSale::where('user_id', $user->id)
+                ->whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
                 ->sum('total_amount'),
         ];

@@ -32,7 +32,7 @@ class UserSalesController extends Controller
         }
 
         // Get user's sales from SellerSale
-        $query = SellerSale::with('items');
+        $query = SellerSale::with('items')->where('user_id', $user->id);
 
         // Filter by date
         if ($request->filled('date_from')) {
@@ -49,12 +49,13 @@ class UserSalesController extends Controller
 
         $sales = $query->latest('sale_date')->paginate(10);
 
-        // Calculate statistics
-        $allSales = SellerSale::all();
+        // Calculate statistics for current user only
+        $userSales = SellerSale::where('user_id', $user->id)->get();
         $stats = [
-            'total_sales' => $allSales->count(),
-            'total_items_sold' => SellerSaleItem::sum('quantity'),
-            'this_month_sales' => SellerSale::whereMonth('sale_date', Carbon::now()->month)
+            'total_sales' => $userSales->count(),
+            'total_items_sold' => SellerSaleItem::whereHas('sellerSale', fn($q) => $q->where('user_id', $user->id))->sum('quantity'),
+            'this_month_sales' => SellerSale::where('user_id', $user->id)
+                ->whereMonth('sale_date', Carbon::now()->month)
                 ->whereYear('sale_date', Carbon::now()->year)
                 ->count(),
             'current_inventory' => $this->getCurrentInventoryCount($userWarehouse->id),
