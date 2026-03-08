@@ -47,6 +47,16 @@ class PurchaseController extends Controller
     // حفظ المشترية الجديدة
     public function store(Request $request)
     {
+        // التحقق من الـ mark_as_received يدويّاً (checkbox يرسل "on" أو قيمة أخرى، أو لا يرسل شيء)
+        $markAsReceived = $request->has('mark_as_received');
+
+        // التحقق من received_date عند الحاجة
+        if ($markAsReceived) {
+            $request->validate([
+                'received_date' => 'required|date|before_or_equal:today',
+            ]);
+        }
+
         $request->validate([
             'provider_id' => 'nullable|exists:providers,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
@@ -141,6 +151,7 @@ class PurchaseController extends Controller
             PurchaseItem::insert($purchaseItemsData);
 
             // إنشاء طلب كتب تلقائي من نفس المنتجات
+            $bookRequest = null;
             if ($purchase->provider_id) {
                 $bookRequest = BookRequest::create([
                     'provider_id' => $purchase->provider_id,
@@ -160,6 +171,80 @@ class PurchaseController extends Controller
                     ];
                 }, $purchaseItems);
                 BookRequestItem::insert($bookRequestItemsData);
+            }
+
+            // معالجة الاستلام الفوري إذا تم تفعيل mark_as_received
+            if ($markAsReceived) {
+                // 1. إنشاء BookRequestResponse لكل item (بنفس بيانات الشراء)
+                $lastResponseId = null;
+                if ($bookRequest) {
+                    foreach ($bookRequest->items as $bookRequestItem) {
+                        // استخراج بيانات المنتج من purchaseItems
+                        $purchaseItem = collect($purchaseItems)->firstWhere('product_id', $bookRequestItem->product_id);
+                        if (!$purchaseItem) continue;
+
+                        $priceWithTax = $purchaseItem['unit_price'] * (1 + $purchaseItem['tax_percentage'] / 100);
+
+                        $response = BookRequestResponse::create([
+                            'book_request_item_id' => $bookRequestItem->id,
+                            'provider_id' => $purchase->provider_id,
+                            'available_quantity' => $purchaseItem['quantity'],
+                            'price' => $priceWithTax,
+                            'tax_percentage' => $purchaseItem['tax_percentage'],
+                            'status' => 'approved',
+                            'note' => 'تم إنشاؤه تلقائياً عند الاستلام الفوري',
+                        ]);
+                        $lastResponseId = $response->id;
+                    }
+
+                    // تحديث BookRequest إلى approved
+                    $bookRequest->update(['status' => 'approved']);
+                }
+
+                // 2. إنشاء NoteVoucher (سند إدخال واحد لكل المنتجات)
+                $mainWarehouse = Warehouse::find($request->warehouse_id)
+                                ?? Warehouse::first()
+                                ?? Warehouse::create(['name' => __('messages.main_warehouse')]);
+
+                $inVoucherType = NoteVoucherType::where('in_out_type', 1)->first();
+                if (!$inVoucherType) {
+                    throw new \Exception(__('messages.input_voucher_type_not_found'));
+                }
+
+                $lastNumber = NoteVoucher::max('number') ?? 0;
+                $noteVoucher = NoteVoucher::create([
+                    'number' => $lastNumber + 1,
+                    'note_voucher_type_id' => $inVoucherType->id,
+                    'from_warehouse_id' => null,
+                    'to_warehouse_id' => $mainWarehouse->id,
+                    'date_note_voucher' => $request->received_date,
+                    'provider_id' => $purchase->provider_id,
+                    'note' => __('messages.input_voucher_from_purchase', [
+                        'purchase_number' => $purchaseNumber
+                    ]),
+                ]);
+
+                // 3. VoucherProduct لكل منتج
+                foreach ($purchaseItems as $item) {
+                    $priceWithTax = $item['unit_price'] * (1 + $item['tax_percentage'] / 100);
+                    VoucherProduct::create([
+                        'note_voucher_id' => $noteVoucher->id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'purchasing_price' => $priceWithTax,
+                        'tax_percentage' => $item['tax_percentage'],
+                    ]);
+                }
+
+                // 4. تحديث Purchase → received
+                $updateData = [
+                    'status' => 'received',
+                    'received_date' => $request->received_date,
+                ];
+                if ($lastResponseId) {
+                    $updateData['book_request_response_id'] = $lastResponseId;
+                }
+                $purchase->update($updateData);
             }
 
             DB::commit();

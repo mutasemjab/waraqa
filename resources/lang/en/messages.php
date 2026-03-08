@@ -1740,6 +1740,7 @@ return [
     'Created_by' => 'Created By',
     'Notes' => 'Notes',
     'received_date' => 'Received Date',
+    'mark_as_received' => 'Mark as Received',
     'product_code' => 'Product Code',
     'purchase_information' => 'Purchase Information',
     'purchase_items' => 'Purchase Items',

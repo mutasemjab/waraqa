@@ -35,7 +35,7 @@
                                     fieldName="provider_id"
                                     label="provider"
                                     placeholder="Search..."
-                                    limit="10"
+                                    limit="20"
                                     required="false"
                                     value="{{ old('provider_id') }}"
                                 />
@@ -132,6 +132,38 @@
                                             <strong id="grand-total" class="h4 text-primary">0.00</strong>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Switcher: تحديد كمستلمة -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="mark_as_received" name="mark_as_received" value="1"
+                                               {{ old('mark_as_received') ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold" for="mark_as_received">
+                                            {{ __('messages.mark_as_received') }}
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- حقل تاريخ الاستلام (يظهر فقط عند التفعيل) -->
+                                <div class="mb-3" id="received_date_section" style="display: none;">
+                                    <label for="received_date" class="form-label">
+                                        {{ __('messages.received_date') }} <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date"
+                                           class="form-control @error('received_date') is-invalid @enderror"
+                                           id="received_date"
+                                           name="received_date"
+                                           value="{{ old('received_date', date('Y-m-d')) }}"
+                                           max="{{ date('Y-m-d') }}">
+                                    @error('received_date')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
@@ -344,6 +376,23 @@ $(document).ready(function() {
     // Initialize on load
     updateDeleteButtons();
     calculateTotals();
+
+    // Toggle received date field
+    $('#mark_as_received').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#received_date_section').show();
+            $('#received_date').prop('required', true);
+        } else {
+            $('#received_date_section').hide();
+            $('#received_date').prop('required', false);
+        }
+    });
+
+    // On page load (in case of validation error with old values)
+    if ($('#mark_as_received').is(':checked')) {
+        $('#received_date_section').show();
+        $('#received_date').prop('required', true);
+    }
 });
 </script>
 

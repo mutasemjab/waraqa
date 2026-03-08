@@ -65,14 +65,23 @@ class SearchController extends Controller
 
             // Build search query - search in all columns
             if ($term) {
-                $query->where(function ($q) use ($term) {
-                    $columns = \Schema::getColumnListing($q->getModel()->getTable());
-                    foreach ($columns as $column) {
-                        if ($column !== 'id' && $column !== 'created_at' && $column !== 'updated_at') {
-                            $q->orWhere($column, 'LIKE', "%{$term}%");
+                // Special handling for Provider - search in related User's name
+                if ($model === 'App\Models\Provider') {
+                    $query->whereHas('user', function ($q) use ($term) {
+                        $q->where('name', 'LIKE', "%{$term}%")
+                          ->orWhere('email', 'LIKE', "%{$term}%")
+                          ->orWhere('phone', 'LIKE', "%{$term}%");
+                    });
+                } else {
+                    $query->where(function ($q) use ($term) {
+                        $columns = \Schema::getColumnListing($q->getModel()->getTable());
+                        foreach ($columns as $column) {
+                            if ($column !== 'id' && $column !== 'created_at' && $column !== 'updated_at') {
+                                $q->orWhere($column, 'LIKE', "%{$term}%");
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
 
             // Get results

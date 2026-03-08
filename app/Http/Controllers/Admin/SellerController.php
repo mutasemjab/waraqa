@@ -4,13 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
-use App\Models\Event;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -64,11 +61,6 @@ class SellerController extends Controller
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
-            'events' => 'nullable|array',
-            'events.*.name' => 'required_with:events|string|max:255',
-            'events.*.start_date' => 'required_with:events|date_format:Y-m-d\TH:i',
-            'events.*.end_date' => 'required_with:events|date_format:Y-m-d\TH:i|after:events.*.start_date',
-            'events.*.commission_percentage' => 'required_with:events|numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -78,7 +70,7 @@ class SellerController extends Controller
                 ->withInput();
         }
 
-        $userData = $request->except('photo', 'events');
+        $userData = $request->except('photo');
 
         // Handle photo upload
         if ($request->has('photo')) {
@@ -97,19 +89,6 @@ class SellerController extends Controller
             'name' => $seller->name,
             'user_id' => $seller->id,
         ]);
-
-        // Create events if provided
-        if ($request->has('events') && is_array($request->events)) {
-            foreach ($request->events as $eventData) {
-                Event::create([
-                    'user_id' => $seller->id,
-                    'name' => $eventData['name'],
-                    'start_date' => $eventData['start_date'],
-                    'end_date' => $eventData['end_date'],
-                    'commission_percentage' => $eventData['commission_percentage'],
-                ]);
-            }
-        }
 
         return redirect()
             ->route('sellers.index')
@@ -137,7 +116,7 @@ class SellerController extends Controller
      */
     public function edit($id)
     {
-        $seller = User::with('events')->role('seller')->findOrFail($id);
+        $seller = User::role('seller')->findOrFail($id);
         $countries = Country::get();
         return view('admin.sellers.edit', compact('seller', 'countries'));
     }
@@ -163,11 +142,6 @@ class SellerController extends Controller
             'activate' => 'nullable|in:1,2',
             'country_id' => 'nullable|exists:countries,id',
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
-            'events' => 'nullable|array',
-            'events.*.name' => 'required_with:events|string|max:255',
-            'events.*.start_date' => 'required_with:events|date_format:Y-m-d\TH:i',
-            'events.*.end_date' => 'required_with:events|date_format:Y-m-d\TH:i|after:events.*.start_date',
-            'events.*.commission_percentage' => 'required_with:events|numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -177,7 +151,7 @@ class SellerController extends Controller
                 ->withInput();
         }
 
-        $userData = $request->except('photo', 'password', 'events', 'deleted_events', 'updated_events');
+        $userData = $request->except('photo', 'password');
 
         // Handle photo upload
         if ($request->has('photo')) {
@@ -190,44 +164,6 @@ class SellerController extends Controller
         }
 
         $seller->update($userData);
-
-        // Handle updated events
-        if ($request->has('updated_events') && !empty($request->updated_events)) {
-            $updatedEvents = json_decode($request->updated_events, true);
-            if (is_array($updatedEvents)) {
-                foreach ($updatedEvents as $eventData) {
-                    if (isset($eventData['id'])) {
-                        Event::where('id', $eventData['id'])->where('user_id', $seller->id)->update([
-                            'name' => $eventData['name'],
-                            'start_date' => $eventData['start_date'],
-                            'end_date' => $eventData['end_date'],
-                            'commission_percentage' => $eventData['commission_percentage'],
-                        ]);
-                    }
-                }
-            }
-        }
-
-        // Handle new events
-        if ($request->has('events') && is_array($request->events)) {
-            foreach ($request->events as $eventData) {
-                Event::create([
-                    'user_id' => $seller->id,
-                    'name' => $eventData['name'],
-                    'start_date' => $eventData['start_date'],
-                    'end_date' => $eventData['end_date'],
-                    'commission_percentage' => $eventData['commission_percentage'],
-                ]);
-            }
-        }
-
-        // Handle deleted events
-        if ($request->has('deleted_events')) {
-            $deletedIds = array_filter(explode(',', $request->deleted_events));
-            if (!empty($deletedIds)) {
-                Event::whereIn('id', $deletedIds)->delete();
-            }
-        }
 
         return redirect()
             ->route('sellers.index')

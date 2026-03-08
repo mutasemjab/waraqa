@@ -182,7 +182,15 @@
                 <li class="nav-item">
                     <a href="{{ route('purchases.index') }}" class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-shopping-cart"></i>
-                        <p>{{ __('messages.purchases') }}</p>
+                        <p>
+                            {{ __('messages.purchases') }}
+                            @php
+                                $pendingPurchasesCount = \App\Models\Purchase::where('status', 'pending')->count();
+                            @endphp
+                            @if($pendingPurchasesCount > 0)
+                                <span class="badge badge-warning right">{{ $pendingPurchasesCount }}</span>
+                            @endif
+                        </p>
                     </a>
                 </li>
                 @endcanany

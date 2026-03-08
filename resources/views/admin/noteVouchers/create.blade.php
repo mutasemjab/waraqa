@@ -42,7 +42,7 @@
                         fieldName="provider_id"
                         label="provider"
                         placeholder="Search..."
-                        limit="10"
+                        limit="20"
                         required="true"
                     />
                 </div>
@@ -53,7 +53,7 @@
                         fieldName="toWarehouse"
                         label="toWarehouse"
                         placeholder="Search..."
-                        limit="10"
+                        limit="20"
                         required="true"
                     />
                 </div>
@@ -65,7 +65,7 @@
                         fieldName="fromWarehouse"
                         label="fromWarehouse"
                         placeholder="Search..."
-                        limit="10"
+                        limit="20"
                         required="true"
                     />
                 </div>
@@ -92,7 +92,7 @@
                             fieldName="provider_id"
                             label="provider"
                             placeholder="Search..."
-                            limit="10"
+                            limit="20"
                             required="true"
                         />
                     </div>
@@ -103,7 +103,7 @@
                             fieldName="user_id"
                             label="customer"
                             placeholder="Search..."
-                            limit="10"
+                            limit="20"
                             displayColumn="name"
                             filter="with_role:customer"
                             required="false"
@@ -118,7 +118,7 @@
                             fieldName="toWarehouse"
                             label="toWarehouse"
                             placeholder="Search..."
-                            limit="10"
+                            limit="20"
                             required="true"
                             excludeField="fromWarehouse"
                         />

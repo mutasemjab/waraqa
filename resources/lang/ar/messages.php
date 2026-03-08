@@ -1804,6 +1804,7 @@ return [
     'Created_by' => 'أنشأ بواسطة',
     'Notes' => 'ملاحظات',
     'received_date' => 'تاريخ الاستلام',
+    'mark_as_received' => 'تحديد كمستلمة',
     'product_code' => 'رمز المنتج',
     'purchase_information' => 'معلومات المشتراة',
     'purchase_items' => 'عناصر المشتراة',
