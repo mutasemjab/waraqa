@@ -2034,4 +2034,9 @@ return [
     'processed_at' => 'معالج في',
     'seller_information' => 'معلومات البائع',
     'status_information' => 'معلومات الحالة',
+    'Key' => 'المفتاح',
+    'Last_Updated' => 'آخر تحديث',
+    'No_Data' => 'لا توجد بيانات',
+    'not_updated' => 'لم يتم التحديث',
+    'this_field_cannot_be_changed' => 'لا يمكن تغيير هذا الحقل',
 ];

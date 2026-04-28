@@ -1971,4 +1971,9 @@ return [
     'processed_at' => 'Processed At',
     'seller_information' => 'Seller Information',
     'status_information' => 'Status Information',
+    'Key' => 'Key',
+    'Last_Updated' => 'Last Updated',
+    'No_Data' => 'No Data',
+    'not_updated' => 'Not Updated',
+    'this_field_cannot_be_changed' => 'This Field Cannot Be Changed',
 ];
