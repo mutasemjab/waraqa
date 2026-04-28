@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            border-bottom: 3px solid #28a745;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #28a745;
+            margin: 0;
+        }
+        .greeting {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .content {
+            color: #333;
+            line-height: 1.8;
+        }
+        .info-section {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .info-section h3 {
+            color: #28a745;
+            margin-top: 0;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+        }
+        .info-item {
+            margin: 10px 0;
+            padding: 8px 0;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .items-table th,
+        .items-table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        .items-table th {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+        }
+        .items-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .items-table tr:hover {
+            background-color: #f0f0f0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .cta-button:hover {
+            background-color: #218838;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        .note-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .note-box strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 طلب كتب جديد</h1>
+        </div>
+
+        <div class="greeting">
+            <p>السلام عليكم ورحمة الله وبركاته،</p>
+            <p>تم استقبال طلب كتب جديد من عميل. يرجى مراجعة التفاصيل أدناه والرد في أسرع وقت:</p>
+        </div>
+
+        <div class="content">
+            <div class="info-section">
+                <h3>🔍 بيانات الطالب/العميل</h3>
+                <div class="info-item">
+                    <span class="label">الاسم:</span>
+                    {{ $bookRequest->user->name }}
+                </div>
+                <div class="info-item">
+                    <span class="label">البريد الإلكتروني:</span>
+                    {{ $bookRequest->user->email }}
+                </div>
+                <div class="info-item">
+                    <span class="label">رقم الطلب:</span>
+                    #{{ $bookRequest->id }}
+                </div>
+                <div class="info-item">
+                    <span class="label">التاريخ:</span>
+                    {{ $bookRequest->created_at->format('Y-m-d H:i') }}
+                </div>
+                @if ($bookRequest->note)
+                    <div class="info-item">
+                        <span class="label">ملاحظات:</span>
+                        {{ $bookRequest->note }}
+                    </div>
+                @endif
+            </div>
+
+            <div class="info-section">
+                <h3>📚 تفاصيل الكتب المطلوبة</h3>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>اسم الكتاب/المنتج</th>
+                            <th>الكمية المطلوبة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($bookRequest->items as $item)
+                            <tr>
+                                <td>
+                                    <strong>{{ $item->product->name ?? 'غير محدد' }}</strong>
+                                    @if ($item->product && $item->product->description)
+                                        <br><small style="color: #999;">{{ substr($item->product->description, 0, 100) }}...</small>
+                                    @endif
+                                </td>
+                                <td>{{ $item->requested_quantity }} وحدة</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="2" style="text-align: center; color: #999;">لا توجد عناصر</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="note-box">
+                <strong>⏰ هام:</strong> يرجى الرد على هذا الطلب بأسرع وقت ممكن لتقديم أفضل خدمة لعملائنا.
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>هذا إيميل تلقائي من نظام دار ورقة. يرجى عدم الرد على هذا البريد.</p>
+            <p>للمزيد من المعلومات، يرجى تسجيل الدخول إلى لوحة التحكم الخاصة بك.</p>
+        </div>
+    </div>
+</body>
+</html>

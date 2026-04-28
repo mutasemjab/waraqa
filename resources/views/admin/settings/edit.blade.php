@@ -1,85 +1,63 @@
 @extends('layouts.admin')
-@section('title')
 
-edit Setting
-@endsection
-
-
-
-@section('contentheaderlink')
-<a href="{{ route('settings.index') }}"> Setting </a>
-@endsection
-
-@section('contentheaderactive')
-تعديل
-@endsection
-
+@section('title', __('messages.Edit') . ' ' . $data->key)
 
 @section('content')
-
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title card_title_center"> edit Setting </h3>
-    </div>
-    <!-- /.card-header -->
-    <div class="card-body">
-
-
-        <form action="{{ route('settings.update',$data['id']) }}" method="post" enctype='multipart/form-data'>
-            <div class="row">
-                @csrf
-
-
-
-
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>{{ __('messages.key') }}</label>
-                        <input name="key" id="key" class="form-control"
-                            value="{{ old('key',$data['key']) }}" readonly>
-                        @error('key')
-                        <span class="text-danger">{{ $message }}</span>
-                        @enderror
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ __('messages.Edit') }}: <strong>{{ $data->key }}</strong></h3>
+                    <div class="card-tools">
+                        <a href="{{ route('settings.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> {{ __('messages.Back_to_List') }}
+                        </a>
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>{{ __('messages.value') }}</label>
-                        <input name="value" id="value" class="form-control"
-                            value="{{ old('value',$data['value']) }}">
-                        @error('value')
-                        <span class="text-danger">{{ $message }}</span>
-                        @enderror
+                <form action="{{ route('settings.update', $data->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>{{ __('messages.Key') }}</label>
+                            <input type="text" class="form-control" value="{{ $data->key }}" disabled>
+                            <small class="form-text text-muted">{{ __('messages.this_field_cannot_be_changed') }}</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>{{ __('messages.Value') }} *</label>
+                            <textarea
+                                name="value"
+                                class="form-control @error('value') is-invalid @enderror"
+                                rows="6"
+                                required>{{ $data->value }}</textarea>
+                            @error('value')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label>{{ __('messages.Last_Updated') }}</label>
+                            <input type="text" class="form-control"
+                                   value="{{ $data->updated_at?->format('Y-m-d H:i:s') ?? __('messages.not_updated') }}"
+                                   disabled>
+                        </div>
                     </div>
-                </div>
 
-
-
-                <div class="col-md-12">
-                    <div class="form-group text-center">
-                        <button id="do_add_item_cardd" type="submit" class="btn btn-primary btn-sm"> update</button>
-                        <a href="{{ route('settings.index') }}" class="btn btn-sm btn-danger">cancel</a>
-
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {{ __('messages.Save') }}
+                        </button>
+                        <a href="{{ route('settings.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> {{ __('messages.Cancel') }}
+                        </a>
                     </div>
-                </div>
-
+                </form>
             </div>
-        </form>
-
-
-
+        </div>
     </div>
-
-
-
-
 </div>
-</div>
-
-
-
-
-
-
 @endsection

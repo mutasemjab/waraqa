@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\BookRequestCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
@@ -171,6 +172,8 @@ class PurchaseController extends Controller
                     ];
                 }, $purchaseItems);
                 BookRequestItem::insert($bookRequestItemsData);
+
+                BookRequestCreated::dispatch($bookRequest);
             }
 
             // معالجة الاستلام الفوري إذا تم تفعيل mark_as_received

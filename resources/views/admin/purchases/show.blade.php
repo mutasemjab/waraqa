@@ -220,6 +220,7 @@
                                                     <table class="table table-sm table-striped">
                                                         <thead>
                                                             <tr>
+                                                                <th>{{ __('messages.Product') }}</th>
                                                                 <th>{{ __('messages.Quantity') }}</th>
                                                                 <th>{{ __('messages.Price') }} ({{ __('messages.tax_inclusive') }})</th>
                                                                 <th>{{ __('messages.Tax') }} %</th>
@@ -230,6 +231,16 @@
                                                         </thead>
                                                         <tbody>
                                                             <tr data-response-id="{{ $response['id'] }}">
+                                                                <td>
+                                                                    @php
+                                                                        $bookRequestItem = \App\Models\BookRequestItem::find($response['book_request_item_id']);
+                                                                    @endphp
+                                                                    @if ($bookRequestItem && $bookRequestItem->product)
+                                                                        {{ app()->getLocale() === 'ar' ? $bookRequestItem->product->name_ar : $bookRequestItem->product->name_en }}
+                                                                    @else
+                                                                        <span class="text-muted">{{ __('messages.Product_Deleted') }}</span>
+                                                                    @endif
+                                                                </td>
                                                                 <td>
                                                                     <input type="number" name="quantity" class="form-control form-control-sm qty-input" data-response-id="{{ $response['id'] }}" value="{{ $response['available_quantity'] }}" max="{{ $response['available_quantity'] }}" min="1" style="width: 80px;">
                                                                 </td>

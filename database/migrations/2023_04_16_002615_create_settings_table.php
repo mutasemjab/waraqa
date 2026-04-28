@@ -15,12 +15,15 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('key');
-            $table->integer('value')->default(1);
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
             $table->timestamps();
+
+            $table->index('key');
         });
         DB::table('settings')->insert([
-            ['key' => "commission_of_admin", 'value' => 1],
+            ['key' => "commission_of_admin", 'value' => '1'],
+            ['key' => "admin_email", 'value' => 'admin@waraqa.test'],
         ]);
 
     }

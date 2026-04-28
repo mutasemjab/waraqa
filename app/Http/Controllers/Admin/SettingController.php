@@ -40,23 +40,21 @@ class SettingController extends Controller
       if (auth()->user()->can('setting-edit')) {
           $setting = Setting::findOrFail($id);
 
-          // Validate input (only allow 'value' field)
           $request->validate([
-              'value' => 'required|integer', // Adjust validation as needed
+              'value' => 'required|string',
           ]);
 
           try {
-              // Update only the value field
               $setting->value = $request->input('value');
 
               if ($setting->save()) {
-                  return redirect()->route('admin.setting.index')->with(['success' => 'Setting updated successfully']);
+                  return redirect()->route('admin.setting.index')->with('success', 'تم تحديث الإعداد بنجاح');
               } else {
-                  return redirect()->back()->with(['error' => 'Something went wrong']);
+                  return redirect()->back()->with('error', 'حدث خطأ أثناء التحديث');
               }
           } catch (\Exception $ex) {
               return redirect()->back()
-                  ->with(['error' => 'An error occurred: ' . $ex->getMessage()])
+                  ->with('error', 'خطأ: ' . $ex->getMessage())
                   ->withInput();
           }
       } else {

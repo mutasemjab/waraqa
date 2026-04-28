@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Provider;
 
+use App\Events\BookRequestResponseCreated;
 use App\Http\Controllers\Controller;
 use App\Models\BookRequestItem;
 use App\Models\BookRequestResponse;
@@ -70,6 +71,8 @@ class BookRequestController extends Controller
             'note' => $validated['note'] ?? null,
             'expected_delivery_date' => $validated['expected_delivery_date'] ?? null,
         ]);
+
+        BookRequestResponseCreated::dispatch($response);
 
         // Update the purchase with the book request response
         $purchase = $bookRequestItem->bookRequest->purchase;

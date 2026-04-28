@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Events\SellerProductRequestCreated;
 use App\Http\Controllers\Controller;
 use App\Models\SellerProductRequest;
 use App\Models\SellerProductRequestItem;
@@ -56,6 +57,8 @@ class SellerProductRequestController extends Controller
                     'requested_quantity' => $item['requested_quantity'],
                 ]);
             }
+
+            SellerProductRequestCreated::dispatch($sellerProductRequest);
         });
 
         return redirect()->route('user.sellerProductRequests.index')
