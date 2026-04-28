@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Enums\SellerSaleStatus;
+use App\Events\SellerSaleCreated;
 use App\Http\Controllers\Controller;
 use App\Models\NoteVoucher;
 use App\Models\VoucherProduct;
@@ -155,6 +156,8 @@ class UserSalesController extends Controller
                 'total_amount' => 0, // Will be updated after items
                 'total_tax' => 0 // Will be updated after items
             ]);
+
+            SellerSaleCreated::dispatch($sellerSale);
 
             // 5. Create sale items
             foreach ($request->products as $productData) {

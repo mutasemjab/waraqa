@@ -73,7 +73,7 @@ class ProvidersReportController extends Controller
             if (!isset($uniqueProducts[$productId])) {
                 $uniqueProducts[$productId] = [
                     'id' => $product->id,
-                    'name' => $product->name_en ?? $product->name_ar ?? 'Unknown',
+                    'name' => $product->name ?? 'Unknown',
                     'sku' => $product->sku ?? '-',
                     'unit_price' => number_format($product->selling_price ?? 0, 2),
                     'quantity' => 0,
@@ -459,21 +459,27 @@ class ProvidersReportController extends Controller
 
         $sales = [];
         $totalSold = 0;
-        $totalRevenue = 0;
+        $totalSellerShare = 0;
 
         foreach ($sellerSales as $sellerSale) {
             foreach ($sellerSale->items as $item) {
-                $revenue = $item->quantity * ($item->unit_price ?? 0);
+                // Use total_price_before_tax for calculation
+                $revenueWithoutTax = $item->total_price_before_tax ?? 0;
+
+                // Calculate seller share using formula: revenue_without_tax × (1 - 0.20 - commission_percentage/100)
+                $commissionPercentage = $sellerSale->user?->commission_percentage ?? 0;
+                $sellerShare = $revenueWithoutTax * (1 - 0.20 - ($commissionPercentage / 100));
+
                 $sales[] = [
                     'warehouse_name' => $sellerSale->user?->name ?? 'Unknown',
                     'product_name' => $item->product?->name ?? 'Unknown',
                     'quantity_sold' => $item->quantity,
-                    'revenue' => $revenue,
+                    'seller_share' => $sellerShare,
                     'date' => $sellerSale->sale_date instanceof \DateTime ? $sellerSale->sale_date->format('Y-m-d') : substr($sellerSale->sale_date, 0, 10),
                     'order_number' => $sellerSale->sale_number,
                 ];
                 $totalSold += $item->quantity;
-                $totalRevenue += $revenue;
+                $totalSellerShare += $sellerShare;
             }
         }
 
@@ -482,7 +488,7 @@ class ProvidersReportController extends Controller
             'sales' => $sales,
             'summary' => [
                 'total_sold' => $totalSold,
-                'total_revenue' => number_format($totalRevenue, 2),
+                'total_revenue' => number_format($totalSellerShare, 2),
             ],
         ]);
     }
@@ -769,6 +775,7 @@ class ProvidersReportController extends Controller
 
             if ($transferred > 0 || $totalSold > 0 || $returned > 0) {
                 $stockBalance[] = [
+                    'product_id' => $product->id,
                     'warehouse_name' => $warehouse?->name ?? 'المستودع الرئيسي',
                     'product_name' => $product->name,
                     'quantity_distributed' => $transferred,
@@ -789,7 +796,93 @@ class ProvidersReportController extends Controller
         ]);
     }
 
-private function getStatusBadge($status)
+    /**
+     * Get stock breakdown by warehouse for a specific product
+     */
+    public function getStockBreakdownByWarehouse(Request $request, $providerId, $productId)
+    {
+        // Get all warehouses
+        $warehouses = \App\Models\Warehouse::all();
+
+        $breakdown = [];
+        $totalRemaining = 0;
+
+        foreach ($warehouses as $warehouse) {
+            // Get received quantity (Type 1 to this warehouse)
+            $received = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) use ($warehouse) {
+                $q->where('note_voucher_type_id', 1)
+                  ->where('to_warehouse_id', $warehouse->id);
+            })
+            ->where('product_id', $productId)
+            ->sum('quantity');
+
+            // Get transferred out (Type 3 from this warehouse)
+            $transferredOut = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) use ($warehouse) {
+                $q->where('note_voucher_type_id', 3)
+                  ->where('from_warehouse_id', $warehouse->id);
+            })
+            ->where('product_id', $productId)
+            ->sum('quantity');
+
+            // Get transferred in (Type 3 to this warehouse)
+            $transferredIn = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) use ($warehouse) {
+                $q->where('note_voucher_type_id', 3)
+                  ->where('to_warehouse_id', $warehouse->id);
+            })
+            ->where('product_id', $productId)
+            ->sum('quantity');
+
+            // Get sold from orders via this warehouse's user
+            $soldViaOrders = \App\Models\OrderProduct::whereHas('order', function ($q) use ($warehouse) {
+                $q->where('status', \App\Enums\OrderStatus::DONE->value)
+                  ->whereHas('user', function ($subQ) use ($warehouse) {
+                      $subQ->where('id', $warehouse->user_id);
+                  });
+            })
+            ->where('product_id', $productId)
+            ->sum('quantity');
+
+            // Get returned from orders via this warehouse's user
+            $returned = \App\Models\OrderProduct::whereHas('order', function ($q) use ($warehouse) {
+                $q->where('status', \App\Enums\OrderStatus::REFUNDED->value)
+                  ->whereHas('user', function ($subQ) use ($warehouse) {
+                      $subQ->where('id', $warehouse->user_id);
+                  });
+            })
+            ->where('product_id', $productId)
+            ->sum('quantity');
+
+            // Total received in warehouse
+            $totalReceived = $received + $transferredIn;
+
+            // Total sent out from warehouse
+            $totalSent = $transferredOut + $soldViaOrders + $returned;
+
+            // Remaining in warehouse
+            $remaining = max(0, $totalReceived - $totalSent);
+
+            if ($totalReceived > 0 || $remaining > 0) {
+                $breakdown[] = [
+                    'warehouse_id' => $warehouse->id,
+                    'warehouse_name' => $warehouse->name,
+                    'received' => $totalReceived,
+                    'transferred_out' => $transferredOut,
+                    'sold' => $soldViaOrders,
+                    'returned' => $returned,
+                    'remaining' => $remaining,
+                ];
+                $totalRemaining += $remaining;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'breakdown' => $breakdown,
+            'total_remaining' => $totalRemaining,
+        ]);
+    }
+
+    private function getStatusBadge($status)
     {
         $badges = [
             'approved' => '<span class="badge badge-success">موافق عليه</span>',

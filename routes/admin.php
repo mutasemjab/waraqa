@@ -156,6 +156,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('reports/providers/{providerId}/refunds', 'App\Http\Controllers\Admin\ProvidersReportController@getRefundsData')->name('admin.reports.providers.refunds');
         Route::get('reports/providers/{providerId}/sellers-payments', 'App\Http\Controllers\Admin\ProvidersReportController@getSellersPaymentsData')->name('admin.reports.providers.sellersPayments');
         Route::get('reports/providers/{providerId}/stock-balance', 'App\Http\Controllers\Admin\ProvidersReportController@getStockBalanceData')->name('admin.reports.providers.stockBalance');
+        Route::get('reports/providers/{providerId}/stock-breakdown/{productId}', 'App\Http\Controllers\Admin\ProvidersReportController@getStockBreakdownByWarehouse')->name('admin.reports.providers.stockBreakdown');
 
         // Distribution Point Sales Report
         Route::get('reports/distribution-point-sales', [DistributionPointSalesReportController::class, 'index'])->name('admin.reports.distributionPointSales.index');
@@ -168,6 +169,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         // Seller Product Requests
         Route::prefix('sellerProductRequests')->name('sellerProductRequests.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'index'])->name('index');
+            Route::get('/create-direct', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'createDirect'])->name('create-direct');
+            Route::post('/store-direct', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'storeDirect'])->name('store-direct');
             Route::get('/{sellerProductRequest}', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'show'])->name('show');
             Route::get('/{sellerProductRequest}/approve', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'showApprovalForm'])->name('approve.form');
             Route::post('/{sellerProductRequest}/approve', [\App\Http\Controllers\Admin\SellerProductRequestController::class, 'approve'])->name('approve');

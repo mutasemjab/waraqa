@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Events\BookRequestCreated;
 use App\Events\BookRequestResponseCreated;
 use App\Events\SellerProductRequestCreated;
+use App\Events\SellerSaleCreated;
 use App\Listeners\SendBookRequestNotificationToProvider;
 use App\Listeners\SendBookRequestResponseNotification;
 use App\Listeners\SendSellerProductRequestNotification;
+use App\Listeners\SendSellerSaleNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -31,6 +33,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         SellerProductRequestCreated::class => [
             SendSellerProductRequestNotification::class,
+        ],
+        SellerSaleCreated::class => [
+            SendSellerSaleNotification::class,
         ],
     ];
 

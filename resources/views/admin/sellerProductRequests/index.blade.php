@@ -8,6 +8,11 @@
         <div class="col-md-8">
             <h1 class="h3 mb-0">{{ __('messages.seller_product_requests') }}</h1>
         </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ route('sellerProductRequests.create-direct') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {{ __('messages.add_products_directly') }}
+            </a>
+        </div>
     </div>
 
     @if($message = Session::get('success'))

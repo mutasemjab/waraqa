@@ -2252,7 +2252,7 @@
                             <th>{{ __('messages.distribution_point') }}</th>
                             <th>{{ __('messages.product') }}</th>
                             <th>{{ __('messages.quantity') }}</th>
-                            <th>{{ __('messages.revenue') }}</th>
+                            <th>{{ __('messages.seller_share') }}</th>
                             <th>{{ __('messages.date') }}</th>
                             <th>{{ __('messages.order_number') }}</th>
                         </tr>
@@ -2267,7 +2267,7 @@
                     <td><strong>${item.warehouse_name}</strong></td>
                     <td>${item.product_name}</td>
                     <td><span class="badge badge-info">${item.quantity_sold}</span></td>
-                    <td>${parseFloat(item.revenue).toFixed(2)} ${riyalIcon}</td>
+                    <td>${parseFloat(item.seller_share).toFixed(2)} ${riyalIcon}</td>
                     <td>${item.date}</td>
                     <td><small class="text-muted">${item.order_number}</small></td>
                 </tr>
@@ -2493,7 +2493,7 @@
 
                 data.forEach(function(item, index) {
                     const remainingBadge = item.quantity_remaining > 0 ?
-                        '<span class="badge badge-info">' + item.quantity_remaining + '</span>' :
+                        '<span class="badge badge-info stock-breakdown-trigger" data-product-id="' + item.product_id + '" style="cursor: pointer;" title="{{ __('messages.click_to_view_warehouse_distribution') }}">' + item.quantity_remaining + '</span>' :
                         '<span class="badge badge-secondary">0</span>';
 
                     html += `
@@ -2516,6 +2516,84 @@
         `;
 
                 $('#stockBalanceTableContainer').html(html);
+
+                // Add click handler for stock breakdown
+                attachStockBreakdownHandlers();
+            }
+
+            // Handle stock breakdown click
+            function attachStockBreakdownHandlers() {
+                $('.stock-breakdown-trigger').off('click').on('click', function() {
+                    const productId = $(this).data('product-id');
+                    const providerId = $('#provider_id_input').val();
+                    showStockBreakdownModal(providerId, productId);
+                });
+            }
+
+            // Show stock breakdown modal
+            function showStockBreakdownModal(providerId, productId) {
+                $.ajax({
+                    url: '{{ route('admin.reports.providers.stockBreakdown', [':providerId', ':productId']) }}'
+                        .replace(':providerId', providerId)
+                        .replace(':productId', productId),
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            displayStockBreakdownModal(response.breakdown, response.total_remaining);
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire('{{ __('messages.error') }}', '{{ __('messages.error_loading_data') }}', 'error');
+                    }
+                });
+            }
+
+            // Display stock breakdown modal
+            function displayStockBreakdownModal(breakdown, totalRemaining) {
+                let modalBody = `
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ __('messages.warehouse') }}</th>
+                                <th>{{ __('messages.received') }}</th>
+                                <th>{{ __('messages.distributed') }}</th>
+                                <th>{{ __('messages.sold') }}</th>
+                                <th>{{ __('messages.returned') }}</th>
+                                <th>{{ __('messages.remaining') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                breakdown.forEach(function(item) {
+                    modalBody += `
+                        <tr>
+                            <td><strong>${item.warehouse_name}</strong></td>
+                            <td><span class="badge badge-info">${item.received}</span></td>
+                            <td><span class="badge badge-primary">${item.transferred_out}</span></td>
+                            <td><span class="badge badge-success">${item.sold}</span></td>
+                            <td><span class="badge badge-warning">${item.returned}</span></td>
+                            <td><span class="badge badge-success" style="font-size: 14px;">${item.remaining}</span></td>
+                        </tr>
+                    `;
+                });
+
+                modalBody += `
+                        </tbody>
+                    </table>
+                    <div class="alert alert-info mt-3" style="text-align: center;">
+                        <strong>{{ __('messages.total_remaining') }}: ${totalRemaining}</strong>
+                    </div>
+                `;
+
+                Swal.fire({
+                    title: '{{ __('messages.warehouse_distribution') }}',
+                    html: modalBody,
+                    width: '900px',
+                    didOpen: (modal) => {
+                        modal.querySelector('.swal2-html-container').style.textAlign = 'right';
+                    }
+                });
             }
 
             // Load Purchases Data
@@ -2567,6 +2645,7 @@
                             <th>{{ __('messages.tax') }}</th>
                             <th>{{ __('messages.status') }}</th>
                             <th>{{ __('messages.date') }}</th>
+                            <th>{{ __('messages.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2581,6 +2660,11 @@
                     <td>${parseFloat(item.total_tax).toFixed(2)} ${riyalIcon}</td>
                     <td><span class="badge badge-secondary">${item.status}</span></td>
                     <td>${item.created_at}</td>
+                    <td>
+                        <a href="{{ route('admin.purchases.show', '') }}/${item.id}" class="btn btn-sm btn-primary" title="{{ __('messages.view') }}">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
                 </tr>
             `;
                 });

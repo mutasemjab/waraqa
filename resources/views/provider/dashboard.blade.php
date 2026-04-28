@@ -55,7 +55,6 @@
                                     <th>{{ __('messages.products') }}</th>
                                     <th>{{ __('messages.quantity') }}</th>
                                     <th>{{ __('messages.date') }}</th>
-                                    <th>{{ __('messages.total_amount') }}</th>
                                     <th>{{ __('messages.status') }}</th>
                                     <th>{{ __('messages.actions') }}</th>
                                 </tr>
@@ -84,7 +83,6 @@
                                         </small>
                                     </td>
                                     <td>{{ $order->created_at->format('Y-m-d') }}</td>
-                                    <td><x-riyal-icon /> {{ number_format($order->total_amount, 2) }}</td>
                                     <td>
                                         @php
                                             $statusColors = [

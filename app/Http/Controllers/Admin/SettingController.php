@@ -48,7 +48,7 @@ class SettingController extends Controller
               $setting->value = $request->input('value');
 
               if ($setting->save()) {
-                  return redirect()->route('admin.setting.index')->with('success', 'تم تحديث الإعداد بنجاح');
+                  return redirect()->route('settings.index')->with('success', 'تم تحديث الإعداد بنجاح');
               } else {
                   return redirect()->back()->with('error', 'حدث خطأ أثناء التحديث');
               }
