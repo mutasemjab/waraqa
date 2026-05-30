@@ -2661,7 +2661,7 @@
                     <td><span class="badge badge-secondary">${item.status}</span></td>
                     <td>${item.created_at}</td>
                     <td>
-                        <a href="{{ route('admin.purchases.show', '') }}/${item.id}" class="btn btn-sm btn-primary" title="{{ __('messages.view') }}">
+                        <a href="{{ route('purchases.show', '') }}/${item.id}" class="btn btn-sm btn-primary" title="{{ __('messages.view') }}">
                             <i class="fas fa-eye"></i>
                         </a>
                     </td>
