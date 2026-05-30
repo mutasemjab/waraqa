@@ -130,8 +130,17 @@ class OrderController extends Controller
                          ->where('key', 'last_order_number')
                          ->update(['value' => $newNumber]);
                  } else {
-                     // Initialize with 1001 if setting doesn't exist
+                     $lastOrder = DB::table('orders')
+                         ->where('number', 'like', 'PO-%')
+                         ->orderByDesc('id')
+                         ->first();
+
                      $newNumber = 1001;
+                     if ($lastOrder) {
+                         $lastNum = (int) str_replace('PO-', '', $lastOrder->number);
+                         $newNumber = max(1001, $lastNum + 1);
+                     }
+
                      DB::table('settings')->insert([
                          'key' => 'last_order_number',
                          'value' => $newNumber,

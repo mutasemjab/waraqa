@@ -138,7 +138,17 @@ class SellerSalesController extends Controller
                         ->where('key', 'last_seller_sale_number')
                         ->update(['value' => $newNumber]);
                 } else {
+                    $lastSale = DB::table('seller_sales')
+                        ->where('sale_number', 'like', 'PO-%')
+                        ->orderByDesc('id')
+                        ->first();
+
                     $newNumber = 1001;
+                    if ($lastSale) {
+                        $lastNum = (int) str_replace('PO-', '', $lastSale->sale_number);
+                        $newNumber = max(1001, $lastNum + 1);
+                    }
+
                     DB::table('settings')->insert([
                         'key' => 'last_seller_sale_number',
                         'value' => $newNumber,

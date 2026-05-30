@@ -113,7 +113,17 @@ class PurchaseController extends Controller
                         ->where('key', 'last_purchase_number')
                         ->update(['value' => $newNumber]);
                 } else {
+                    $lastPurchase = DB::table('purchases')
+                        ->where('purchase_number', 'like', 'PO-%')
+                        ->orderByDesc('id')
+                        ->first();
+
                     $newNumber = 1001;
+                    if ($lastPurchase) {
+                        $lastNum = (int) str_replace('PO-', '', $lastPurchase->purchase_number);
+                        $newNumber = max(1001, $lastNum + 1);
+                    }
+
                     DB::table('settings')->insert([
                         'key' => 'last_purchase_number',
                         'value' => $newNumber,
