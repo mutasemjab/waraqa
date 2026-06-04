@@ -68,8 +68,8 @@ class SellerProductRequestController extends Controller
         $validated = $request->validate([
             'items' => 'required|array',
             'items.*.id' => 'required|exists:seller_product_request_items,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.price_with_tax' => 'required|numeric|min:0',
+            'items.*.quantity' => 'required|integer|min:0',
+            'items.*.price_with_tax' => 'nullable|numeric|min:0',
             'items.*.tax_percentage' => 'nullable|numeric|min:0|max:100',
             'from_warehouse_id' => 'required|exists:warehouses,id'
         ]);
@@ -79,6 +79,10 @@ class SellerProductRequestController extends Controller
         $insufficientStockErrors = [];
 
         foreach ($validated['items'] as $itemData) {
+            if ((int) $itemData['quantity'] === 0) {
+                continue;
+            }
+
             $item = SellerProductRequestItem::findOrFail($itemData['id']);
             $requestedQuantity = $itemData['quantity'];
             $productId = $item->product_id;
@@ -124,9 +128,21 @@ class SellerProductRequestController extends Controller
 
             foreach ($validated['items'] as $itemData) {
                 $item = SellerProductRequestItem::findOrFail($itemData['id']);
-                $quantity = $itemData['quantity'];
-                $priceWithTax = $itemData['price_with_tax'];
+                $quantity = (int) $itemData['quantity'];
                 $taxPercentage = $itemData['tax_percentage'] ?? 0;
+
+                // Update the item record regardless of quantity
+                $item->update([
+                    'approved_quantity' => $quantity,
+                    'approved_price' => $quantity > 0 ? ($itemData['price_with_tax'] ?? 0) : null,
+                    'approved_tax_percentage' => $quantity > 0 ? $taxPercentage : null,
+                ]);
+
+                if ($quantity === 0) {
+                    continue;
+                }
+
+                $priceWithTax = $itemData['price_with_tax'] ?? 0;
 
                 // Use price with tax directly
                 $itemTotal = $priceWithTax * $quantity;
@@ -137,13 +153,6 @@ class SellerProductRequestController extends Controller
                 $basePrice = $taxMultiplier > 0 ? $priceWithTax / $taxMultiplier : 0;
                 $itemTaxAmount = $itemTotal - ($basePrice * $quantity);
                 $totalTaxAmount += $itemTaxAmount;
-
-                // Update the item record
-                $item->update([
-                    'approved_quantity' => $quantity,
-                    'approved_price' => $priceWithTax,
-                    'approved_tax_percentage' => $taxPercentage,
-                ]);
             }
 
             // Create Order with total price including tax
@@ -193,11 +202,15 @@ class SellerProductRequestController extends Controller
                 'order_id' => $order->id,
             ]);
 
-            // Add OrderProducts and VoucherProducts
+            // Add OrderProducts and VoucherProducts (skip items with quantity 0)
             foreach ($validated['items'] as $itemData) {
+                if ((int) $itemData['quantity'] === 0) {
+                    continue;
+                }
+
                 $item = SellerProductRequestItem::findOrFail($itemData['id']);
-                $quantity = $itemData['quantity'];
-                $priceWithTax = $itemData['price_with_tax'];
+                $quantity = (int) $itemData['quantity'];
+                $priceWithTax = $itemData['price_with_tax'] ?? 0;
                 $taxPercentage = $itemData['tax_percentage'] ?? 0;
 
                 // Calculate base price from price with tax

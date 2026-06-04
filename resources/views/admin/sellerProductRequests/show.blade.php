@@ -18,7 +18,7 @@
     @if($message = Session::get('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         {{ $message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
     </div>
     @endif
 
@@ -195,7 +195,7 @@
                 <a href="{{ route('sellerProductRequests.approve.form', $sellerProductRequest) }}" class="btn btn-success">
                     <i class="fas fa-check"></i> {{ __('messages.approve') }}
                 </a>
-                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#rejectModal">
                     <i class="fas fa-times"></i> {{ __('messages.reject') }}
                 </button>
             </div>
@@ -210,7 +210,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">{{ __('messages.reject_request') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <form action="{{ route('sellerProductRequests.reject', $sellerProductRequest) }}" method="POST">
                 @csrf
@@ -221,7 +221,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
                         {{ __('messages.cancel') }}
                     </button>
                     <button type="submit" class="btn btn-danger">

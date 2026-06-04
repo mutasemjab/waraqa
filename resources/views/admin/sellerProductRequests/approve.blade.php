@@ -23,7 +23,7 @@
             <li>{{ $error }}</li>
             @endforeach
         </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
     </div>
     @endif
 
@@ -119,7 +119,7 @@
                                                    class="form-control quantity-input"
                                                    name="items[{{ $index }}][quantity]"
                                                    value="{{ $item->requested_quantity }}"
-                                                   min="1"
+                                                   min="0"
                                                    max="{{ $item->requested_quantity }}"
                                                    required>
                                         </td>

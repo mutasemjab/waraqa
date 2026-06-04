@@ -32,6 +32,49 @@
     </div>
 </div>
 
+<!-- Quantity Distribution Breakdown -->
+@if($stats['total_sold_items'] > 0 || $distributionStats['main_warehouse_qty'] > 0 || count($distributionStats['distribution_points']) > 0)
+<div class="card mt-3">
+    <div class="card-body py-3">
+        <div class="row g-3">
+            <!-- Distribution -->
+            <div class="col-md-6">
+                <h6 class="fw-semibold mb-2 text-muted">
+                    <i class="fas fa-warehouse me-1"></i>{{ __('messages.quantity_distribution') }}
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-secondary fs-6 px-3 py-2">
+                        {{ __('messages.main_warehouse') }}: <strong>{{ $distributionStats['main_warehouse_qty'] }}</strong>
+                    </span>
+                    @foreach($distributionStats['distribution_points'] as $point)
+                    <span class="badge bg-info fs-6 px-3 py-2">
+                        {{ $point['name'] }}: <strong>{{ $point['qty'] }}</strong>
+                    </span>
+                    @endforeach
+                </div>
+            </div>
+            <!-- Sales -->
+            <div class="col-md-6">
+                <h6 class="fw-semibold mb-2 text-muted">
+                    <i class="fas fa-cash-register me-1"></i>{{ __('messages.sold_quantities') }}
+                </h6>
+                @if($distributionStats['total_sold'] > 0)
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($distributionStats['sales_by_outlet'] as $outlet)
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        {{ $outlet['name'] }}: <strong>{{ $outlet['qty'] }}</strong>
+                    </span>
+                    @endforeach
+                </div>
+                @else
+                <span class="text-muted small">{{ __('messages.no_sales_yet') }}</span>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 
 <!-- Completed Purchases -->
 <div class="row mt-4">

@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Store all products data
         const allProductsData = [
             @foreach($products as $product)
-            { id: '{{ $product->id }}', name: '{{ $product->name_ar ?? $product->name_en }}' },
+            { id: '{{ $product->id }}', name: @json($product->name_ar ?? $product->name_en) },
             @endforeach
         ];
 

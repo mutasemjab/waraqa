@@ -81,7 +81,9 @@ class ProviderDashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('provider.dashboard', compact('stats', 'recentOrders', 'completedPurchases', 'pendingBookRequests'));
+        $distributionStats = $this->getDistributionStats($provider->id);
+
+        return view('provider.dashboard', compact('stats', 'recentOrders', 'completedPurchases', 'pendingBookRequests', 'distributionStats'));
     }
 
     public function orders()
@@ -202,6 +204,106 @@ class ProviderDashboardController extends Controller
             ->latest()
             ->take($limit)
             ->get();
+    }
+
+    private function getDistributionStats($providerId)
+    {
+        // Get provider's product IDs via approved BookRequestResponses
+        $productIds = \App\Models\BookRequestResponse::where('provider_id', $providerId)
+            ->where('status', 'approved')
+            ->with('bookRequestItem')
+            ->get()
+            ->pluck('bookRequestItem.product_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        if (empty($productIds)) {
+            return [
+                'main_warehouse_qty'   => 0,
+                'distribution_points'  => [],
+                'total_sold'           => 0,
+                'sales_by_outlet'      => [],
+            ];
+        }
+
+        // --- Main warehouse (Type 1 in - Type 3 out) ---
+        $mainWarehouse = \App\Models\Warehouse::whereNull('user_id')->first();
+
+        $mainWarehouseQty = 0;
+        if ($mainWarehouse) {
+            $receivedMain = \App\Models\VoucherProduct::whereIn('product_id', $productIds)
+                ->whereHas('noteVoucher', fn($q) => $q
+                    ->where('note_voucher_type_id', 1)
+                    ->where('to_warehouse_id', $mainWarehouse->id))
+                ->sum('quantity');
+
+            $transferredOutMain = \App\Models\VoucherProduct::whereIn('product_id', $productIds)
+                ->whereHas('noteVoucher', fn($q) => $q
+                    ->where('note_voucher_type_id', 3)
+                    ->where('from_warehouse_id', $mainWarehouse->id))
+                ->sum('quantity');
+
+            $mainWarehouseQty = max(0, $receivedMain - $transferredOutMain);
+        }
+
+        // --- Distribution points (Type 3 transfers TO seller warehouses) ---
+        // Scope to vouchers that contain at least one of this provider's products
+        $transferVouchers = \App\Models\NoteVoucher::where('note_voucher_type_id', 3)
+            ->whereHas('voucherProducts', fn($q) => $q->whereIn('product_id', $productIds))
+            ->with([
+                'toWarehouse.user',
+                'voucherProducts' => fn($q) => $q->whereIn('product_id', $productIds),
+            ])
+            ->get();
+
+        $distributionPoints = [];
+        foreach ($transferVouchers as $voucher) {
+            $seller = $voucher->toWarehouse?->user;
+            if (!$seller || !$seller->hasRole('seller')) {
+                continue;
+            }
+            foreach ($voucher->voucherProducts as $vp) {
+                if (in_array($vp->product_id, $productIds)) {
+                    $sellerId = $seller->id;
+                    if (!isset($distributionPoints[$sellerId])) {
+                        $distributionPoints[$sellerId] = [
+                            'name' => $seller->name,
+                            'qty'  => 0,
+                        ];
+                    }
+                    $distributionPoints[$sellerId]['qty'] += $vp->quantity;
+                }
+            }
+        }
+
+        // --- Sales by outlet (SellerSale) ---
+        $sellerSales = \App\Models\SellerSale::whereHas('items', fn($q) => $q->whereIn('product_id', $productIds))
+            ->with(['user', 'items' => fn($q) => $q->whereIn('product_id', $productIds)])
+            ->get();
+
+        $salesByOutlet = [];
+        $totalSold = 0;
+        foreach ($sellerSales as $sale) {
+            $sellerId = $sale->user_id;
+            foreach ($sale->items as $item) {
+                if (!isset($salesByOutlet[$sellerId])) {
+                    $salesByOutlet[$sellerId] = [
+                        'name' => $sale->user?->name ?? 'Unknown',
+                        'qty'  => 0,
+                    ];
+                }
+                $salesByOutlet[$sellerId]['qty'] += $item->quantity;
+                $totalSold += $item->quantity;
+            }
+        }
+
+        return [
+            'main_warehouse_qty'  => $mainWarehouseQty,
+            'distribution_points' => array_values($distributionPoints),
+            'total_sold'          => $totalSold,
+            'sales_by_outlet'     => array_values($salesByOutlet),
+        ];
     }
 
 }

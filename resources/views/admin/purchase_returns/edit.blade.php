@@ -124,7 +124,7 @@ function loadPurchaseDetails(items) {
                     <div class="col-md-2">
                         <label>{{ __('messages.quantity') }}</label>
                         <input type="number" name="products[${index}][quantity_returned]" class="form-control quantity-input"
-                               min="1" max="${purchaseItem.quantity}" required
+                               min="0" max="${purchaseItem.quantity}" required
                                value="${existingItem ? existingItem.quantity_returned : purchaseItem.quantity}" onchange="updateTotal()">
                     </div>
                     <div class="col-md-3">

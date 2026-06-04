@@ -522,17 +522,16 @@ class ProvidersReportController extends Controller
             ]);
         }
 
-        // Get refund orders for these products
-        $query = \App\Models\Order::whereHas('orderProducts', function ($q) use ($productIds) {
+        // Get sales returns for these products
+        $query = \App\Models\SalesReturn::whereHas('returnItems', function ($q) use ($productIds) {
             $q->whereIn('product_id', $productIds);
         })
-        ->where('status', \App\Enums\OrderStatus::REFUNDED->value)
-        ->with(['user', 'orderProducts' => function ($q) use ($productIds) {
+        ->with(['order.user', 'returnItems' => function ($q) use ($productIds) {
             $q->whereIn('product_id', $productIds)->with('product');
         }]);
 
         if ($fromDate && $toDate) {
-            $query->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
+            $query->whereBetween('return_date', [$fromDate, $toDate]);
         }
 
         $refunds = $query->get();
@@ -541,18 +540,18 @@ class ProvidersReportController extends Controller
         $totalReturned = 0;
         $totalAmount = 0;
 
-        foreach ($refunds as $order) {
-            foreach ($order->orderProducts as $op) {
-                $amount = $op->quantity * $op->unit_price;
+        foreach ($refunds as $salesReturn) {
+            foreach ($salesReturn->returnItems as $item) {
+                $amount = $item->quantity_returned * $item->unit_price;
                 $refundsList[] = [
-                    'warehouse_name' => $order->user?->name ?? 'Unknown',
-                    'product_name' => $op->product->name,
-                    'quantity_returned' => $op->quantity,
+                    'warehouse_name' => $salesReturn->order?->user?->name ?? 'Unknown',
+                    'product_name' => $item->product->name,
+                    'quantity_returned' => $item->quantity_returned,
                     'amount' => number_format($amount, 2),
-                    'date' => $order->created_at?->format('Y-m-d') ?? '-',
-                    'order_number' => $order->number,
+                    'date' => $salesReturn->return_date?->format('Y-m-d') ?? '-',
+                    'order_number' => $salesReturn->number,
                 ];
-                $totalReturned += $op->quantity;
+                $totalReturned += $item->quantity_returned;
                 $totalAmount += $amount;
             }
         }
@@ -728,55 +727,50 @@ class ProvidersReportController extends Controller
         $stockBalance = [];
         $totalRemaining = 0;
 
+        // Resolve main warehouse ID once, outside the product loop
+        $mainWarehouseId = \App\Models\Warehouse::whereNull('user_id')->value('id') ?? 1;
+        $mainWarehouse = \App\Models\Warehouse::whereNull('user_id')->first();
+
         // Get unique products from book requests
         $products = \App\Models\Product::whereIn('id', $productIds)->get();
 
         foreach ($products as $product) {
             // Get purchased quantity (NoteVoucher Type 1 - incoming purchases)
             $purchased = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) {
-                $q->where('note_voucher_type_id', 1); // Type 1 = Incoming/Purchased
+                $q->where('note_voucher_type_id', 1);
             })
             ->where('product_id', $product->id)
             ->sum('quantity');
 
-            // Get transferred quantity (NoteVoucher Type 3 only - transfers to sellers)
-            $transferred = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) {
-                $q->where('note_voucher_type_id', 3); // Type 3 = Transfer only
+            // Get distributed quantity: type 3 transfers FROM main warehouse to sellers
+            $transferred = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) use ($mainWarehouseId) {
+                $q->where('note_voucher_type_id', 3)
+                  ->where('from_warehouse_id', $mainWarehouseId);
             })
             ->where('product_id', $product->id)
             ->sum('quantity');
 
-            // Get sales quantity from Orders (to customers)
-            $soldViaOrder = \App\Models\OrderProduct::whereHas('order', function ($q) {
-                $q->where('status', \App\Enums\OrderStatus::DONE->value);
+            // Get returned quantity: type 3 transfers FROM sellers TO main warehouse
+            $returned = \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) use ($mainWarehouseId) {
+                $q->where('note_voucher_type_id', 3)
+                  ->where('to_warehouse_id', $mainWarehouseId)
+                  ->whereNotNull('from_warehouse_id')
+                  ->where('from_warehouse_id', '!=', $mainWarehouseId);
             })
             ->where('product_id', $product->id)
             ->sum('quantity');
 
-            // Get sales quantity from SellerSales (from sellers themselves)
-            $soldViaSellerSales = \App\Models\SellerSaleItem::where('product_id', $product->id)
+            // Get sales quantity from SellerSales (items permanently sold from seller warehouses)
+            $totalSold = \App\Models\SellerSaleItem::where('product_id', $product->id)
                 ->sum('quantity');
 
-            // Total sold = Order sales + SellerSales
-            $totalSold = $soldViaOrder + $soldViaSellerSales;
-
-            // Get refund quantity (Status = Refunded)
-            $returned = \App\Models\OrderProduct::whereHas('order', function ($q) {
-                $q->where('status', \App\Enums\OrderStatus::REFUNDED->value);
-            })
-            ->where('product_id', $product->id)
-            ->sum('quantity');
-
-            // Total remaining = Purchased - Sold - Returned
-            $remaining = $purchased - $totalSold - $returned;
-
-            // Get warehouse data
-            $warehouse = \App\Models\Warehouse::first(); // Main warehouse
+            // remaining in main warehouse = purchased - distributed + returned - sold
+            $remaining = $purchased - $transferred + $returned - $totalSold;
 
             if ($transferred > 0 || $totalSold > 0 || $returned > 0) {
                 $stockBalance[] = [
                     'product_id' => $product->id,
-                    'warehouse_name' => $warehouse?->name ?? 'المستودع الرئيسي',
+                    'warehouse_name' => $mainWarehouse?->name ?? 'المستودع الرئيسي',
                     'product_name' => $product->name,
                     'quantity_distributed' => $transferred,
                     'quantity_sold' => $totalSold,
@@ -803,6 +797,7 @@ class ProvidersReportController extends Controller
     {
         // Get all warehouses
         $warehouses = \App\Models\Warehouse::all();
+        $mainWarehouseId = \App\Models\Warehouse::whereNull('user_id')->value('id') ?? 1;
 
         $breakdown = [];
         $totalRemaining = 0;
@@ -842,21 +837,33 @@ class ProvidersReportController extends Controller
             ->where('product_id', $productId)
             ->sum('quantity');
 
-            // Get returned from orders via this warehouse's user
-            $returned = \App\Models\OrderProduct::whereHas('order', function ($q) use ($warehouse) {
-                $q->where('status', \App\Enums\OrderStatus::REFUNDED->value)
-                  ->whereHas('user', function ($subQ) use ($warehouse) {
-                      $subQ->where('id', $warehouse->user_id);
-                  });
-            })
-            ->where('product_id', $productId)
-            ->sum('quantity');
+            // Get sold via SellerSales by the seller who owns this warehouse
+            $soldViaSellerSales = $warehouse->user_id
+                ? \App\Models\SellerSaleItem::where('product_id', $productId)
+                    ->whereHas('sellerSale', fn($q) => $q->where('user_id', $warehouse->user_id))
+                    ->sum('quantity')
+                : 0;
+
+            $totalSold = $soldViaOrders + $soldViaSellerSales;
+
+            // For seller warehouses: returned = type 3 transfers FROM seller TO main (return transfers)
+            // These are already included in $transferredOut, so use for display only, NOT added to totalSent again
+            $returned = $warehouse->user_id
+                ? \App\Models\VoucherProduct::whereHas('noteVoucher', function ($q) use ($warehouse, $mainWarehouseId) {
+                    $q->where('note_voucher_type_id', 3)
+                      ->where('from_warehouse_id', $warehouse->id)
+                      ->where('to_warehouse_id', $mainWarehouseId);
+                })
+                ->where('product_id', $productId)
+                ->sum('quantity')
+                : 0;
 
             // Total received in warehouse
             $totalReceived = $received + $transferredIn;
 
-            // Total sent out from warehouse
-            $totalSent = $transferredOut + $soldViaOrders + $returned;
+            // Total sent out = transfers to others + sold + returns (all already in transferredOut for sellers)
+            // For sellers: $transferredOut already includes return transfers, so don't add $returned again
+            $totalSent = $transferredOut + $totalSold;
 
             // Remaining in warehouse
             $remaining = max(0, $totalReceived - $totalSent);
@@ -867,7 +874,7 @@ class ProvidersReportController extends Controller
                     'warehouse_name' => $warehouse->name,
                     'received' => $totalReceived,
                     'transferred_out' => $transferredOut,
-                    'sold' => $soldViaOrders,
+                    'sold' => $totalSold,
                     'returned' => $returned,
                     'remaining' => $remaining,
                 ];

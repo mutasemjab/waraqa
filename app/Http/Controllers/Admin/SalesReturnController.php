@@ -56,6 +56,17 @@ class SalesReturnController extends Controller
         DB::beginTransaction();
         try {
             $order = Order::findOrFail($request->order_id);
+
+            $sellerWarehouse = \App\Models\Warehouse::where('user_id', $order->user_id)->first();
+            $mainWarehouse = \App\Models\Warehouse::whereNull('user_id')->first();
+
+            if (!$sellerWarehouse) {
+                throw new \Exception('لا يوجد مستودع مرتبط بالعميل، لا يمكن معالجة المرتجع.');
+            }
+            if (!$mainWarehouse) {
+                throw new \Exception('لا يوجد مستودع رئيسي في النظام، يرجى إضافة مستودع رئيسي أولاً.');
+            }
+
             $totalAmount = 0;
             $returnNumber = 'SR-' . date('YmdHis');
 
@@ -88,27 +99,27 @@ class SalesReturnController extends Controller
 
             $salesReturn->update(['total_amount' => $totalAmount]);
 
-            // Update order status to Refund
-            $order->update(['status' => 6]); // 6 = Refund
+            $order->update(['status' => \App\Enums\OrderStatus::REFUNDED->value]);
 
-            // Create Receipt Note Voucher (سند إدخال) for returned items
-            $nextNoteVoucherNumber = (DB::table('note_vouchers')->max('number') ?? 0) + 1;
-            $noteVoucher = NoteVoucher::create([
-                'number' => $nextNoteVoucherNumber,
+            $returnNote = 'مردود مبيعات - ' . $salesReturn->number . ' - من العميل: ' . $order->user->name;
+            $transferVoucherNumber = (DB::table('note_vouchers')->lockForUpdate()->max('number') ?? 0) + 1;
+            $transferVoucher = NoteVoucher::create([
+                'number' => $transferVoucherNumber,
                 'date_note_voucher' => now()->toDateString(),
-                'note' => 'مردود مبيعات - ' . $salesReturn->number . ' - من العميل: ' . $order->user->name,
-                'to_warehouse_id' => 1, // Default to first warehouse
-                'note_voucher_type_id' => 1, // Receipt Note Voucher (سند إدخال)
+                'note' => $returnNote,
+                'from_warehouse_id' => $sellerWarehouse->id,
+                'to_warehouse_id' => $mainWarehouse->id,
+                'note_voucher_type_id' => 3,
+                'sales_return_id' => $salesReturn->id,
             ]);
 
-            // Add returned products to voucher
             foreach ($salesReturn->returnItems as $returnItem) {
                 VoucherProduct::create([
                     'quantity' => $returnItem->quantity_returned,
                     'purchasing_price' => $returnItem->unit_price,
                     'note' => 'مردود مبيعات - ' . ($returnItem->product->name_en ?? $returnItem->product->name_ar),
                     'product_id' => $returnItem->product_id,
-                    'note_voucher_id' => $noteVoucher->id
+                    'note_voucher_id' => $transferVoucher->id
                 ]);
             }
 
@@ -185,13 +196,12 @@ class SalesReturnController extends Controller
                 'total_amount' => $totalAmount,
             ]);
 
-            // Update Receipt Note Voucher if exists
-            $existingVoucher = NoteVoucher::where('note', 'like', '%' . $salesReturn->number . '%')->first();
-            if ($existingVoucher) {
-                // Delete old voucher products
+            // Update all Note Vouchers associated with this return
+            $salesReturn->load('returnItems.product');
+            $existingVouchers = NoteVoucher::where('sales_return_id', $salesReturn->id)->get();
+            foreach ($existingVouchers as $existingVoucher) {
                 VoucherProduct::where('note_voucher_id', $existingVoucher->id)->delete();
 
-                // Add updated products to voucher
                 foreach ($salesReturn->returnItems as $returnItem) {
                     VoucherProduct::create([
                         'quantity' => $returnItem->quantity_returned,
@@ -215,9 +225,9 @@ class SalesReturnController extends Controller
     public function destroy(SalesReturn $salesReturn)
     {
         try {
-            // Delete associated note voucher
-            $voucher = NoteVoucher::where('note', 'like', '%' . $salesReturn->number . '%')->first();
-            if ($voucher) {
+            // Delete all associated note vouchers
+            $vouchers = NoteVoucher::where('sales_return_id', $salesReturn->id)->get();
+            foreach ($vouchers as $voucher) {
                 VoucherProduct::where('note_voucher_id', $voucher->id)->delete();
                 $voucher->delete();
             }

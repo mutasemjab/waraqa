@@ -48,8 +48,8 @@ class PurchaseReturnController extends Controller
             'notes' => 'nullable|string',
             'products' => 'required|array',
             'products.*.product_id' => 'required|exists:products,id',
-            'products.*.quantity_returned' => 'required|integer|min:1',
-            'products.*.unit_price' => 'required|numeric|min:0',
+            'products.*.quantity_returned' => 'required|integer|min:0',
+            'products.*.unit_price' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -71,9 +71,13 @@ class PurchaseReturnController extends Controller
             ]);
 
             foreach ($request->products as $productData) {
+                $quantity = (int) $productData['quantity_returned'];
+                if ($quantity === 0) {
+                    continue;
+                }
+
                 $product = Product::findOrFail($productData['product_id']);
-                $quantity = $productData['quantity_returned'];
-                $unitPrice = $productData['unit_price'];
+                $unitPrice = $productData['unit_price'] ?? 0;
                 $totalPrice = $quantity * $unitPrice;
                 $totalAmount += $totalPrice;
 
@@ -88,18 +92,23 @@ class PurchaseReturnController extends Controller
 
             $purchaseReturn->update(['total_amount' => $totalAmount]);
 
-            // Create Dispatch Note Voucher (سند إخراج) for returned items
-            $nextNoteVoucherNumber = (DB::table('note_vouchers')->max('number') ?? 0) + 1;
+            // Rollback if no items were actually added (all quantities were 0)
+            if ($purchaseReturn->returnItems()->count() === 0) {
+                DB::rollback();
+                return back()->withErrors(['products' => 'يجب إدخال كمية مرتجعة أكبر من صفر لمنتج واحد على الأقل.'])->withInput();
+            }
+
+            $nextNoteVoucherNumber = (DB::table('note_vouchers')->lockForUpdate()->max('number') ?? 0) + 1;
             $noteVoucher = NoteVoucher::create([
                 'number' => $nextNoteVoucherNumber,
                 'date_note_voucher' => now()->toDateString(),
                 'note' => 'مردود مشتريات - ' . $purchaseReturn->number . ' - إلى المورد: ' . ($purchase->provider->name ?? 'N/A'),
-                'from_warehouse_id' => $purchase->warehouse_id, // Products are returned FROM this warehouse
-                'note_voucher_type_id' => 2, // Dispatch Note Voucher (سند إخراج)
+                'from_warehouse_id' => $purchase->warehouse_id,
+                'note_voucher_type_id' => 2,
                 'provider_id' => $purchase->provider_id,
+                'purchase_return_id' => $purchaseReturn->id,
             ]);
 
-            // Add returned products to voucher
             foreach ($purchaseReturn->returnItems as $returnItem) {
                 VoucherProduct::create([
                     'quantity' => $returnItem->quantity_returned,
@@ -144,8 +153,8 @@ class PurchaseReturnController extends Controller
             'notes' => 'nullable|string',
             'products' => 'required|array',
             'products.*.product_id' => 'required|exists:products,id',
-            'products.*.quantity_returned' => 'required|integer|min:1',
-            'products.*.unit_price' => 'required|numeric|min:0',
+            'products.*.quantity_returned' => 'required|integer|min:0',
+            'products.*.unit_price' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -155,11 +164,15 @@ class PurchaseReturnController extends Controller
             // Delete old items
             PurchaseReturnItem::where('purchase_return_id', $purchaseReturn->id)->delete();
 
-            // Create new items
+            // Create new items (skip quantity 0)
             foreach ($request->products as $productData) {
+                $quantity = (int) $productData['quantity_returned'];
+                if ($quantity === 0) {
+                    continue;
+                }
+
                 $product = Product::findOrFail($productData['product_id']);
-                $quantity = $productData['quantity_returned'];
-                $unitPrice = $productData['unit_price'];
+                $unitPrice = $productData['unit_price'] ?? 0;
                 $totalPrice = $quantity * $unitPrice;
                 $totalAmount += $totalPrice;
 
@@ -183,12 +196,11 @@ class PurchaseReturnController extends Controller
             ]);
 
             // Update Dispatch Note Voucher if exists
-            $existingVoucher = NoteVoucher::where('note', 'like', '%' . $purchaseReturn->number . '%')->first();
+            $purchaseReturn->load('returnItems.product');
+            $existingVoucher = NoteVoucher::where('purchase_return_id', $purchaseReturn->id)->first();
             if ($existingVoucher) {
-                // Delete old voucher products
                 VoucherProduct::where('note_voucher_id', $existingVoucher->id)->delete();
 
-                // Add updated products to voucher
                 foreach ($purchaseReturn->returnItems as $returnItem) {
                     VoucherProduct::create([
                         'quantity' => $returnItem->quantity_returned,
@@ -213,7 +225,7 @@ class PurchaseReturnController extends Controller
     {
         try {
             // Delete associated note voucher
-            $voucher = NoteVoucher::where('note', 'like', '%' . $purchaseReturn->number . '%')->first();
+            $voucher = NoteVoucher::where('purchase_return_id', $purchaseReturn->id)->first();
             if ($voucher) {
                 VoucherProduct::where('note_voucher_id', $voucher->id)->delete();
                 $voucher->delete();
