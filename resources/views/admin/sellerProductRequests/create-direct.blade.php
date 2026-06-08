@@ -70,7 +70,7 @@
                                 <option value="">{{ __('messages.select_warehouse') }}</option>
                                 @forelse($warehouses as $warehouse)
                                 <option value="{{ $warehouse->id }}">
-                                    {{ $warehouse->name_ar ?? $warehouse->name_en ?? 'Warehouse #' . $warehouse->id }}
+                                    {{ $warehouse->name ?? 'Warehouse #' . $warehouse->id }}
                                 </option>
                                 @empty
                                 <option value="" disabled>{{ __('messages.no_warehouses_available') }}</option>

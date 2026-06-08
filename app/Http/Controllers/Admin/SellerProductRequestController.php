@@ -182,10 +182,7 @@ class SellerProductRequestController extends Controller
             // 2. Create seller's warehouse if not exists
             $toWarehouse = Warehouse::firstOrCreate(
                 ['user_id' => $sellerProductRequest->user_id],
-                [
-                    'name_ar' => 'مستودع ' . $sellerProductRequest->user->name,
-                    'name_en' => $sellerProductRequest->user->name . ' Warehouse',
-                ]
+                ['name' => 'مستودع ' . $sellerProductRequest->user->name]
             );
 
             // 3. Create Transfer Note Voucher (type 3) for inventory transfer
@@ -431,10 +428,7 @@ class SellerProductRequestController extends Controller
         // Create seller's warehouse if not exists
         $toWarehouse = Warehouse::firstOrCreate(
             ['user_id' => $sellerProductRequest->user_id],
-            [
-                'name_ar' => 'مستودع ' . $sellerProductRequest->user->name,
-                'name_en' => $sellerProductRequest->user->name . ' Warehouse',
-            ]
+            ['name' => 'مستودع ' . $sellerProductRequest->user->name]
         );
 
         // Create Transfer Note Voucher

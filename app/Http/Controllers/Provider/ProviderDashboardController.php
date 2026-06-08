@@ -183,13 +183,19 @@ class ProviderDashboardController extends Controller
 
     private function getTotalSoldItems($providerId)
     {
-        return \App\Models\Purchase::where('provider_id', $providerId)
+        $totalPurchased = \App\Models\Purchase::where('provider_id', $providerId)
             ->whereIn('status', ['confirmed', 'received', 'paid'])
             ->with('items')
             ->get()
-            ->sum(function($purchase) {
-                return $purchase->items->sum('quantity');
-            });
+            ->sum(fn($purchase) => $purchase->items->sum('quantity'));
+
+        $totalReturned = \App\Models\PurchaseReturn::where('provider_id', $providerId)
+            ->whereIn('status', ['approved', 'received'])
+            ->with('returnItems')
+            ->get()
+            ->sum(fn($return) => $return->returnItems->sum('quantity_returned'));
+
+        return max(0, $totalPurchased - $totalReturned);
     }
 
     private function getRecentOrders($providerId, $limit)
@@ -244,7 +250,17 @@ class ProviderDashboardController extends Controller
                     ->where('from_warehouse_id', $mainWarehouse->id))
                 ->sum('quantity');
 
-            $mainWarehouseQty = max(0, $receivedMain - $transferredOutMain);
+            // Subtract items returned back to the provider from the main warehouse
+            $purchaseReturnsFromMain = \App\Models\PurchaseReturn::where('provider_id', $providerId)
+                ->where('warehouse_id', $mainWarehouse->id)
+                ->whereIn('status', ['approved', 'received'])
+                ->with('returnItems')
+                ->get()
+                ->sum(fn($return) => $return->returnItems
+                    ->whereIn('product_id', $productIds)
+                    ->sum('quantity_returned'));
+
+            $mainWarehouseQty = max(0, $receivedMain - $transferredOutMain - $purchaseReturnsFromMain);
         }
 
         // --- Distribution points (Type 3 transfers TO seller warehouses) ---
@@ -297,6 +313,29 @@ class ProviderDashboardController extends Controller
                 $totalSold += $item->quantity;
             }
         }
+
+        // Subtract sales returns per outlet
+        $salesReturns = \App\Models\SalesReturn::whereIn('status', ['approved', 'received'])
+            ->whereHas('returnItems', fn($q) => $q->whereIn('product_id', $productIds))
+            ->with(['returnItems' => fn($q) => $q->whereIn('product_id', $productIds)])
+            ->get();
+
+        foreach ($salesReturns as $return) {
+            $sellerId = $return->user_id;
+            foreach ($return->returnItems as $item) {
+                $totalSold -= $item->quantity_returned;
+                if (isset($salesByOutlet[$sellerId])) {
+                    $salesByOutlet[$sellerId]['qty'] -= $item->quantity_returned;
+                }
+            }
+        }
+
+        $totalSold = max(0, $totalSold);
+        foreach ($salesByOutlet as $sid => $data) {
+            $salesByOutlet[$sid]['qty'] = max(0, $data['qty']);
+        }
+        // Remove outlets with zero net sales
+        $salesByOutlet = array_filter($salesByOutlet, fn($o) => $o['qty'] > 0);
 
         return [
             'main_warehouse_qty'  => $mainWarehouseQty,
