@@ -154,6 +154,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         Route::get('reports/providers/{providerId}/distribution', 'App\Http\Controllers\Admin\ProvidersReportController@getDistributionData')->name('admin.reports.providers.distribution');
         Route::get('reports/providers/{providerId}/sales-by-warehouse', 'App\Http\Controllers\Admin\ProvidersReportController@getSalesByWarehouse')->name('admin.reports.providers.salesByWarehouse');
         Route::get('reports/providers/{providerId}/refunds', 'App\Http\Controllers\Admin\ProvidersReportController@getRefundsData')->name('admin.reports.providers.refunds');
+        Route::get('reports/providers/{providerId}/purchase-returns', 'App\Http\Controllers\Admin\ProvidersReportController@getPurchaseReturnsData')->name('admin.reports.providers.purchaseReturns');
         Route::get('reports/providers/{providerId}/sellers-payments', 'App\Http\Controllers\Admin\ProvidersReportController@getSellersPaymentsData')->name('admin.reports.providers.sellersPayments');
         Route::get('reports/providers/{providerId}/stock-balance', 'App\Http\Controllers\Admin\ProvidersReportController@getStockBalanceData')->name('admin.reports.providers.stockBalance');
         Route::get('reports/providers/{providerId}/stock-breakdown/{productId}', 'App\Http\Controllers\Admin\ProvidersReportController@getStockBreakdownByWarehouse')->name('admin.reports.providers.stockBreakdown');

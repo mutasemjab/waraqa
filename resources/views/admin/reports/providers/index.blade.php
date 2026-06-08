@@ -950,12 +950,12 @@
                 </div>
             </div>
 
-            <!-- Refunds Section -->
+            <!-- Sales Returns Section -->
             <div class="row mb-4 refunds-section printable-section" style="display:block;">
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header bg-danger text-white">
-                            <h3 class="card-title"><i class="fas fa-undo"></i> {{ __('messages.refunds') }}</h3>
+                            <h3 class="card-title"><i class="fas fa-undo"></i> {{ __('messages.sales_returns') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="row mb-3">
@@ -970,8 +970,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="info-box">
-                                        <span class="info-box-icon bg-danger"><i
-                                                class="fas fa-money-bill-wave"></i></span>
+                                        <span class="info-box-icon bg-danger"><i class="fas fa-money-bill-wave"></i></span>
                                         <div class="info-box-content">
                                             <span class="info-box-text">{{ __('messages.total_refund_amount') }}</span>
                                             <span class="info-box-number" id="refunds-total-amount">0.00</span>
@@ -980,6 +979,42 @@
                                 </div>
                             </div>
                             <div id="refundsTableContainer">
+                                <p class="text-center text-muted">{{ __('messages.no_data_available') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchase Returns Section -->
+            <div class="row mb-4 purchase-returns-section printable-section" style="display:block;">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h3 class="card-title"><i class="fas fa-undo-alt"></i> {{ __('messages.purchase_returns') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-warning"><i class="fas fa-reply"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">{{ __('messages.total_returned') }}</span>
+                                            <span class="info-box-number" id="purchase-returns-total-quantity">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-orange"><i class="fas fa-money-bill-wave"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">{{ __('messages.total_refund_amount') }}</span>
+                                            <span class="info-box-number" id="purchase-returns-total-amount">0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="purchaseReturnsTableContainer">
                                 <p class="text-center text-muted">{{ __('messages.no_data_available') }}</p>
                             </div>
                         </div>
@@ -1187,7 +1222,7 @@
                         </div>
                     </div>
 
-                    <!-- Refunds & Sellers Payments Section -->
+                    <!-- Sales Returns & Purchase Returns Section -->
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card mb-3">
@@ -1196,14 +1231,30 @@
                                         <input type="checkbox" class="custom-control-input display-section-toggle"
                                             id="display_refunds" data-section="refunds" checked>
                                         <label class="custom-control-label font-weight-bold" for="display_refunds">
-                                            <i class="fas fa-undo"></i> {{ __('messages.refunds') }}
+                                            <i class="fas fa-undo"></i> {{ __('messages.sales_returns') }}
                                         </label>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Sellers Payments Section -->
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input display-section-toggle"
+                                            id="display_purchase_returns" data-section="purchase_returns" checked>
+                                        <label class="custom-control-label font-weight-bold" for="display_purchase_returns">
+                                            <i class="fas fa-undo-alt"></i> {{ __('messages.purchase_returns') }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sellers Payments Section -->
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="card mb-3">
                                 <div class="card-header bg-light">
@@ -1467,7 +1518,7 @@
                     </div>
 
                     <div class="row">
-                        <!-- Refunds Section -->
+                        <!-- Sales Returns Section -->
                         <div class="col-md-6">
                             <div class="card mb-3">
                                 <div class="card-header bg-light">
@@ -1476,7 +1527,7 @@
                                             id="export_refunds" name="export_options[]" value="refunds" checked
                                             data-section="refunds">
                                         <label class="custom-control-label font-weight-bold" for="export_refunds">
-                                            <i class="fas fa-undo"></i> {{ __('messages.refunds') }}
+                                            <i class="fas fa-undo"></i> {{ __('messages.sales_returns') }}
                                         </label>
                                     </div>
                                 </div>
@@ -1486,6 +1537,27 @@
                             </div>
                         </div>
 
+                        <!-- Purchase Returns Section -->
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input section-toggle export-option"
+                                            id="export_purchase_returns" name="export_options[]" value="purchase_returns" checked
+                                            data-section="purchase_returns">
+                                        <label class="custom-control-label font-weight-bold" for="export_purchase_returns">
+                                            <i class="fas fa-undo-alt"></i> {{ __('messages.purchase_returns') }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="card-body" id="purchase_returns_options">
+                                    <small class="text-muted">{{ __('messages.purchase_returns') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <!-- Sellers Payments Section -->
                         <div class="col-md-6">
                             <div class="card mb-3">
@@ -2019,6 +2091,7 @@
                     distribution: $('#export_distribution').is(':checked'),
                     sales: $('#export_sales').is(':checked'),
                     refunds: $('#export_refunds').is(':checked'),
+                    purchase_returns: $('#export_purchase_returns').is(':checked'),
                     sellers_payments: $('#export_sellers_payments').is(':checked'),
                     stock_balance: $('#export_stock_balance').is(':checked'),
                     book_requests: $('#export_book_requests').is(':checked'),
@@ -2070,6 +2143,7 @@
                     distribution: $('#display_distribution').is(':checked'),
                     sales: $('#display_sales').is(':checked'),
                     refunds: $('#display_refunds').is(':checked'),
+                    purchase_returns: $('#display_purchase_returns').is(':checked'),
                     sellers_payments: $('#display_sellers_payments').is(':checked'),
                     stock_balance: $('#display_stock_balance').is(':checked'),
                     book_requests: $('#display_book_requests').is(':checked'),
@@ -2103,6 +2177,7 @@
                 $('.distribution-section').toggle(options.distribution);
                 $('.sales-section').toggle(options.sales);
                 $('.refunds-section').toggle(options.refunds);
+                $('.purchase-returns-section').toggle(options.purchase_returns);
                 $('.sellers-payments-section').toggle(options.sellers_payments);
                 $('.stock-balance-section').toggle(options.stock_balance);
                 $('.book-requests-section').toggle(options.book_requests);
@@ -2119,6 +2194,7 @@
                     distribution: $('#display_distribution').is(':checked'),
                     sales: $('#display_sales').is(':checked'),
                     refunds: $('#display_refunds').is(':checked'),
+                    purchase_returns: $('#display_purchase_returns').is(':checked'),
                     sellers_payments: $('#display_sellers_payments').is(':checked'),
                     stock_balance: $('#display_stock_balance').is(':checked'),
                     book_requests: $('#display_book_requests').is(':checked'),
@@ -2364,6 +2440,74 @@
                 $('#refundsTableContainer').html(html);
             }
 
+            // Load Purchase Returns Data
+            function loadPurchaseReturnsData(providerId) {
+                const fromDate = $('#from_date').val();
+                const toDate = $('#to_date').val();
+
+                $.ajax({
+                    url: '{{ route('admin.reports.providers.purchaseReturns', ':id') }}'.replace(':id', providerId),
+                    method: 'GET',
+                    data: { from_date: fromDate, to_date: toDate },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#purchase-returns-total-quantity').text(response.summary.total_returned || 0);
+                            $('#purchase-returns-total-amount').text(parseFloat(response.summary.total_amount || 0).toFixed(2));
+                            populatePurchaseReturnsTable(response.purchase_returns);
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading purchase returns:', xhr);
+                        $('#purchaseReturnsTableContainer').html(
+                            '<p class="text-center text-danger">{{ __('messages.error_loading_data') }}</p>'
+                        );
+                    }
+                });
+            }
+
+            // Populate Purchase Returns Table
+            function populatePurchaseReturnsTable(data) {
+                if (!data || data.length === 0) {
+                    $('#purchaseReturnsTableContainer').html(
+                        '<p class="text-center text-muted">{{ __('messages.no_data_available') }}</p>');
+                    return;
+                }
+
+                const riyalIcon = '<svg class="riyal-icon" style="width: 14px; height: 14px; display: inline-block; margin: 0 2px; vertical-align: middle;" viewBox="0 0 1124.14 1256.39" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"/><path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"/></svg>';
+
+                let html = `
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>{{ __('messages.return_number') }}</th>
+                            <th>{{ __('messages.product') }}</th>
+                            <th>{{ __('messages.quantity') }}</th>
+                            <th>{{ __('messages.amount') }}</th>
+                            <th>{{ __('messages.date') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+                data.forEach(function(item, index) {
+                    html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.return_number}</strong></td>
+                    <td>${item.product_name}</td>
+                    <td><span class="badge badge-warning">${item.quantity_returned}</span></td>
+                    <td>${parseFloat(item.amount).toFixed(2)} ${riyalIcon}</td>
+                    <td>${item.date}</td>
+                </tr>
+            `;
+                });
+
+                html += `</tbody></table></div>`;
+                $('#purchaseReturnsTableContainer').html(html);
+            }
+
             // Load Sellers Payments Data
             function loadSellersPaymentsData(providerId) {
                 $.ajax({
@@ -2492,9 +2636,7 @@
         `;
 
                 data.forEach(function(item, index) {
-                    const remainingBadge = item.quantity_remaining > 0 ?
-                        '<span class="badge badge-info stock-breakdown-trigger" data-product-id="' + item.product_id + '" style="cursor: pointer;" title="{{ __('messages.click_to_view_warehouse_distribution') }}">' + item.quantity_remaining + '</span>' :
-                        '<span class="badge badge-secondary">0</span>';
+                    const remainingBadge = '<span class="badge ' + (item.quantity_remaining > 0 ? 'badge-info' : 'badge-secondary') + ' stock-breakdown-trigger" data-product-id="' + item.product_id + '" style="cursor: pointer;" title="{{ __('messages.click_to_view_warehouse_distribution') }}">' + item.quantity_remaining + '</span>';
 
                     html += `
                 <tr>
@@ -2687,6 +2829,7 @@
                 loadDistributionData(providerId);
                 loadSalesByWarehouse(providerId);
                 loadRefundsData(providerId);
+                loadPurchaseReturnsData(providerId);
                 loadSellersPaymentsData(providerId);
                 loadStockBalanceData(providerId);
             }

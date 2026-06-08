@@ -455,6 +455,13 @@
             </div>
 
             <div class="nav-item">
+                <a href="{{ route('user.sales-returns.index') }}" class="nav-link {{ request()->routeIs('user.sales-returns*') ? 'active' : '' }}">
+                    <i class="fas fa-undo-alt"></i>
+                    <span>{{ __('messages.sales_returns') }}</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
                 <a href="{{ route('user.sellerProductRequests.index') }}" class="nav-link {{ request()->routeIs('user.sellerProductRequests*') ? 'active' : '' }}">
                     <i class="fas fa-shopping-bag"></i>
                     <span>{{ __('messages.seller_product_requests') }}</span>

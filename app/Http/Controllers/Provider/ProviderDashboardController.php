@@ -190,7 +190,6 @@ class ProviderDashboardController extends Controller
             ->sum(fn($purchase) => $purchase->items->sum('quantity'));
 
         $totalReturned = \App\Models\PurchaseReturn::where('provider_id', $providerId)
-            ->whereIn('status', ['approved', 'received'])
             ->with('returnItems')
             ->get()
             ->sum(fn($return) => $return->returnItems->sum('quantity_returned'));
@@ -250,22 +249,28 @@ class ProviderDashboardController extends Controller
                     ->where('from_warehouse_id', $mainWarehouse->id))
                 ->sum('quantity');
 
-            // Subtract items returned back to the provider from the main warehouse
-            $purchaseReturnsFromMain = \App\Models\PurchaseReturn::where('provider_id', $providerId)
-                ->where('warehouse_id', $mainWarehouse->id)
-                ->whereIn('status', ['approved', 'received'])
-                ->with('returnItems')
-                ->get()
-                ->sum(fn($return) => $return->returnItems
-                    ->whereIn('product_id', $productIds)
-                    ->sum('quantity_returned'));
+            // Subtract items that exited main warehouse via Type 2 (exit/return) vouchers
+            $exitedFromMain = \App\Models\VoucherProduct::whereIn('product_id', $productIds)
+                ->whereHas('noteVoucher', fn($q) => $q
+                    ->where('note_voucher_type_id', 2)
+                    ->where('from_warehouse_id', $mainWarehouse->id))
+                ->sum('quantity');
 
-            $mainWarehouseQty = max(0, $receivedMain - $transferredOutMain - $purchaseReturnsFromMain);
+            // Sales returns come back to main warehouse via Type 3 vouchers (seller → main)
+            $returnedToMain = \App\Models\VoucherProduct::whereIn('product_id', $productIds)
+                ->whereHas('noteVoucher', fn($q) => $q
+                    ->where('note_voucher_type_id', 3)
+                    ->where('to_warehouse_id', $mainWarehouse->id)
+                    ->whereNotNull('sales_return_id'))
+                ->sum('quantity');
+
+            $mainWarehouseQty = max(0, $receivedMain + $returnedToMain - $transferredOutMain - $exitedFromMain);
         }
 
         // --- Distribution points (Type 3 transfers TO seller warehouses) ---
         // Scope to vouchers that contain at least one of this provider's products
         $transferVouchers = \App\Models\NoteVoucher::where('note_voucher_type_id', 3)
+            ->whereNull('sales_return_id')
             ->whereHas('voucherProducts', fn($q) => $q->whereIn('product_id', $productIds))
             ->with([
                 'toWarehouse.user',
@@ -293,13 +298,40 @@ class ProviderDashboardController extends Controller
             }
         }
 
+        // Subtract quantities returned from each seller back to main warehouse
+        $returnVouchers = \App\Models\NoteVoucher::where('note_voucher_type_id', 3)
+            ->whereNotNull('sales_return_id')
+            ->whereHas('voucherProducts', fn($q) => $q->whereIn('product_id', $productIds))
+            ->with([
+                'fromWarehouse.user',
+                'voucherProducts' => fn($q) => $q->whereIn('product_id', $productIds),
+            ])
+            ->get();
+
+        foreach ($returnVouchers as $voucher) {
+            $seller = $voucher->fromWarehouse?->user;
+            if (!$seller || !$seller->hasRole('seller')) {
+                continue;
+            }
+            $sellerId = $seller->id;
+            foreach ($voucher->voucherProducts as $vp) {
+                if (in_array($vp->product_id, $productIds) && isset($distributionPoints[$sellerId])) {
+                    $distributionPoints[$sellerId]['qty'] -= $vp->quantity;
+                }
+            }
+        }
+
+        foreach ($distributionPoints as $sid => $data) {
+            $distributionPoints[$sid]['qty'] = max(0, $data['qty']);
+        }
+
         // --- Sales by outlet (SellerSale) ---
         $sellerSales = \App\Models\SellerSale::whereHas('items', fn($q) => $q->whereIn('product_id', $productIds))
             ->with(['user', 'items' => fn($q) => $q->whereIn('product_id', $productIds)])
             ->get();
 
+        // salesByOutlet = gross sales per seller (what they sold to end customers)
         $salesByOutlet = [];
-        $totalSold = 0;
         foreach ($sellerSales as $sale) {
             $sellerId = $sale->user_id;
             foreach ($sale->items as $item) {
@@ -310,32 +342,22 @@ class ProviderDashboardController extends Controller
                     ];
                 }
                 $salesByOutlet[$sellerId]['qty'] += $item->quantity;
-                $totalSold += $item->quantity;
             }
         }
 
-        // Subtract sales returns per outlet
-        $salesReturns = \App\Models\SalesReturn::whereIn('status', ['approved', 'received'])
-            ->whereHas('returnItems', fn($q) => $q->whereIn('product_id', $productIds))
-            ->with(['returnItems' => fn($q) => $q->whereIn('product_id', $productIds)])
-            ->get();
+        $totalSold = array_sum(array_column($salesByOutlet, 'qty'));
 
-        foreach ($salesReturns as $return) {
-            $sellerId = $return->user_id;
-            foreach ($return->returnItems as $item) {
-                $totalSold -= $item->quantity_returned;
-                if (isset($salesByOutlet[$sellerId])) {
-                    $salesByOutlet[$sellerId]['qty'] -= $item->quantity_returned;
-                }
+        // distributionPoints already has (transferred - returned_to_main).
+        // Subtract sold qty to get what is physically still in seller's warehouse.
+        foreach ($salesByOutlet as $sellerId => $soldData) {
+            if (isset($distributionPoints[$sellerId])) {
+                $distributionPoints[$sellerId]['qty'] = max(0, $distributionPoints[$sellerId]['qty'] - $soldData['qty']);
             }
         }
 
-        $totalSold = max(0, $totalSold);
-        foreach ($salesByOutlet as $sid => $data) {
-            $salesByOutlet[$sid]['qty'] = max(0, $data['qty']);
-        }
         // Remove outlets with zero net sales
         $salesByOutlet = array_filter($salesByOutlet, fn($o) => $o['qty'] > 0);
+        $distributionPoints = array_filter($distributionPoints, fn($p) => $p['qty'] > 0);
 
         return [
             'main_warehouse_qty'  => $mainWarehouseQty,

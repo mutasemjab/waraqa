@@ -119,7 +119,7 @@ function loadOrderDetails(products) {
                     <div class="col-md-2">
                         <label>{{ __('messages.quantity') }}</label>
                         <input type="number" name="products[${index}][quantity_returned]" class="form-control quantity-input"
-                               min="1" max="${orderProduct.quantity}" required value="${orderProduct.quantity}" onchange="updateTotal()">
+                               min="0" max="${orderProduct.quantity}" required value="${orderProduct.quantity}" onchange="updateTotal()">
                     </div>
                     <div class="col-md-3">
                         <label>{{ __('messages.unit_price') }}</label>

@@ -49,9 +49,14 @@ class SalesReturnController extends Controller
             'notes' => 'nullable|string',
             'products' => 'required|array',
             'products.*.product_id' => 'required|exists:products,id',
-            'products.*.quantity_returned' => 'required|integer|min:1',
+            'products.*.quantity_returned' => 'required|integer|min:0',
             'products.*.unit_price' => 'required|numeric|min:0',
         ]);
+
+        $hasItems = collect($request->products)->contains(fn($p) => $p['quantity_returned'] > 0);
+        if (!$hasItems) {
+            return back()->withErrors(['products' => __('messages.at_least_one_product_required')])->withInput();
+        }
 
         DB::beginTransaction();
         try {
@@ -82,6 +87,7 @@ class SalesReturnController extends Controller
             ]);
 
             foreach ($request->products as $productData) {
+                if ($productData['quantity_returned'] <= 0) continue;
                 $product = Product::findOrFail($productData['product_id']);
                 $quantity = $productData['quantity_returned'];
                 $unitPrice = $productData['unit_price'];
@@ -158,9 +164,14 @@ class SalesReturnController extends Controller
             'notes' => 'nullable|string',
             'products' => 'required|array',
             'products.*.product_id' => 'required|exists:products,id',
-            'products.*.quantity_returned' => 'required|integer|min:1',
+            'products.*.quantity_returned' => 'required|integer|min:0',
             'products.*.unit_price' => 'required|numeric|min:0',
         ]);
+
+        $hasItems = collect($request->products)->contains(fn($p) => $p['quantity_returned'] > 0);
+        if (!$hasItems) {
+            return back()->withErrors(['products' => __('messages.at_least_one_product_required')])->withInput();
+        }
 
         DB::beginTransaction();
         try {
@@ -171,6 +182,7 @@ class SalesReturnController extends Controller
 
             // Create new items
             foreach ($request->products as $productData) {
+                if ($productData['quantity_returned'] <= 0) continue;
                 $product = Product::findOrFail($productData['product_id']);
                 $quantity = $productData['quantity_returned'];
                 $unitPrice = $productData['unit_price'];

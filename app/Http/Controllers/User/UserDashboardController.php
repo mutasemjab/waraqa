@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OrderProduct;
 use App\Models\Country;
 use App\Models\SellerSale;
+use App\Models\SalesReturn;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,7 +47,13 @@ class UserDashboardController extends Controller
                 ->sum('total_amount'),
         ];
 
-        return view('user.dashboard', compact('stats', 'salesStats'));
+        $recentSalesReturns = SalesReturn::whereHas('order', fn($q) => $q->where('user_id', $user->id))
+            ->with(['returnItems.product', 'order'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('user.dashboard', compact('stats', 'salesStats', 'recentSalesReturns'));
     }
 
     public function orders(Request $request)
@@ -143,6 +150,30 @@ class UserDashboardController extends Controller
         return back()->with('success', __('messages.profile_updated_successfully'));
     }
 
+
+    public function salesReturns(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = SalesReturn::whereHas('order', fn($q) => $q->where('user_id', $user->id))
+            ->with(['returnItems.product', 'order']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('return_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('return_date', '<=', $request->date_to);
+        }
+
+        $salesReturns = $query->latest()->paginate(15);
+
+        return view('user.sales-returns.index', compact('salesReturns'));
+    }
 
     // Generate user report for admin
     public function generateReport()

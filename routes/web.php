@@ -81,6 +81,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         // Seller Product Requests
         Route::resource('sellerProductRequests', \App\Http\Controllers\User\SellerProductRequestController::class)
             ->only(['index', 'create', 'store', 'show', 'destroy']);
+
+        // Sales Returns
+        Route::get('/sales-returns', [UserDashboardController::class, 'salesReturns'])->name('sales-returns.index');
     });
 
     // Provider Dashboard Routes (using 'web' guard with 'provider' role)

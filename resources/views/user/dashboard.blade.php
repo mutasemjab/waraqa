@@ -225,6 +225,66 @@
         </div>
     </div>
 </div>
+<!-- Sales Returns Section -->
+@if($recentSalesReturns->count() > 0)
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header d-flex justify-content-between align-items-center bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-undo-alt me-2"></i>{{ __('messages.sales_returns') }}
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ __('messages.return_number') }}</th>
+                                <th>{{ __('messages.order_number') }}</th>
+                                <th>{{ __('messages.products') }}</th>
+                                <th>{{ __('messages.total') }}</th>
+                                <th>{{ __('messages.return_date') }}</th>
+                                <th>{{ __('messages.return_status') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($recentSalesReturns as $return)
+                            <tr>
+                                <td><strong>{{ $return->number }}</strong></td>
+                                <td>{{ $return->order->number ?? '-' }}</td>
+                                <td>
+                                    <small>
+                                        @foreach($return->returnItems as $item)
+                                            <div>
+                                                {{ app()->getLocale() == 'ar' ? $item->product?->name_ar : $item->product?->name_en }}
+                                                <span class="text-muted">({{ $item->quantity_returned }})</span>
+                                            </div>
+                                        @endforeach
+                                    </small>
+                                </td>
+                                <td><x-riyal-icon /> {{ number_format($return->total_amount, 2) }}</td>
+                                <td>{{ \Carbon\Carbon::parse($return->return_date)->format('Y-m-d') }}</td>
+                                <td>
+                                    @php
+                                        $colors = ['pending' => 'warning', 'approved' => 'info', 'received' => 'success'];
+                                        $labels = ['pending' => __('messages.pending'), 'approved' => __('messages.approved'), 'received' => __('messages.received')];
+                                    @endphp
+                                    <span class="badge bg-{{ $colors[$return->status] ?? 'secondary' }}">
+                                        {{ $labels[$return->status] ?? $return->status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 @endsection
 
 @push('scripts')

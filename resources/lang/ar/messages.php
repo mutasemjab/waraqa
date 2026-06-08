@@ -1574,6 +1574,7 @@ return [
     // Returns Management
     "returns" => "المرتجعات",
     "sales_returns" => "مردود بيع",
+    "all_sales_returns" => "جميع مردودات المبيعات",
     "purchase_returns" => "مردود شراء",
 
     // Analytics
@@ -1584,6 +1585,7 @@ return [
     "return_reason" => "سبب المردود",
     "return_status" => "حالة المردود",
     "return_created_successfully" => "تم إنشاء المردود بنجاح",
+    "at_least_one_product_required" => "يجب أن يكون كمية منتج واحد على الأقل أكبر من صفر.",
     "return_updated_successfully" => "تم تحديث المردود بنجاح",
     "return_deleted_successfully" => "تم حذف المردود بنجاح",
     "no_returns_found" => "لم يتم العثور على مرتجعات",
