@@ -364,6 +364,9 @@ class ProvidersReportController extends Controller
         }
 
         $bookResponses = $query->get();
+        // A product can have more than one approved response (e.g. across separate
+        // book requests) — dedupe to the distinct set of products this provider
+        // actually supplies, so each real transfer is only reported once below.
         $productIds = $bookResponses->pluck('bookRequestItem.product_id')->unique();
 
         // Get NoteVouchers Type 3 (transfers to sellers) for these products
@@ -376,35 +379,32 @@ class ProvidersReportController extends Controller
 
         $vouchers = $vouchersQuery->get();
 
-        // Build distribution data by linking book requests with vouchers
+        // Build distribution data from the actual transfer vouchers, one row per
+        // voucher line — not per approved book response.
         $distributions = [];
         $warehouseIds = [];
         $totalQuantity = 0;
 
-        foreach ($bookResponses as $response) {
-            $productId = $response->bookRequestItem->product_id;
-            $productName = $response->bookRequestItem->product?->name ?? 'Unknown';
+        foreach ($vouchers as $voucher) {
+            $toUser = $voucher->toWarehouse?->user;
+            if (!$toUser || !$toUser->hasRole('seller')) {
+                continue;
+            }
 
-            // Find matching vouchers for this product
-            foreach ($vouchers as $voucher) {
-                $toUser = $voucher->toWarehouse?->user;
-                if (!$toUser || !$toUser->hasRole('seller')) {
+            foreach ($voucher->voucherProducts as $vp) {
+                if (!$productIds->contains($vp->product_id)) {
                     continue;
                 }
 
-                foreach ($voucher->voucherProducts as $vp) {
-                    if ($vp->product_id == $productId) {
-                        $distributions[] = [
-                            'warehouse_name' => $toUser->name ?? 'Unknown',
-                            'product_name' => $productName,
-                            'quantity' => $vp->quantity,
-                            'date' => $voucher->date_note_voucher instanceof \DateTime ? $voucher->date_note_voucher->format('Y-m-d') : $voucher->date_note_voucher,
-                            'note_voucher_number' => $voucher->number,
-                        ];
-                        $warehouseIds[] = $voucher->to_warehouse_id;
-                        $totalQuantity += $vp->quantity;
-                    }
-                }
+                $distributions[] = [
+                    'warehouse_name' => $toUser->name ?? 'Unknown',
+                    'product_name' => $vp->product?->name_ar ?? $vp->product?->name_en ?? 'Unknown',
+                    'quantity' => $vp->quantity,
+                    'date' => $voucher->date_note_voucher instanceof \DateTime ? $voucher->date_note_voucher->format('Y-m-d') : $voucher->date_note_voucher,
+                    'note_voucher_number' => $voucher->number,
+                ];
+                $warehouseIds[] = $voucher->to_warehouse_id;
+                $totalQuantity += $vp->quantity;
             }
         }
 
