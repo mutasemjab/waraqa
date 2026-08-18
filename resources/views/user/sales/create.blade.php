@@ -113,7 +113,7 @@
 
                 <div class="available-products-list" style="max-height: 400px; overflow-y: auto;">
                     @if($availableProducts->count() > 0)
-                        @foreach($availableProducts->take(5) as $product)
+                        @foreach($availableProducts as $product)
                             <div class="product-item border rounded p-3 mb-2 cursor-pointer"
                                  data-product-id="{{ $product->id }}"
                                  data-product-name="{{ strtolower($product->name_ar . ' ' . $product->name_en) }}"
@@ -140,14 +140,6 @@
                                 </div>
                             </div>
                         @endforeach
-
-                        @if($availableProducts->count() > 5)
-                            <div class="d-grid">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#allProductsModal">
-                                    <i class="fas fa-eye me-1"></i>{{ __('messages.view_all') ?? 'عرض المزيد' }}
-                                </button>
-                            </div>
-                        @endif
                     @else
                         <div class="text-center py-4">
                             <i class="fas fa-box-open text-muted" style="font-size: 2rem;"></i>
@@ -209,26 +201,6 @@
                 <div class="summary-item d-flex justify-content-between border-top pt-2">
                     <strong>{{ __('messages.amount_due_to_waraqa') }}:</strong>
                     <strong><x-riyal-icon /> <span id="remainingAmount">0.00</span></strong>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- All Products Modal -->
-<div class="modal fade" id="allProductsModal" tabindex="-1" aria-labelledby="allProductsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="allProductsModalLabel">{{ __('messages.available_products') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <input type="text" id="modalProductSearch" class="form-control" placeholder="{{ __('messages.search_products') }}">
-                </div>
-                <div class="row" id="allProductsContainer">
-                    <!-- Products will be loaded here by JavaScript -->
                 </div>
             </div>
         </div>
@@ -298,26 +270,6 @@ let productIndex = 0;
 
 // Helper functions (will be populated after DOMContentLoaded)
 let addProductRow, setupRowEvents, updateAvailableOptions, updateProductInfo, updateSummary;
-
-// Make this function global (outside DOMContentLoaded)
-function addProductFromModal(productId, productName, availableQty, price, tax) {
-    // Check if product already added
-    const existingSelects = document.querySelectorAll('.product-select');
-    for (let select of existingSelects) {
-        if (select.value == productId) {
-            alert('{{ __("messages.product_already_added") }}');
-            return;
-        }
-    }
-
-    addProductToSale(productId, productName, availableQty, price, tax);
-
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('allProductsModal'));
-    if (modal) {
-        modal.hide();
-    }
-}
 
 // Add product to sale from sidebar
 function addProductToSale(productId, productName, availableQty, price, tax) {
@@ -593,72 +545,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add one initial row
     addProductRow();
-
-    // Load all products in modal
-    function loadAllProducts(products = []) {
-        const container = document.getElementById('allProductsContainer');
-
-        if (products.length === 0) {
-            container.innerHTML = '<div class="col-12 text-center py-4"><p class="text-muted">{{ __("messages.no_products_available") }}</p></div>';
-            return;
-        }
-
-        let html = '';
-        products.forEach(product => {
-            html += `
-                <div class="col-md-6 mb-3 product-card-item" data-product-name="${(product.name_ar + ' ' + (product.name_en || '')).toLowerCase()}">
-                    <div class="card h-100 cursor-pointer" onclick="addProductFromModal(${product.id}, '${product.name_ar}', ${product.available}, ${product.price}, ${product.tax || 0})">
-                        <div class="card-body">
-                            <h6 class="card-title">${product.name_ar}</h6>
-                            ${product.name_en ? `<small class="text-muted d-block mb-2">${product.name_en}</small>` : ''}
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="badge bg-info me-1">${product.available} {{ __('messages.available') }}</span>
-                                    <span class="badge bg-success"><x-riyal-icon style="width: 12px; height: 12px;" /> ${product.price.toFixed(2)}</span>
-                                </div>
-                                <button class="btn btn-primary btn-sm" type="button">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-
-        container.innerHTML = html;
-    }
-
-    // Search in modal
-    document.getElementById('modalProductSearch')?.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const items = document.querySelectorAll('.product-card-item');
-
-        items.forEach(item => {
-            const productName = item.dataset.productName;
-            if (productName.includes(searchTerm)) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    });
-
-    // Load products when modal is shown
-    document.getElementById('allProductsModal')?.addEventListener('show.bs.modal', function() {
-        const products = [];
-        @foreach($availableProducts as $product)
-            products.push({
-                id: {{ $product->id }},
-                name_ar: '{{ $product->name_ar }}',
-                name_en: '{{ $product->name_en ?? '' }}',
-                available: {{ $product->available_quantity }},
-                price: {{ $product->selling_price }},
-                tax: {{ $product->tax ?? 0 }}
-            });
-        @endforeach
-        loadAllProducts(products);
-    });
 });
 </script>
 @endpush

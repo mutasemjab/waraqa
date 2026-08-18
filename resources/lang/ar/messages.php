@@ -1805,7 +1805,7 @@ return [
     'warehouse_movements' => 'حركات المستودع',
 
     'seller_commission' => 'عمولة البائع',
-    'seller_share' => 'حصة الموزع',
+    'seller_share' => 'حصة المورد',
     'total_commission' => 'إجمالي العمولة',
     'click_to_view_warehouse_distribution' => 'اضغط لرؤية التوزيع حسب المستودع',
     'warehouse_distribution' => 'توزيع الكمية المتبقية حسب المستودع',

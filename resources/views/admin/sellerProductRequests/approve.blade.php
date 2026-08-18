@@ -120,7 +120,6 @@
                                                    name="items[{{ $index }}][quantity]"
                                                    value="{{ $item->requested_quantity }}"
                                                    min="0"
-                                                   max="{{ $item->requested_quantity }}"
                                                    required>
                                         </td>
                                         <td>
