@@ -295,26 +295,30 @@ class SellerProductRequestController extends Controller
 
         $sellerProductRequest = null;
 
-        DB::transaction(function () use ($validated, &$sellerProductRequest) {
-            // 1. Create SellerProductRequest with PENDING status
-            $sellerProductRequest = SellerProductRequest::create([
-                'user_id' => $validated['user_id'],
-                'status' => SellerProductRequestStatus::PENDING->value,
-                'note' => $validated['note'] ?? 'Direct addition by admin',
-            ]);
-
-            // 2. Create SellerProductRequestItems
-            foreach ($validated['products'] as $productData) {
-                SellerProductRequestItem::create([
-                    'seller_product_request_id' => $sellerProductRequest->id,
-                    'product_id' => $productData['id'],
-                    'requested_quantity' => $productData['quantity'],
+        try {
+            DB::transaction(function () use ($validated, &$sellerProductRequest) {
+                // 1. Create SellerProductRequest with PENDING status
+                $sellerProductRequest = SellerProductRequest::create([
+                    'user_id' => $validated['user_id'],
+                    'status' => SellerProductRequestStatus::PENDING->value,
+                    'note' => $validated['note'] ?? 'Direct addition by admin',
                 ]);
-            }
 
-            // 3. Execute approval process directly
-            $this->processApprovalDirect($sellerProductRequest, $validated);
-        });
+                // 2. Create SellerProductRequestItems
+                foreach ($validated['products'] as $productData) {
+                    SellerProductRequestItem::create([
+                        'seller_product_request_id' => $sellerProductRequest->id,
+                        'product_id' => $productData['id'],
+                        'requested_quantity' => $productData['quantity'],
+                    ]);
+                }
+
+                // 3. Execute approval process directly
+                $this->processApprovalDirect($sellerProductRequest, $validated);
+            });
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('sellerProductRequests.show', $sellerProductRequest)
             ->with('success', __('messages.product_added_successfully'));
