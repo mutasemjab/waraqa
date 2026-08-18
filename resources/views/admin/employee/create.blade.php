@@ -57,6 +57,32 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label for="email">Email <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="email"
+                                        class="form-control @if ($errors->has('email')) is-invalid @endif"
+                                        id="email" placeholder="Email" value="{{ old('email') }}" name="email">
+                                    @if ($errors->has('email'))
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $errors->first('email') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text"
+                                        class="form-control @if ($errors->has('phone')) is-invalid @endif"
+                                        id="phone" placeholder="Phone" value="{{ old('phone') }}" name="phone">
+                                    @if ($errors->has('phone'))
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $errors->first('phone') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label for="password">Password<span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="password"

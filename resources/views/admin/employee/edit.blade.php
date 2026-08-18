@@ -27,7 +27,7 @@
             <div class="col-6">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route('admin.employee.update',$admin->id) }}" method="post" enctype="multipart/form-data">
+                        <form action="{{ route('admin.employee.update',$user->id) }}" method="post" enctype="multipart/form-data">
                             @csrf
                             {{ method_field('PATCH') }}
                             <div class="form-group">
@@ -35,7 +35,7 @@
                                 <div class="input-group">
                                     <input type="text"
                                         class="form-control @if ($errors->has('name')) is-invalid @endif"
-                                        id="name" placeholder="Name" value="{{ $admin->name }}" name="name">
+                                        id="name" placeholder="Name" value="{{ old('name', $user->name) }}" name="name">
                                     @if ($errors->has('name'))
                                         <span class="invalid-feedback" role="alert">
                                             <strong>{{ $errors->first('name') }}</strong>
@@ -48,7 +48,7 @@
                                 <div class="input-group">
                                     <input type="username"
                                         class="form-control @if ($errors->has('username')) is-invalid @endif"
-                                        id="username" placeholder="username" value="{{ $admin->username }}" name="username">
+                                        id="username" placeholder="username" value="{{ old('username', $user->username) }}" name="username">
                                     @if ($errors->has('username'))
                                         <span class="invalid-feedback" role="alert">
                                             <strong>{{ $errors->first('username') }}</strong>
@@ -56,7 +56,33 @@
                                     @endif
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label for="email">Email <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="email"
+                                        class="form-control @if ($errors->has('email')) is-invalid @endif"
+                                        id="email" placeholder="Email" value="{{ old('email', $user->email) }}" name="email">
+                                    @if ($errors->has('email'))
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $errors->first('email') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
 
+                            <div class="form-group">
+                                <label for="phone">Phone <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text"
+                                        class="form-control @if ($errors->has('phone')) is-invalid @endif"
+                                        id="phone" placeholder="Phone" value="{{ old('phone', $user->phone) }}" name="phone">
+                                    @if ($errors->has('phone'))
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $errors->first('phone') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
                             <div class="form-group">
                                 <label for="password">Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
@@ -76,7 +102,7 @@
                                     <br>
                                     <input {{ in_array($role->id, old('roles') ? old('roles') : []) ? 'checked' : '' }}
                                         class="ml-5" type="checkbox" name="roles[]" id="role_{{ $role->id }}"
-                                        value="{{ $role->id }}" {{in_array($role->id,$adminRole)? 'checked' : ''}}>
+                                        value="{{ $role->id }}" {{in_array($role->id,$userRole)? 'checked' : ''}}>
                                     <label for="role_{{ $role->id }}"> {{ $role->name }}. </label>
                                     <br>
                                 @endforeach

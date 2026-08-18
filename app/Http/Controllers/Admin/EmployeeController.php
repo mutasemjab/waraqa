@@ -23,7 +23,7 @@ class EmployeeController extends Controller
 
     public function index(Request $request)
     {
-        $data = User::whereIsAdmin()
+        $data = User::query()
             ->where('id', '!=', auth()->user()->id);
 
         if ($request->search != '' || $request->search) {
@@ -65,6 +65,7 @@ class EmployeeController extends Controller
             $this->validate($request, [
                 'name' => 'required',
                 'email' => 'required|unique:users,email',
+                'phone' => 'required|unique:users,phone',
                 'password' => 'required',
                 'roles' => 'required'
             ]);
@@ -74,6 +75,7 @@ class EmployeeController extends Controller
                 $user = new User([
                     'name' => $request->name,
                     'email' => $request->email,
+                    'phone' => $request->phone,
                     'username' => $request->username,
                     'password' => Hash::make($request->password),
                     'activate' => 1,
@@ -157,6 +159,7 @@ class EmployeeController extends Controller
             $this->validate($request, [
                 'name' => 'required',
                 'email' => 'required|unique:users,email,' . $id,
+                'phone' => 'required|unique:users,phone,' . $id,
                 'roles' => 'required'
             ]);
 
@@ -166,6 +169,7 @@ class EmployeeController extends Controller
 
                 $user->name = $request->name;
                 $user->email = $request->email;
+                $user->phone = $request->phone;
                 $user->username = $request->username;
                 if ($request->password) {
                     $user->password = Hash::make($request->password);
