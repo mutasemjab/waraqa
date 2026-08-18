@@ -27,12 +27,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(Gate $gate)
     {
-        $gate->before(function ($user, $ability) {
-            // Check if user has admin role (super admin)
-            if ($user && $user->hasRole('admin')) {
-                return true;
-            }
-        });
         $this->registerPolicies();
     }
 }

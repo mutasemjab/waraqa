@@ -22,7 +22,6 @@ edit Admin Login
         <div class="card-body">
 
     
-        @can('setting-table')
       <form action="{{ route('admin.login.update',$data['id']) }}" method="post" >
         <div class="row">
         @csrf
@@ -69,7 +68,6 @@ edit Admin Login
 
   </div>
             </form>
-            @endcan
 
 
             </div>

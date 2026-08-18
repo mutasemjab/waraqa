@@ -11,42 +11,55 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('permission:dashboard-view')->only(['index']);
-    }
-
     public function index()
     {
         $stats = [
-            'total_users' => User::role('seller')->count(),
-            'total_providers' => Provider::count(),
-            'total_orders' => Order::count(),
-            'pending_orders' => Order::where('status', OrderStatus::PENDING->value)->count(),
-            'completed_orders' => Order::where('status', OrderStatus::DONE->value)->count(),
-            'cancelled_orders' => Order::where('status', OrderStatus::CANCELLED->value)->count(),
-            'today_orders' => Order::whereDate('created_at', today())->count(),
-            'revenue_today' => Order::where('status', OrderStatus::DONE->value)
+            'total_users' => 0,
+            'total_providers' => 0,
+            'total_orders' => 0,
+            'pending_orders' => 0,
+            'completed_orders' => 0,
+            'cancelled_orders' => 0,
+            'today_orders' => 0,
+            'revenue_today' => 0,
+            'revenue_month' => 0,
+        ];
+        $recentOrders = collect();
+        $ordersByStatus = ['pending' => 0, 'completed' => 0, 'cancelled' => 0, 'refund' => 0];
+
+        if (auth()->user()->can('seller-table')) {
+            $stats['total_users'] = User::role('seller')->count();
+        }
+
+        if (auth()->user()->can('provider-table')) {
+            $stats['total_providers'] = Provider::count();
+        }
+
+        if (auth()->user()->can('order-table')) {
+            $stats['total_orders'] = Order::count();
+            $stats['pending_orders'] = Order::where('status', OrderStatus::PENDING->value)->count();
+            $stats['completed_orders'] = Order::where('status', OrderStatus::DONE->value)->count();
+            $stats['cancelled_orders'] = Order::where('status', OrderStatus::CANCELLED->value)->count();
+            $stats['today_orders'] = Order::whereDate('created_at', today())->count();
+            $stats['revenue_today'] = Order::where('status', OrderStatus::DONE->value)
                 ->whereDate('created_at', today())
-                ->sum('paid_amount'),
-            'revenue_month' => Order::where('status', OrderStatus::DONE->value)
+                ->sum('paid_amount');
+            $stats['revenue_month'] = Order::where('status', OrderStatus::DONE->value)
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
-                ->sum('paid_amount')
-        ];
+                ->sum('paid_amount');
 
-        // Recent orders
-        $recentOrders = Order::with([
-            'user:id,name',
-        ])->latest()->limit(10)->get();
+            $recentOrders = Order::with([
+                'user:id,name',
+            ])->latest()->limit(10)->get();
 
-        // Orders by status
-        $ordersByStatus = [
-            'pending' => Order::where('status', OrderStatus::PENDING->value)->count(),
-            'completed' => Order::where('status', OrderStatus::DONE->value)->count(),
-            'cancelled' => Order::where('status', OrderStatus::CANCELLED->value)->count(),
-            'refund' => Order::where('status', OrderStatus::REFUNDED->value)->count(),
-        ];
+            $ordersByStatus = [
+                'pending' => $stats['pending_orders'],
+                'completed' => $stats['completed_orders'],
+                'cancelled' => $stats['cancelled_orders'],
+                'refund' => Order::where('status', OrderStatus::REFUNDED->value)->count(),
+            ];
+        }
 
         return view('admin.dashboard', compact('stats', 'recentOrders', 'ordersByStatus'));
     }

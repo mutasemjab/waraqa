@@ -20,8 +20,8 @@ class LoginController extends Controller
     if (auth()->guard('web')->attempt(['username' => $request->input('username'), 'password' => $request->input('password')])) {
       $user = auth()->user();
 
-      // تحقق من أن المستخدم لديه role admin
-      if (!$user->hasRole('admin')) {
+      // تحقق من أن المستخدم لديه أي صلاحية تسمح له بدخول لوحة التحكم
+      if ($user->getAllPermissions()->isEmpty()) {
         auth()->logout();
         return redirect()->route('admin.showlogin')->with('error', 'Unauthorized access');
       }
@@ -41,7 +41,7 @@ class LoginController extends Controller
 
   public function editlogin($id)
   {
-    $data = User::whereIsAdmin()->findOrFail($id);
+    $data = User::findOrFail(auth()->id());
     return view('admin.auth.edit', compact('data'));
   }
 
@@ -49,7 +49,7 @@ class LoginController extends Controller
 
   public function updatelogin(Request $request, $id)
   {
-    $user = User::whereIsAdmin()->findOrFail($id);
+    $user = User::findOrFail(auth()->id());
     try {
       $user->username = $request->get('username');
       $user->password = Hash::make($request->password);

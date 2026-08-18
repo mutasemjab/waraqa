@@ -550,7 +550,8 @@ return [
     'order_number_or_user_name' => 'رقم الطلب أو اسم المستخدم',
     'orders_list' => 'قائمة الطلبات',
     'no_orders_found' => 'لم يتم العثور على طلبات',
-    
+    'no_dashboard_permissions' => 'لا توجد لديك صلاحيات لعرض أي محتوى في هذه الصفحة.',
+
     // Actions & Messages
     'view_details' => 'عرض التفاصيل',
     'details' => 'التفاصيل',

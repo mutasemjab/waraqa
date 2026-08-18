@@ -93,7 +93,7 @@ class UserAuthController extends Controller
         $user = Auth::user();
 
         // Determine redirect based on user role
-        if ($user && $user->hasRole('admin')) {
+        if ($user && $user->getAllPermissions()->isNotEmpty()) {
             $redirectRoute = 'admin.showlogin';
         } elseif ($user && $user->hasRole('provider')) {
             $redirectRoute = 'provider.login';

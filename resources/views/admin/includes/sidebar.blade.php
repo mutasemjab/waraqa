@@ -63,6 +63,7 @@
                 </li>
                 @endcanany
                 
+                @canany(['category-table', 'product-table', 'warehouse-table'])
                   <li class="nav-item {{ request()->is('categories*') || request()->is('products*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-tags"></i>
@@ -72,29 +73,36 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
-                     
+
+                        @can('category-table')
                         <li class="nav-item">
                             <a href="{{ route('categories.index') }}" class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}">
                                 <i class="fas fa-folder nav-icon"></i>
                                 <p>{{ __('messages.Categories') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('product-table')
                         <li class="nav-item">
                             <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
                                 <i class="fas fa-box nav-icon"></i>
                                 <p>{{ __('messages.Products') }}</p>
                             </a>
                         </li>
+                        @endcan
 
+                        @can('warehouse-table')
                         <li class="nav-item">
                             <a href="{{ route('warehouses.index') }}"  class="nav-link {{ request()->routeIs('warehouses.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p> {{ __('messages.warehouses') }} </p>
                             </a>
                         </li>
+                        @endcan
 
                     </ul>
                 </li>
+                @endcanany
 
 
                 @canany(['noteVoucher-table', 'noteVoucher-add', 'noteVoucher-edit', 'noteVoucher-delete'])
@@ -196,6 +204,7 @@
                 @endcanany
 
                 <!-- Returns Management Group -->
+                @canany(['sales-return-table', 'purchase-return-table'])
                 <li class="nav-item {{ request()->is('admin/returns*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-undo"></i>
@@ -206,24 +215,30 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <!-- Sales Returns -->
+                        @can('sales-return-table')
                         <li class="nav-item">
                             <a href="{{ route('admin.sales-returns.index') }}" class="nav-link {{ request()->routeIs('admin.sales-returns.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.sales_returns') }}</p>
                             </a>
                         </li>
+                        @endcan
 
                         <!-- Purchase Returns -->
+                        @can('purchase-return-table')
                         <li class="nav-item">
                             <a href="{{ route('admin.purchase-returns.index') }}" class="nav-link {{ request()->routeIs('admin.purchase-returns.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.purchase_returns') }}</p>
                             </a>
                         </li>
+                        @endcan
                     </ul>
                 </li>
+                @endcanany
 
                 <!-- Reports Group -->
+                @canany(['order-table', 'sales-return-table', 'purchase-return-table', 'customer-table', 'view_warehouse_movement_report', 'view_providers_report', 'view_distribution_point_sales_report'])
                 <li class="nav-item {{ request()->is('admin/reports/warehouse-movement*') || request()->is('admin/reports/providers*') || request()->is('admin/reports/orders*') || request()->is('admin/reports/sales-returns*') || request()->is('admin/reports/purchase-returns*') || request()->is('admin/reports/purchases*') || request()->is('admin/reports/customers*') || request()->is('admin/reports/events*') || request()->is('admin/reports/distribution-point-sales*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-chart-bar"></i>
@@ -233,62 +248,81 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
+                        @can('order-table')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.orders') }}" class="nav-link {{ request()->routeIs('admin.reports.orders') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.orders_report') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('sales-return-table')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.salesReturns') }}" class="nav-link {{ request()->routeIs('admin.reports.salesReturns') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.sales_returns_report') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('purchase-return-table')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.purchaseReturns') }}" class="nav-link {{ request()->routeIs('admin.reports.purchaseReturns') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.purchase_returns_report') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('order-table')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.purchases') }}" class="nav-link {{ request()->routeIs('admin.reports.purchases') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.purchases_report') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('customer-table')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.customers') }}" class="nav-link {{ request()->routeIs('admin.reports.customers') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.customer_report') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('order-table')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.events') }}" class="nav-link {{ request()->routeIs('admin.reports.events') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.events_report') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('view_warehouse_movement_report')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.warehouseMovement') }}" class="nav-link {{ request()->routeIs('admin.reports.warehouseMovement') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.warehouse_movements') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('view_providers_report')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.providers.index') }}" class="nav-link {{ request()->routeIs('admin.reports.providers.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.providers_report') }}</p>
                             </a>
                         </li>
+                        @endcan
+                        @can('view_distribution_point_sales_report')
                         <li class="nav-item">
                             <a href="{{ route('admin.reports.distributionPointSales.index') }}" class="nav-link {{ request()->routeIs('admin.reports.distributionPointSales.*') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{{ __('messages.distribution_point_sales_report') }}</p>
                             </a>
                         </li>
+                        @endcan
                     </ul>
                 </li>
+                @endcanany
 
 
                          @canany(['userDept-table', 'userDept-add', 'userDept-edit', 'userDept-delete'])
@@ -301,6 +335,7 @@
                         @endcanany
 
                 <!-- System Settings -->
+                @canany(['setting-table', 'role-table', 'role-add', 'role-edit', 'role-delete', 'employee-table', 'employee-add', 'employee-edit', 'employee-delete'])
                 <li class="nav-item {{ request()->is('admin/settings*') || request()->is('admin/roles*') || request()->is('admin/employees*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-cogs"></i>
@@ -310,13 +345,15 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
+                        @can('setting-table')
                         <li class="nav-item">
                             <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index') ? 'active' : '' }}">
                                 <i class="fas fa-wrench nav-icon"></i>
                                 <p>{{ __('messages.general_settings') }}</p>
                             </a>
                         </li>
-                        
+                        @endcan
+
                         @canany(['role-table', 'role-add', 'role-edit', 'role-delete'])
                         <li class="nav-item">
                             <a href="{{ route('admin.role.index') }}" class="nav-link {{ request()->routeIs('admin.role.index') ? 'active' : '' }}">
@@ -336,6 +373,7 @@
                         @endcanany
                     </ul>
                 </li>
+                @endcanany
 
                 <!-- Account -->
                 <li class="nav-item">

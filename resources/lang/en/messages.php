@@ -492,7 +492,8 @@ return [
     'order_number_or_user_name' => 'Order number or Seller name',
     'orders_list' => 'Orders List',
     'no_orders_found' => 'No orders found',
-    
+    'no_dashboard_permissions' => 'You do not have permission to view any content on this page.',
+
     // Actions & Messages
     'view_details' => 'View Details',
     'details' => 'Details',

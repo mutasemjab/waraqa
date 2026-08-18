@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 
 class ProvidersReportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view_providers_report');
+    }
+
     public function index()
     {
         return view('admin.reports.providers.index');

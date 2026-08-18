@@ -11,7 +11,7 @@ class CustomerReportController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:customers-table')->only(['index']);
+        $this->middleware('permission:customer-table')->only(['index']);
     }
 
     public function index()

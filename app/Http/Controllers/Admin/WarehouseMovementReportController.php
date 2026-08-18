@@ -11,6 +11,11 @@ use Illuminate\Http\Request;
 
 class WarehouseMovementReportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view_warehouse_movement_report')->only(['index', 'show']);
+    }
+
     public function index(Request $request)
     {
         $query = NoteVoucher::with([

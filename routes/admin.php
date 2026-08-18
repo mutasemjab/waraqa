@@ -46,7 +46,7 @@ if (!defined('PAGINATION_COUNT')) {
 
 Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath']], function () {
 
-    Route::group(['prefix' => 'admin', 'middleware' => ['auth:web', 'role:admin']], function () {
+    Route::group(['prefix' => 'admin', 'middleware' => ['auth:web', 'admin.access']], function () {
 
         // API Routes (inside localization scope for proper locale detection)
         Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');

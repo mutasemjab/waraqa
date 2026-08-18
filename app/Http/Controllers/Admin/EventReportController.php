@@ -10,7 +10,7 @@ class EventReportController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:orders-table')->only(['index']);
+        $this->middleware('permission:order-table')->only(['index']);
     }
 
     public function index()

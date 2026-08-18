@@ -65,14 +65,20 @@
     <!-- Page Header -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">{{ __('messages.dashboard') }}</h1>
+        @can('order-table')
         <a href="{{ route('orders.index') }}" class="btn btn-primary">
             <i class="fas fa-list"></i> {{ __('messages.Orders') }}
         </a>
+        @endcan
     </div>
+
+    @unless(auth()->user()->canAny(['seller-table', 'provider-table', 'order-table']))
+        <div class="alert alert-info">{{ __('messages.no_dashboard_permissions') }}</div>
+    @endunless
 
     <!-- Statistics Cards Row -->
     <div class="row">
-        <!-- Total Orders -->
+        @can('seller-table')
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
@@ -95,6 +101,9 @@
                 </div>
             </div>
         </div>
+        @endcan
+
+        @can('provider-table')
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
@@ -117,6 +126,9 @@
                 </div>
             </div>
         </div>
+        @endcan
+
+        @can('order-table')
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
@@ -208,8 +220,10 @@
                 </div>
             </div>
         </div>
+        @endcan
     </div>
 
+    @can('order-table')
     <!-- Second Row Stats -->
     <div class="row">
         <!-- Today's Orders -->
@@ -424,6 +438,7 @@
             </div>
         </div>
     </div>
+    @endcan
 </div>
 
 @endsection
@@ -432,8 +447,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 $(document).ready(function() {
-    // Orders by Status Pie Chart
-    var ctx = document.getElementById('ordersStatusChart').getContext('2d');
+    // Orders by Status Pie Chart (canvas only exists if the user can view orders)
+    var canvasEl = document.getElementById('ordersStatusChart');
+    if (canvasEl) {
+    var ctx = canvasEl.getContext('2d');
     var ordersData = @json($ordersByStatus);
 
     var statusLabels = {
@@ -502,6 +519,7 @@ $(document).ready(function() {
             cutoutPercentage: 70,
         },
     });
+    }
 
     // Auto-refresh dashboard every 60 seconds
     setInterval(function() {

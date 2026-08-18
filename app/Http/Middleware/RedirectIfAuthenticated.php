@@ -23,7 +23,7 @@ class RedirectIfAuthenticated
             $user = Auth::user();
 
             // Redirect based on user's role
-            if ($user->hasRole('admin')) {
+            if ($user->getAllPermissions()->isNotEmpty()) {
                 return redirect()->route('admin.dashboard');
             } elseif ($user->hasRole('provider')) {
                 return redirect()->route('provider.dashboard');

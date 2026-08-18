@@ -79,5 +79,6 @@ class Kernel extends HttpKernel
         'localeViewPath'          => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath::class,
         'role'                    => \Spatie\Permission\Middlewares\RoleMiddleware::class,
         'permission'              => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+        'admin.access'            => \App\Http\Middleware\EnsureHasAdminAccess::class,
     ];
 }

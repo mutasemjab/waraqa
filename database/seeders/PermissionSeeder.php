@@ -16,9 +16,6 @@ class PermissionSeeder extends Seeder
     public function run()
     {
         $permissions = [
-            // Dashboard
-            'dashboard-view',
-
             // Role and Permission Management
             'role-table',
             'role-add',
@@ -128,6 +125,12 @@ class PermissionSeeder extends Seeder
 
             // Distribution Point Sales Report
             'view_distribution_point_sales_report',
+
+            // Warehouse Movement Report
+            'view_warehouse_movement_report',
+
+            // Providers Report
+            'view_providers_report',
 
             // Seller Product Request Management
             'sellerProductRequest-table',
